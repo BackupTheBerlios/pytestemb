@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "$Author: octopy $"
 
 
@@ -115,10 +115,9 @@ class Result:
 
 
 
-
-
 def trace(func):
-    """The time_this decorator"""
+    """ call trace_result
+     decorator function """
     def decorated(*args, **kwargs):
         args[0].trace_result("%s" % func.func_name)
         result = func(*args, **kwargs)
@@ -149,7 +148,7 @@ class ResultStdout(Result):
         Result.__init__(self, trace)
         
     def write_no_arg(self, key):
-        sys.stdout.write("%s\n" % key)
+        sys.stdout.write("%s%s\n" % (key, ResultStdout.SEPARATOR))
 
     def write_one_arg(self, key, value):
         sys.stdout.write("%s%s%s\n" % (key, ResultStdout.SEPARATOR ,value))        
@@ -176,7 +175,7 @@ class ResultStdout(Result):
 
     @trace
     def cleanup_stop(self):
-        self.write_no_arg(ResultStdout.CLEANUP_START)
+        self.write_no_arg(ResultStdout.CLEANUP_STOP)
     
     @trace    
     def case_start(self, name):
@@ -217,32 +216,141 @@ class ResultStdout(Result):
 
 
 
+class ResultCounter:
+    """ class to count result
+    a limit is implemented (usefull for test instanciate for endurance )
+    counter works as cyclic after limit is reach
+    """
+    def __init__(self, name="", limit=1000):
+        self.name = name
+        self.limit = limit
+        self.counter = {}
+        
+    def set_not_executed(self):
+        self.counter = None
+        
+    def add_kind(self, kind):
+        self.counter[kind] = []    
+        
+    def add_result(self, kind, msg):
+        """ add a result if limit is reach, the older result is remove """
+        self.counter[kind].append(msg)
+        if len(self.counter[kind]) > self.limit :
+            self.counter[kind].pop(0)
+    def get_counter(self):
+        return self.counter
+
+    def __str__(self):
+        str = "%s\n" % self.name
+        for k, v in self.counter.iteritems():
+            str += "%s:%s\n" % (k, v)
+        return str       
+
+
+
 class ResultScript:
-    def __init__(self):
-        self.name = ""
+    def __init__(self, name):
+        self.name = name
         self.case = []
+    
+    def __str__(self):
+        str = "%s\n" % self.name
+        for cas in self.case:
+            str += "%s\n" % cas.__str__()
+        return str
 
 
 class ResultStdoutReader:
+    
     def __init__(self):
         self.script = []
+        
+        self.script_started = False 
+        self.case_started = False
+        
     
-    def clear(self):
-        self.script = []
+    def new_script(self):
+        self.script_started = False 
+        self.case_started = False
+        
+    def check_started(self, state):
+        if state :
+            return
+        else :
+            raise Exception   
+        
+    def __str__(self):
+        str = ""
+        for scr in self.script:
+            str += "%s\n" % scr.__str__()
+        return str
+    
+
+    def create_resultcounter(self):
+        obj = ResultCounter()
+        obj.add_kind(ResultStdout.ERROR_CONFIG)
+        obj.add_kind(ResultStdout.ERROR_IO)
+        obj.add_kind(ResultStdout.ERROR_TEST)
+        obj.add_kind(ResultStdout.WARNING)
+        obj.add_kind(ResultStdout.ASSERT_OK)
+        obj.add_kind(ResultStdout.ASSERT_KO)
+        return obj
+    
     
     def add_line(self, line):
         pos = line.find(ResultStdout.SEPARATOR)
-        if pos == -1 :
-            self.no_arg(line)
+        print line
+        if pos == line[-1] :
+            self.process(line, None)
         else :
-            self.one_arg(line[0:pos-1], line[pos+1:])
+            self.process(line[0:pos], line[pos+1:-1])
 
-    def no_arg(self, key):
-        pass
+
     
-    def one_arg(self, key, value):
-        pass
+    def process(self, key, value):
+        print "key=%s value=%s" % (key, value)
+        
+        # SCRIPT_START
+        if      key == ResultStdout.SCRIPT_START :
+            self.check_started(not(self.script_started))
+            self.script.append(ResultScript(value))
+            self.script_started = True
+        # SCRIPT_STOP
+        elif    key == ResultStdout.SCRIPT_STOP :
+            self.check_started(self.script_started)
+            self.script_started = False
+        # SETUP_START, CLEANUP_START, CASE_START
+        elif        key == ResultStdout.SETUP_START\
+                or  key == ResultStdout.CLEANUP_START\
+                or  key == ResultStdout.CASE_START :
+            self.check_started(not(self.case_started))
+            if key == ResultStdout.SETUP_START :
+                value = "setup"
+            if key == ResultStdout.CLEANUP_START:
+                value = "cleanup"
+            obj = self.create_resultcounter()
+            obj.name = value
+            self.script[-1].case.append(obj)
+            self.case_started = True
+        # SETUP_STOP, CLEANUP_STOP, CASE_STOP
+        elif        key == ResultStdout.SETUP_STOP\
+                or  key == ResultStdout.CLEANUP_STOP\
+                or  key == ResultStdout.CASE_STOP :
+            self.check_started(self.case_started)
+            self.case_started = False
+        # CASE_NOTEXECUTED
+        elif    key == ResultStdout.CASE_NOTEXECUTED :
+            self.check_started(not(self.case_started))
+            obj = self.create_resultcounter()
+            obj.set_not_executed()
+            obj.name = value
+            self.script[-1].case.append(obj)
+        # CASE_XX
+        else :
+            self.check_started(self.case_started)
+            self.script[-1].case[-1].add_result(key, value)
 
+        
 
 
 class ResultStandalone(Result):

@@ -16,7 +16,7 @@ def defaultValue():
 def boundValue():
     test.trace_msg("No wait")
     test.assert_true(1==1, "1==1")
-    test.assert_true(1==2, "1==1")
+    test.assert_true(1==2, "1==2")
     test.assert_true(1==1, "1==1")
     test.trace_msg("Easy trace")
     pass
