@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "$Author: octopy $"
 
 
@@ -41,7 +41,7 @@ class TraceOctopylog(Trace):
         pass
 
     def trace_msg(self, msg):
-        self.logger.info("%s\n" % msg)
+        self.logger.info("%s" % msg)
 
 
 

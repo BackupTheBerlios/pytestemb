@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "$Author: octopy $"
 
 
@@ -119,6 +119,20 @@ def assert_true_fatal(exp, msg):
         
 def assert_false_fatal(exp, msg):
     __result__.assert_false_fatal(exp, msg)
+    
+    
+def assert_equal(exp1, exp2, msg):
+    __result__.assert_equal(exp1, exp2, msg)    
+
+def assert_equal_fatal(self, exp1, exp2, msg):
+    __result__.assert_equal_fatal(self, exp1, exp2, msg) 
+
+def assert_notequal(self, exp1, exp2, msg):
+    __result__.assert_notequal(self, exp1, exp2, msg)    
+
+def assert_notequal_fatal(self, exp1, exp2, msg):
+    __result__.assert_notequal_fatal(self, exp1, exp2, msg)       
+    
     
 def trace_msg(msg):
     __trace__.trace_msg(msg)

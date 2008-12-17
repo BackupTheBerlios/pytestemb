@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "$Author: octopy $"
 
 
@@ -59,7 +59,18 @@ class Result:
     def assert_false_fatal(self, exp, msg):
         self._assert_(not(exp), True, msg)   
  
-  
+    def assert_equal(self, exp1, exp2, msg):
+        self._assert_((exp1 == exp2), False, msg)
+
+    def assert_equal_fatal(self, exp1, exp2, msg):
+        self._assert_((exp1 == exp2), True, msg)  
+
+    def assert_notequal(self, exp1, exp2, msg):
+        self._assert_((exp1 != exp2), False, msg)
+
+    def assert_notequal_fatal(self, exp1, exp2, msg):
+        self._assert_((exp1 != exp2), True, msg)  
+
 
     def script_start(self, name):
         pass
@@ -123,6 +134,17 @@ def trace(func):
         result = func(*args, **kwargs)
         return result
     return decorated
+
+
+
+#import UserDict
+# 
+#value = "{'a':{'b':'c', 'd':'e'}}"
+# 
+#try:
+#  a = UserDict.UserDict(eval(value))
+#except:
+#  print "Ce n'est pas un dictionnaire"
 
 
 class ResultStdout(Result):
