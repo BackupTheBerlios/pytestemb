@@ -7,16 +7,38 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "$Author: octopy $"
 
 
 import sys
+import copy
+import inspect
+
 
 
 class TestErrorFatal(Exception):
     "Fatal Error"
     pass
+
+
+
+
+
+
+def finspect():
+    lst = inspect.stack()
+    try :
+        
+        print lst[4][3]
+#        for l in lst:
+#            print "%s" % l.__str__()
+    finally:
+        del lst
+        
+
+
+
 
 
 
@@ -30,14 +52,27 @@ class Result:
     
 
     def get_assert_caller(self):
-        pass
+        CALL_DEPTH = 4
+        lst = inspect.stack()
+        dict = {}
+        try :
+            dict["file"] = copy.copy(lst[CALL_DEPTH][1])
+            dict["line"] = copy.copy(lst[CALL_DEPTH][2])
+            dict["function"] = copy.copy(lst[CALL_DEPTH][3])
+            dict["expression"] = copy.copy(lst[CALL_DEPTH][4][0].strip(" \t\n"))           
+        finally:
+            del lst
+            return dict
  
-    def _assert_(self, exp, fatal ,msg):
+    def _assert_(self, exp, fatal, msg):
         if exp :
-            self.assert_ok(msg) 
+            info = {}
+            info["msg"] = msg
+            self.assert_ok(info) 
         else :
-            self.get_assert_caller()
-            self.assert_ko(msg)
+            info = self.get_assert_caller()
+            info["msg"] = msg
+            self.assert_ko(info)
             if fatal : 
                 raise TestErrorFatal
         
@@ -115,10 +150,10 @@ class Result:
     def warning(self, msg):
         pass
     
-    def assert_ok(self, msg):
+    def assert_ok(self, info):
         pass
     
-    def assert_ko(self, msg):
+    def assert_ko(self, info):
         pass
 
 
@@ -454,10 +489,12 @@ class ResultStandalone(Result):
  
     @trace    
     def assert_ok(self, msg):
+        sys.stdout.write("%s\n" % msg)      
         self.result[-1]["assert_ok"] += 1
     
     @trace     
     def assert_ko(self, msg):
+        sys.stdout.write("%s\n" % msg)   
         self.result[-1]["assert_ko"] += 1
 
 

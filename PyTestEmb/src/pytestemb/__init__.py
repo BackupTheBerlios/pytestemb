@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "$Author: octopy $"
 
 
@@ -54,6 +54,9 @@ parser.add_option("-r", "--result",
 parser.add_option("-t", "--trace",
                     action="store", type="string", dest="trace", default=interface["trace"][INTERFACE_DEFAULT],
                     help="set the interface for trace, value can be : %s" % interface["trace"][INTERFACE_LIST].__str__()) 
+parser.add_option("-p", "--path",
+                    action="store", type="string", dest="path", default=None,
+                    help="add path to python path") 
 
 
 def checker(name, value):
@@ -67,7 +70,6 @@ def checker(name, value):
 (options, args) = parser.parse_args()
 
 
-
 if args != []:
     parser.error("Argument invalid %s " % args.__str__())
 checker("config", options.config)
@@ -75,18 +77,16 @@ checker("result", options.result)
 checker("trace", options.trace)
 
 
-
-
-
-
-
-
+if options.path is not None:
+    sys.path.append(options.path)
 
 
 __trace__ = trace.create(options.trace)
 __result__ = result.create(options.result, __trace__ )
 __config__ = config.create(options.config, __trace__ )
 __valid__ = valid.Valid(__config__, __result__, __trace__)
+
+
 
 
 
