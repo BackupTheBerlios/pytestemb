@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "$Author: octopy $"
 
 
@@ -156,7 +156,8 @@ class Result:
     def assert_ko(self, info):
         pass
 
-
+    def py_exception(self, exception, stack):
+        pass
 
 
 
@@ -199,6 +200,7 @@ class ResultStdout(Result):
     WARNING = "WARNING"
     ASSERT_OK = "ASSERT_OK"
     ASSERT_KO = "ASSERT_KO"
+    PY_EXCEPTION = "PY_EXCEPTION"
 
     
     def __init__(self, trace):
@@ -270,6 +272,24 @@ class ResultStdout(Result):
     def assert_ko(self, msg):
         self.write_one_arg(ResultStdout.ASSERT_KO, msg)
 
+
+
+#  File "C:\CVS_Local\PyTestEmb\test\script_exception.py", line 27, in <module>
+#    0/0
+#ZeroDivisionError: integer division or modulo by zero
+#
+#                stack[-1]["path"]      = copy.copy(traceback[index][1])
+#                stack[-1]["line"]      = copy.copy(traceback[index][2])
+#                stack[-1]["function"]  = copy.copy(traceback[index][3])
+#                stack[-1]["code"]  
+                
+    def py_exception(self, exception, stack):
+        msg = ""
+        for sline in stack :
+            msg += "File \"%s\", line %d, in %s" % (sline["path"], sline["line"], sline["function"])
+            msg += "    %s\n" % (sline["code"])
+        msg += "%s" % exception
+        self.write_one_arg(ResultStdout.PY_EXCEPTION, msg)
 
 
 
@@ -472,7 +492,6 @@ class ResultStandalone(Result):
     
     @trace 
     def error_config(self, msg):
-        pass
         self.result[-1]["error_config"]
     
     @trace    
@@ -497,6 +516,16 @@ class ResultStandalone(Result):
         sys.stdout.write("%s\n" % msg)   
         self.result[-1]["assert_ko"] += 1
 
+
+    def py_exception(self, exception, stack):
+        msg = ""
+        for sline in stack :
+            msg += "File \"%s\", line %d, in %s\n" % (sline["path"], sline["line"], sline["function"])
+            msg += "    %s\n" % (sline["code"])
+        msg += "%s\n" % exception
+        sys.stdout.write(msg)
+        
+        
 
 def create(interface, trace):
     

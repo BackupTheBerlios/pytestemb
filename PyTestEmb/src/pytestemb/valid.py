@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "$Author: octopy $"
 
 
@@ -16,7 +16,9 @@ __author__ = "$Author: octopy $"
 
 
 import sys
+import copy
 import os.path
+import inspect
 
 
 
@@ -91,14 +93,39 @@ class Valid:
         try:
             func()
         except result.TestErrorFatal:
-            pass              
+            pass  
+        except (Exception), (error):
+            self.inspect_traceback(error)            
 
     def run_case(self, case):
         try:
             case()
+            return True
         except result.TestErrorFatal:
-            pass
+            return True
+        except (Exception), (error):
+            self.inspect_traceback(error)
+            return False
+            
         
+        
+        
+    def inspect_traceback(self, exception):
+        CALL_DEPTH = 1
+        traceback = inspect.trace()
+        stack = []
+        try:
+            for index in range(CALL_DEPTH, len(traceback)):
+                stack.append({})
+                stack[-1]["path"]      = copy.copy(traceback[index][1])
+                stack[-1]["line"]      = copy.copy(traceback[index][2])
+                stack[-1]["function"]  = copy.copy(traceback[index][3])
+                stack[-1]["code"]      = copy.copy(traceback[index][4][0].strip("\n"))     
+        finally:
+            del traceback
+            
+        self.result.py_exception(exception.__str__(), stack)
+            
 
 
 
