@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "$Author: octopy $"
 
 
@@ -45,7 +45,6 @@ class TraceOctopylog(Trace):
 
 
 
-
 class TraceStdout(Trace):
     
     def __init__(self):
@@ -54,7 +53,6 @@ class TraceStdout(Trace):
 
     def trace_msg(self, msg):
         sys.stdout.write("%s\n" % msg)
-
 
 
 

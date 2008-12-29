@@ -7,14 +7,14 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "$Author: octopy $"
 
 
 import sys
 import copy
 import inspect
-
+import UserDict
 
 
 class TestErrorFatal(Exception):
@@ -26,16 +26,16 @@ class TestErrorFatal(Exception):
 
 
 
-def finspect():
-    lst = inspect.stack()
-    try :
-        
-        print lst[4][3]
-#        for l in lst:
-#            print "%s" % l.__str__()
-    finally:
-        del lst
-        
+#def finspect():
+#    lst = inspect.stack()
+#    try :
+#        
+#        print lst[4][3]
+##        for l in lst:
+##            print "%s" % l.__str__()
+#    finally:
+#        del lst
+#        
 
 
 
@@ -67,11 +67,11 @@ class Result:
     def _assert_(self, exp, fatal, msg):
         if exp :
             info = {}
-            info["msg"] = msg
+            info["info"] = msg
             self.assert_ok(info) 
         else :
             info = self.get_assert_caller()
-            info["msg"] = msg
+            info["info"] = msg
             self.assert_ko(info)
             if fatal : 
                 raise TestErrorFatal
@@ -107,56 +107,53 @@ class Result:
         self._assert_((exp1 != exp2), True, msg)  
 
 
+
     def script_start(self, name):
         pass
-    
+
     def script_stop(self, name):
         pass
     
     def setup_start(self):
         pass
-
+    
     def setup_stop(self):
         pass
-       
-    
-    
+ 
     def cleanup_start(self):
         pass
 
     def cleanup_stop(self):
         pass
     
+    def case_start(self, name):
+        pass
     
+    def case_stop(self, name):
+        pass
+
     def case_not_executed(self, name):
         pass
     
-    def case_start(self, name):
-        pass   
-    
-    def case_stop(self, name):
-        pass   
-
-
-    def error_config(self, msg):
-        pass
-    
-    def error_io(self, msg):
-        pass
-    
-    def error(self, msg):
+    def error_config(self, des):
         pass
 
-    def warning(self, msg):
+    def error_io(self, des):
         pass
     
-    def assert_ok(self, info):
-        pass
-    
-    def assert_ko(self, info):
+    def error_test(self, des):
         pass
 
-    def py_exception(self, exception, stack):
+    def warning(self, des):
+        pass
+
+    def assert_ok(self, des):
+        pass
+    
+    def assert_ko(self, des):
+        pass
+        
+    def py_exception(self, des):
         pass
 
 
@@ -166,21 +163,21 @@ def trace(func):
     """ call trace_result
      decorator function """
     def decorated(*args, **kwargs):
-        args[0].trace_result("%s" % func.func_name)
+        # args[0] = self
+        trace_func = args[0].trace_result
+        #args[0].trace_result("%s" % func.func_name)
+        # arg[1] = string or dict or no
+        try:
+            trace_func("%s : %s" % (func.func_name, args[1].__str__()))
+        except :
+            pass
         result = func(*args, **kwargs)
         return result
     return decorated
 
 
 
-#import UserDict
-# 
-#value = "{'a':{'b':'c', 'd':'e'}}"
-# 
-#try:
-#  a = UserDict.UserDict(eval(value))
-#except:
-#  print "Ce n'est pas un dictionnaire"
+
 
 
 class ResultStdout(Result):
@@ -212,84 +209,80 @@ class ResultStdout(Result):
     def write_one_arg(self, key, value):
         sys.stdout.write("%s%s%s\n" % (key, ResultStdout.SEPARATOR ,value))        
     
+    
+    def write(self, opcode, arg):
+        sys.stdout.write("%s%s%s\n" % (opcode, ResultStdout.SEPARATOR, arg.__str__()))
+        
+    
     @trace
     def script_start(self, name):
-        self.write_one_arg(ResultStdout.SCRIPT_START, name)
+        self.write(ResultStdout.SCRIPT_START, {"name":name})
  
     @trace   
     def script_stop(self, name):
-        self.write_one_arg(ResultStdout.SCRIPT_STOP, name)
+        self.write(ResultStdout.SCRIPT_STOP, {"name":name})
     
     @trace    
     def setup_start(self):
-        self.write_no_arg(ResultStdout.SETUP_START)
+        self.write(ResultStdout.SETUP_START, {})
     
     @trace
     def setup_stop(self):
-        self.write_no_arg(ResultStdout.SETUP_STOP)
+        self.write(ResultStdout.SETUP_STOP, {})
  
     @trace   
     def cleanup_start(self):
-        self.write_no_arg(ResultStdout.CLEANUP_START)
+        self.write(ResultStdout.CLEANUP_START, {})
 
     @trace
     def cleanup_stop(self):
-        self.write_no_arg(ResultStdout.CLEANUP_STOP)
+        self.write(ResultStdout.CLEANUP_STOP, {})
     
     @trace    
     def case_start(self, name):
-        self.write_one_arg(ResultStdout.CASE_START, name)
+        self.write(ResultStdout.CASE_START, {"name":name})
 
     @trace    
     def case_stop(self, name):
-        self.write_one_arg(ResultStdout.CASE_STOP, name)
+        self.write(ResultStdout.CASE_STOP, {"name":name})
 
     @trace
     def case_not_executed(self, name):
-        self.write_one_arg(ResultStdout.CASE_NOTEXECUTED, name)
+        self.write(ResultStdout.CASE_NOTEXECUTED, {"name":name})
     
     @trace    
-    def error_config(self, msg):
-        self.write_one_arg(ResultStdout.ERROR_CONFIG, msg)
+    def error_config(self, des):
+        self.write(ResultStdout.ERROR_CONFIG, des)
 
     @trace    
-    def error_io(self, msg):
-        self.write_one_arg(ResultStdout.ERROR_IO, msg)
+    def error_io(self, des):
+        self.write(ResultStdout.ERROR_IO, des)
     
     @trace
-    def error_test(self, msg):
-        self.write_one_arg(ResultStdout.ERROR_TEST, msg)
+    def error_test(self, des):
+        self.write(ResultStdout.ERROR_TEST, des)
 
     @trace
-    def warning(self, msg):
-        self.write_one_arg(ResultStdout.WARNING, msg)
+    def warning(self, des):
+        self.write(ResultStdout.WARNING, des)
 
     @trace    
-    def assert_ok(self, msg):
-        self.write_one_arg(ResultStdout.ASSERT_OK, msg)
+    def assert_ok(self, des):
+        self.write(ResultStdout.ASSERT_OK, des)
 
     @trace    
-    def assert_ko(self, msg):
-        self.write_one_arg(ResultStdout.ASSERT_KO, msg)
-
-
-
-#  File "C:\CVS_Local\PyTestEmb\test\script_exception.py", line 27, in <module>
-#    0/0
-#ZeroDivisionError: integer division or modulo by zero
-#
-#                stack[-1]["path"]      = copy.copy(traceback[index][1])
-#                stack[-1]["line"]      = copy.copy(traceback[index][2])
-#                stack[-1]["function"]  = copy.copy(traceback[index][3])
-#                stack[-1]["code"]  
-                
-    def py_exception(self, exception, stack):
-        msg = ""
-        for sline in stack :
-            msg += "File \"%s\", line %d, in %s" % (sline["path"], sline["line"], sline["function"])
-            msg += "    %s\n" % (sline["code"])
-        msg += "%s" % exception
-        self.write_one_arg(ResultStdout.PY_EXCEPTION, msg)
+    def assert_ko(self, des):
+        self.write(ResultStdout.ASSERT_KO, des)
+            
+            
+    @trace        
+    def py_exception(self, des):
+#        msg = ""
+#        for sline in des["stack"] :
+#            msg += "File \"%s\", line %d, in %s" % (sline["path"], sline["line"], sline["function"])
+#            msg += "    %s\n" % (sline["code"])
+#        msg += "%s" % des["exception"]
+        self.write_one_arg(ResultStdout.PY_EXCEPTION, des)
 
 
 
@@ -309,9 +302,9 @@ class ResultCounter:
     def add_kind(self, kind):
         self.counter[kind] = []    
         
-    def add_result(self, kind, msg):
+    def add_result(self, kind, obj):
         """ add a result if limit is reach, the older result is remove """
-        self.counter[kind].append(msg)
+        self.counter[kind].append(obj)
         if len(self.counter[kind]) > self.limit :
             self.counter[kind].pop(0)
     def get_counter(self):
@@ -371,6 +364,7 @@ class ResultStdoutReader:
         obj.add_kind(ResultStdout.WARNING)
         obj.add_kind(ResultStdout.ASSERT_OK)
         obj.add_kind(ResultStdout.ASSERT_KO)
+        obj.add_kind(ResultStdout.PY_EXCEPTION)        
         return obj
     
     
@@ -382,6 +376,23 @@ class ResultStdoutReader:
         else :
             self.process(line[0:pos], line[pos+1:-1])
 
+
+
+    def conv_dict(self, data):
+        try:
+            return UserDict.UserDict(eval(data))
+        except Exception , error:
+            print data
+            raise error    
+        
+#import UserDict
+# 
+#value = "{'a':{'b':'c', 'd':'e'}}"
+# 
+#try:
+#  a = UserDict.UserDict(eval(value))
+#except:
+#  print "Ce n'est pas un dictionnaire"
 
     
     def process(self, key, value):
@@ -425,7 +436,8 @@ class ResultStdoutReader:
         # CASE_XX
         else :
             self.check_started(self.case_started)
-            self.script[-1].case[-1].add_result(key, value)
+            dic = self.conv_dict(value)
+            self.script[-1].case[-1].add_result(key, dic)
 
         
 
@@ -442,22 +454,34 @@ class ResultStandalone(Result):
     def script_start(self, name):
         sys.stdout.write("Start running %s ...\n" % name)
         
+    
+    def magical(self, data, size):
+        return (len(data)-size)    
+    
+    def add_line(self, col1, col2):
+        marge1 = (" " * (32-2-len(col1)))
+        marge2 = (" " * (32-2-len(col2) ))
+        sys.stdout.write("| %s%s| %s%s|\n"  % (col1, marge1, col2, marge2)) 
+                 
     @trace     
     def script_stop(self, name):
         sys.stdout.write("End running %s\n" % name)
         
         test_ok = True
         
+        sys.stdout.write("\n+%s+\n" % ("-"*63))
         for case in self.result :
             if case["assert_ko"] == 0 :
-                sys.stdout.write("Case %s : ok\n" % case["case"])
+                self.add_line("Case \"%s\"" % case["case"], "ok")
             else :
-                sys.stdout.write("Case %s : ko\n" % case["case"])
+                self.add_line("Case \"%s\"" % case["case"], "ko")
                 test_ok = False
+        sys.stdout.write("+%s+\n" % ("-"*63))        
         if test_ok :
-            sys.stdout.write("Test OK\n")     
+            self.add_line("Script \"%s\"" % name , "OK")    
         else:
-            sys.stdout.write("Test KO\n")
+            self.add_line("Script \"%s\"" % name , "KO")
+        sys.stdout.write("+%s+\n" % ("-"*63))
     
     @trace    
     def setup_start(self):
@@ -481,6 +505,7 @@ class ResultStandalone(Result):
         self.result.append({"case":name}) 
         self.result[-1]["assert_ok"] = 0
         self.result[-1]["assert_ko"] = 0
+        sys.stdout.write("Case \"%s\" :\n" % name)
         
     @trace 
     def case_stop(self, name):
@@ -495,36 +520,36 @@ class ResultStandalone(Result):
         self.result[-1]["error_config"]
     
     @trace    
-    def error_io(self, msg):
+    def error_io(self, des):
         pass
     
     @trace     
-    def error_test(self, msg):
+    def error_test(self, des):
         pass
     
     @trace 
-    def warning(self, msg):
+    def warning(self, des):
         pass
  
     @trace    
-    def assert_ok(self, msg):
-        sys.stdout.write("%s\n" % msg)      
+    def assert_ok(self, des):
+        #sys.stdout.write("%s\n" % des["info"])      
         self.result[-1]["assert_ok"] += 1
     
     @trace     
-    def assert_ko(self, msg):
-        sys.stdout.write("%s\n" % msg)   
+    def assert_ko(self, des):
+        sys.stdout.write("    assert ko : %s\n" % des["info"])   
         self.result[-1]["assert_ko"] += 1
 
-
-    def py_exception(self, exception, stack):
-        msg = ""
-        for sline in stack :
-            msg += "File \"%s\", line %d, in %s\n" % (sline["path"], sline["line"], sline["function"])
-            msg += "    %s\n" % (sline["code"])
-        msg += "%s\n" % exception
+    @trace
+    def py_exception(self, des):
+        msg = "Exception :\n"
+        for sline in des["stack"] :
+            msg += "    File \"%s\", line %d, in %s\n" % (sline["path"], sline["line"], sline["function"])
+            msg += "        %s\n" % (sline["code"])
+        msg += "    %s" % (des["exception"])
         sys.stdout.write(msg)
-        
+        self.result[-1]["assert_ko"] += 1
         
 
 def create(interface, trace):

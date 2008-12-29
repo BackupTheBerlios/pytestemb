@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "$Author: octopy $"
 
 
@@ -133,6 +133,10 @@ def assert_notequal(exp1, exp2, msg):
 def assert_notequal_fatal(exp1, exp2, msg):
     __result__.assert_notequal_fatal(exp1, exp2, msg)       
     
+
+def warning(msg):
+    __result__.warning(msg)
+
     
 #def py_exception(exception, stack):
 #    __result__.py_exception(exception, stack)    

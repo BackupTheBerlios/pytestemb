@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "$Author: octopy $"
 
 
@@ -123,8 +123,10 @@ class Valid:
                 stack[-1]["code"]      = copy.copy(traceback[index][4][0].strip("\n"))     
         finally:
             del traceback
-            
-        self.result.py_exception(exception.__str__(), stack)
+        des = {}
+        des["stack"] = stack
+        des["exception"] = exception.__str__()    
+        self.result.py_exception(des)
             
 
 
