@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "$Author: octopy $"
 
 
@@ -81,13 +81,22 @@ if options.path is not None:
     sys.path.append(options.path)
 
 
-__trace__ = trace.create(options.trace)
-__result__ = result.create(options.result, __trace__ )
-__config__ = config.create(options.config, __trace__ )
-__valid__ = valid.Valid(__config__, __result__, __trace__)
+
+__trace__   = None
+__result__  = None
+__config__  = None
+__valid__   = None
 
 
 
+__trace__   = trace.create(options.trace)
+__result__  = result.create(options.result, __trace__ )
+__config__  = config.create(options.config, __trace__ )
+__valid__   = valid.Valid(__config__, __result__)
+
+
+__trace__.set_result(__result__)
+__trace__.start()
 
 
 def set_setup(funcSetup):
@@ -102,47 +111,61 @@ def add_test_case(funcCase):
 def run_script():
     __valid__.run_script()
 
-def raise_error(msg):
-    __result__.error(msg)
 
-def raise_warning(msg):
-    __result__.warning(msg)
-    
-def assert_true(exp, msg):
-    __result__.assert_true(exp, msg)
+def _create_des_(msg):
+    if msg is None :
+        return {}
+    else:
+        return dict({"msg":msg})
+
+
+
+def assert_true(exp, msg=None):
+    __result__.assert_true(exp, _create_des_(msg))
         
-def assert_false(exp, msg):
-    __result__.assert_false(exp, msg)
+def assert_false(exp, msg=None):
+    __result__.assert_false(exp, _create_des_(msg))
     
-def assert_true_fatal(exp, msg):
-    __result__.assert_true_fatal(exp, msg)
+def assert_true_fatal(exp, msg=None):
+    __result__.assert_true_fatal(exp, _create_des_(msg))
         
-def assert_false_fatal(exp, msg):
-    __result__.assert_false_fatal(exp, msg)
+def assert_false_fatal(exp, msg=None):
+    __result__.assert_false_fatal(exp, _create_des_(msg))
     
     
-def assert_equal(exp1, exp2, msg):
-    __result__.assert_equal(exp1, exp2, msg)    
+def assert_equal(exp1, exp2, msg=None):
+    __result__.assert_equal(exp1, exp2, _create_des_(msg))    
 
-def assert_equal_fatal(exp1, exp2, msg):
-    __result__.assert_equal_fatal(exp1, exp2, msg) 
+def assert_equal_fatal(exp1, exp2, msg=None):
+    __result__.assert_equal_fatal(exp1, exp2, _create_des_(msg)) 
 
-def assert_notequal(exp1, exp2, msg):
-    __result__.assert_notequal(exp1, exp2, msg)    
+def assert_notequal(exp1, exp2, msg=None):
+    __result__.assert_notequal(exp1, exp2, _create_des_(msg))    
 
-def assert_notequal_fatal(exp1, exp2, msg):
-    __result__.assert_notequal_fatal(exp1, exp2, msg)       
+def assert_notequal_fatal(exp1, exp2, msg=None):
+    __result__.assert_notequal_fatal(exp1, exp2, _create_des_(msg))       
     
 
-def warning(msg):
-    __result__.warning(msg)
+def warning(msg=None):
+    __result__.warning(_create_des_(msg))
 
-    
-#def py_exception(exception, stack):
-#    __result__.py_exception(exception, stack)    
-    
-def trace_msg(msg):
-    __trace__.trace_msg(msg)
+def fail(msg=None):
+    __result__.fail(_create_des_(msg))
+
+def fail_fatal(msg=None):
+    __result__.fail_fatal(_create_des_(msg))
+
+
+
+
+
+
+def trace_io(interface, data):
+    __trace__.trace_io(interface, data)
+
+
+def trace_script(msg):
+    __trace__.trace_script(msg)
     
 
 

@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.1 $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "$Author: octopy $"
 
 
@@ -28,7 +28,7 @@ class Config:
         self.trace = trace
         
     def trace_config(self, msg):
-        self.trace.trace_msg(msg)
+        self.trace.trace_config(msg)
         
     def load_config(self):
         pass

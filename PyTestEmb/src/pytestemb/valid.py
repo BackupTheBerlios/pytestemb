@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "$Author: octopy $"
 
 
@@ -39,10 +39,10 @@ def getScriptName():
 
 
 class Valid:
-    def __init__(self, config, result, trace):
+    def __init__(self, config, result):
         self.config = config
         self.result = result
-        self.trace = trace
+        #self.trace = trace
         self.setup = self._nothing_
         self.cleanup = self._nothing_
         self.case = []
@@ -65,7 +65,7 @@ class Valid:
     
     
     def run_script(self):
-        self.result.script_start(self.name)
+        self.result.script_start({"name":self.name})
         try:
             # Setup
             self.result.setup_start()
@@ -74,19 +74,19 @@ class Valid:
             # Case
             for acase in self.case :
                 name = acase.func_name
-                self.result.case_start(name)
+                self.result.case_start({"name":name})
                 if self.script_need_run(name):
                     self.run_case(acase)
                 else :
                     pass
-                self.result.case_stop(name)
+                self.result.case_stop({"name":name})
             # Cleanup
             self.result.cleanup_start()
             self.run_try(self.cleanup)
             self.result.cleanup_stop()
         except:
             raise
-        self.result.script_stop(self.name)
+        self.result.script_stop({"name":self.name})
         
     
     def run_try(self, func):  

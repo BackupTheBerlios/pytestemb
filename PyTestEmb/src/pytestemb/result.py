@@ -7,14 +7,18 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "$Author: octopy $"
 
 
 import sys
 import copy
+import time
 import inspect
 import UserDict
+
+
+import gtime
 
 
 class TestErrorFatal(Exception):
@@ -46,10 +50,17 @@ class Result:
     
     def __init__(self, trace):
         self.trace = trace
+
+        self.start_date = time.localtime()
+        self.start_clock = time.clock()
+        
+        self.gtime = gtime.Gtime.create()
     
-    def trace_result(self, msg):
-        self.trace.trace_msg(msg)
-    
+    def trace_result(self, name, des):
+        self.trace.trace_result(name, des)
+        
+    def get_time(self):
+        return self.gtime.get_time()
 
     def get_assert_caller(self):
         CALL_DEPTH = 4
@@ -64,54 +75,52 @@ class Result:
             del lst
             return dict
  
-    def _assert_(self, exp, fatal, msg):
+    def _assert_(self, exp, fatal, des):
         if exp :
-            info = {}
-            info["info"] = msg
-            self.assert_ok(info) 
+            self.assert_ok(des) 
         else :
             info = self.get_assert_caller()
-            info["info"] = msg
-            self.assert_ko(info)
+            des.update(info)
+            self.assert_ko(des)
             if fatal : 
                 raise TestErrorFatal
         
-    def fail(self, msg=""):
-        self._assert_(False, False, msg)
+    def fail(self, des):
+        self._assert_(False, False, des)
     
-    def fail_fatal(self, msg=""):
-        self._assert_(False, True, msg)
+    def fail_fatal(self, des):
+        self._assert_(False, True, des)
         
-    def assert_true(self, exp, msg):
-        self._assert_(exp, False, msg)
+    def assert_true(self, exp, des):
+        self._assert_(exp, False, des)
         
-    def assert_false(self, exp, msg):
-        self._assert_(not(exp), False, msg)           
+    def assert_false(self, exp, des):
+        self._assert_(not(exp), False, des)           
     
-    def assert_true_fatal(self, exp, msg):
-        self._assert_(exp, True, msg)
+    def assert_true_fatal(self, exp, des):
+        self._assert_(exp, True, des)
         
-    def assert_false_fatal(self, exp, msg):
-        self._assert_(not(exp), True, msg)   
+    def assert_false_fatal(self, exp, des):
+        self._assert_(not(exp), True, des)   
  
-    def assert_equal(self, exp1, exp2, msg):
-        self._assert_((exp1 == exp2), False, msg)
+    def assert_equal(self, exp1, exp2, des):
+        self._assert_((exp1 == exp2), False, des)
 
-    def assert_equal_fatal(self, exp1, exp2, msg):
-        self._assert_((exp1 == exp2), True, msg)  
+    def assert_equal_fatal(self, exp1, exp2, des):
+        self._assert_((exp1 == exp2), True, des)  
 
-    def assert_notequal(self, exp1, exp2, msg):
-        self._assert_((exp1 != exp2), False, msg)
+    def assert_notequal(self, exp1, exp2, des):
+        self._assert_((exp1 != exp2), False, des)
 
-    def assert_notequal_fatal(self, exp1, exp2, msg):
-        self._assert_((exp1 != exp2), True, msg)  
+    def assert_notequal_fatal(self, exp1, exp2, des):
+        self._assert_((exp1 != exp2), True, des)  
 
 
 
-    def script_start(self, name):
+    def script_start(self, des):
         pass
 
-    def script_stop(self, name):
+    def script_stop(self, des):
         pass
     
     def setup_start(self):
@@ -126,13 +135,13 @@ class Result:
     def cleanup_stop(self):
         pass
     
-    def case_start(self, name):
+    def case_start(self, des):
         pass
     
-    def case_stop(self, name):
+    def case_stop(self, des):
         pass
 
-    def case_not_executed(self, name):
+    def case_not_executed(self, des):
         pass
     
     def error_config(self, des):
@@ -156,7 +165,8 @@ class Result:
     def py_exception(self, des):
         pass
 
-
+    def trace_info(self, des):
+        pass
 
 
 def trace(func):
@@ -168,7 +178,7 @@ def trace(func):
         #args[0].trace_result("%s" % func.func_name)
         # arg[1] = string or dict or no
         try:
-            trace_func("%s : %s" % (func.func_name, args[1].__str__()))
+            trace_func(func.func_name, args[1])
         except :
             pass
         result = func(*args, **kwargs)
@@ -176,7 +186,18 @@ def trace(func):
     return decorated
 
 
-
+def stamp(func):
+    """ add time stamp """
+    def decorated(*args, **kwargs):
+        # args[0] = self
+        stamp = args[0].get_time()
+        try:
+            args[1]["time"] = stamp
+        except :
+            pass
+        result = func(*args, **kwargs)
+        return result
+    return decorated    
 
 
 
@@ -198,6 +219,7 @@ class ResultStdout(Result):
     ASSERT_OK = "ASSERT_OK"
     ASSERT_KO = "ASSERT_KO"
     PY_EXCEPTION = "PY_EXCEPTION"
+    TRACE = "TRACE"
 
     
     def __init__(self, trace):
@@ -215,12 +237,12 @@ class ResultStdout(Result):
         
     
     @trace
-    def script_start(self, name):
-        self.write(ResultStdout.SCRIPT_START, {"name":name})
+    def script_start(self, des):
+        self.write(ResultStdout.SCRIPT_START, des)
  
     @trace   
-    def script_stop(self, name):
-        self.write(ResultStdout.SCRIPT_STOP, {"name":name})
+    def script_stop(self, des):
+        self.write(ResultStdout.SCRIPT_STOP, des)
     
     @trace    
     def setup_start(self):
@@ -239,16 +261,16 @@ class ResultStdout(Result):
         self.write(ResultStdout.CLEANUP_STOP, {})
     
     @trace    
-    def case_start(self, name):
-        self.write(ResultStdout.CASE_START, {"name":name})
+    def case_start(self, des):
+        self.write(ResultStdout.CASE_START, des)
 
     @trace    
-    def case_stop(self, name):
-        self.write(ResultStdout.CASE_STOP, {"name":name})
+    def case_stop(self, des):
+        self.write(ResultStdout.CASE_STOP, des)
 
     @trace
-    def case_not_executed(self, name):
-        self.write(ResultStdout.CASE_NOTEXECUTED, {"name":name})
+    def case_not_executed(self, des):
+        self.write(ResultStdout.CASE_NOTEXECUTED, des)
     
     @trace    
     def error_config(self, des):
@@ -277,14 +299,10 @@ class ResultStdout(Result):
             
     @trace        
     def py_exception(self, des):
-#        msg = ""
-#        for sline in des["stack"] :
-#            msg += "File \"%s\", line %d, in %s" % (sline["path"], sline["line"], sline["function"])
-#            msg += "    %s\n" % (sline["code"])
-#        msg += "%s" % des["exception"]
         self.write_one_arg(ResultStdout.PY_EXCEPTION, des)
 
-
+    def trace_ctrl(self, des):
+        self.write_one_arg(ResultStdout.TRACE, des)
 
 class ResultCounter:
     """ class to count result
@@ -451,37 +469,37 @@ class ResultStandalone(Result):
         self.result = [] 
     
     @trace  
-    def script_start(self, name):
-        sys.stdout.write("Start running %s ...\n" % name)
+    def script_start(self, des):
+        sys.stdout.write("Start running %s ...\n" % des["name"])
         
     
     def magical(self, data, size):
         return (len(data)-size)    
     
     def add_line(self, col1, col2):
-        marge1 = (" " * (32-2-len(col1)))
-        marge2 = (" " * (32-2-len(col2) ))
+        marge1 = (" " * (48-2-len(col1)))
+        marge2 = (" " * (48-2-len(col2) ))
         sys.stdout.write("| %s%s| %s%s|\n"  % (col1, marge1, col2, marge2)) 
                  
     @trace     
-    def script_stop(self, name):
-        sys.stdout.write("End running %s\n" % name)
+    def script_stop(self, des):
+        sys.stdout.write("End running %s\n" % des["name"])
         
         test_ok = True
         
-        sys.stdout.write("\n+%s+\n" % ("-"*63))
+        sys.stdout.write("\n+%s+\n" % ("-"*95))
         for case in self.result :
             if case["assert_ko"] == 0 :
                 self.add_line("Case \"%s\"" % case["case"], "ok")
             else :
                 self.add_line("Case \"%s\"" % case["case"], "ko")
                 test_ok = False
-        sys.stdout.write("+%s+\n" % ("-"*63))        
+        sys.stdout.write("+%s+\n" % ("-"*95))        
         if test_ok :
-            self.add_line("Script \"%s\"" % name , "OK")    
+            self.add_line("Script \"%s\"" % des["name"] , "OK")    
         else:
-            self.add_line("Script \"%s\"" % name , "KO")
-        sys.stdout.write("+%s+\n" % ("-"*63))
+            self.add_line("Script \"%s\"" % des["name"] , "KO")
+        sys.stdout.write("+%s+\n" % ("-"*95))
     
     @trace    
     def setup_start(self):
@@ -501,22 +519,22 @@ class ResultStandalone(Result):
   
       
     @trace   
-    def case_start(self, name):
-        self.result.append({"case":name}) 
+    def case_start(self, des):
+        self.result.append({"case":des["name"]}) 
         self.result[-1]["assert_ok"] = 0
         self.result[-1]["assert_ko"] = 0
-        sys.stdout.write("Case \"%s\" :\n" % name)
+        sys.stdout.write("Case \"%s\" :\n" % des["name"])
         
     @trace 
-    def case_stop(self, name):
+    def case_stop(self, des):
         pass
 
     @trace 
-    def case_not_executed(self, name):
+    def case_not_executed(self, des):
         pass
     
     @trace 
-    def error_config(self, msg):
+    def error_config(self, des):
         self.result[-1]["error_config"]
     
     @trace    
@@ -536,20 +554,30 @@ class ResultStandalone(Result):
         #sys.stdout.write("%s\n" % des["info"])      
         self.result[-1]["assert_ok"] += 1
     
+    @stamp
     @trace     
     def assert_ko(self, des):
-        sys.stdout.write("    assert ko : %s\n" % des["info"])   
+        sys.stdout.write("    assert ko  :\n")
+        sys.stdout.write("        - function   : \"%s\"\n" % des["function"])   
+        sys.stdout.write("        - expression : \"%s\"\n" % des["expression"])
         self.result[-1]["assert_ko"] += 1
 
     @trace
     def py_exception(self, des):
-        msg = "Exception :\n"
+        dis = "Exception :\n"
         for sline in des["stack"] :
-            msg += "    File \"%s\", line %d, in %s\n" % (sline["path"], sline["line"], sline["function"])
-            msg += "        %s\n" % (sline["code"])
-        msg += "    %s" % (des["exception"])
-        sys.stdout.write(msg)
-        self.result[-1]["assert_ko"] += 1
+            dis += "    File \"%s\", line %d, in %s\n" % (sline["path"], sline["line"], sline["function"])
+            dis += "        %s\n" % (sline["code"])
+        dis += "    %s\n" % (des["exception"])
+        sys.stdout.write(dis)
+        try :
+            self.result[-1]["assert_ko"] += 1
+        except :
+            pass
+        
+        
+    def trace_info(self, des):
+        sys.stdout.write("Trace info : %s\n" % des.__str__())
         
 
 def create(interface, trace):
