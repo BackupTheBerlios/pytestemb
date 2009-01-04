@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "$Author: octopy $"
 
 
@@ -62,17 +62,17 @@ class TraceOctopylog(Trace):
     
     def __init__(self):
         Trace.__init__(self)
-        
+        self.scope = {}   
+           
+           
+    def start(self):    
         socketHandler = logging.handlers.SocketHandler("localhost", logging.handlers.DEFAULT_TCP_LOGGING_PORT)
         rootLogger = logging.getLogger("pytestemb")
         rootLogger.setLevel(logging.DEBUG)
         rootLogger.addHandler(socketHandler)
         
-        self.scope = {}   
-           
-           
-    def start(self):    
-        pass
+        des = dict({"octopylog":"pytestemb"})
+        self.result.trace_ctrl(des)
 
     def trace_scope(self, scope, msg):
         try:
@@ -113,24 +113,32 @@ class TraceStdout(Trace):
         sys.stdout.write("Config::%s" % msg)
 
 
+
+
+from config import ConfigError
+
+
 class TraceTxt(Trace):
     
     def __init__(self):
         Trace.__init__(self)
         
-     
     def start(self):
-        
-        pathfile = "c:\\temp\\" + self.gen_file_name()
-        
+        # output path and filename for trace file
+        try:
+            pathfile = self.config.get_config("TRACE_PATH")
+        except (ConfigError), (error):
+            pathfile = "c:\\temp\\" 
+        pathfile += self.gen_file_name() 
+        # create file
         des = dict({"file":pathfile})
         try :
             self.file = open(pathfile, 'w')          
         except (IOError) , (error):
             self.file = None
             des["error"] = error.__str__()
-            
-        self.result.trace_info(des)
+        self.result.trace_ctrl(des)
+        # write header
         self.add_header()         
         
         

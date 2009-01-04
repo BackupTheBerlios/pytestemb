@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "$Author: octopy $"
 
 
@@ -165,7 +165,7 @@ class Result:
     def py_exception(self, des):
         pass
 
-    def trace_info(self, des):
+    def trace_ctrl(self, des):
         pass
 
 
@@ -224,6 +224,7 @@ class ResultStdout(Result):
     
     def __init__(self, trace):
         Result.__init__(self, trace)
+        self.delay_trace_ctrl = None
         
     def write_no_arg(self, key):
         sys.stdout.write("%s%s\n" % (key, ResultStdout.SEPARATOR))
@@ -239,7 +240,9 @@ class ResultStdout(Result):
     @trace
     def script_start(self, des):
         self.write(ResultStdout.SCRIPT_START, des)
- 
+        if self.delay_trace_ctrl is not None:
+            self.write(ResultStdout.TRACE, self.delay_trace_ctrl)
+
     @trace   
     def script_stop(self, des):
         self.write(ResultStdout.SCRIPT_STOP, des)
@@ -259,50 +262,64 @@ class ResultStdout(Result):
     @trace
     def cleanup_stop(self):
         self.write(ResultStdout.CLEANUP_STOP, {})
-    
+
+    @stamp     
     @trace    
     def case_start(self, des):
         self.write(ResultStdout.CASE_START, des)
 
+    @stamp 
     @trace    
     def case_stop(self, des):
         self.write(ResultStdout.CASE_STOP, des)
 
+    @stamp 
     @trace
     def case_not_executed(self, des):
         self.write(ResultStdout.CASE_NOTEXECUTED, des)
-    
+
+    @stamp     
     @trace    
     def error_config(self, des):
         self.write(ResultStdout.ERROR_CONFIG, des)
 
+    @stamp 
     @trace    
     def error_io(self, des):
         self.write(ResultStdout.ERROR_IO, des)
-    
+
+    @stamp     
     @trace
     def error_test(self, des):
         self.write(ResultStdout.ERROR_TEST, des)
 
+    @stamp 
     @trace
     def warning(self, des):
         self.write(ResultStdout.WARNING, des)
 
+    @stamp 
     @trace    
     def assert_ok(self, des):
         self.write(ResultStdout.ASSERT_OK, des)
-
+        
+    @stamp 
     @trace    
     def assert_ko(self, des):
         self.write(ResultStdout.ASSERT_KO, des)
-            
-            
+    
+    @stamp                    
     @trace        
     def py_exception(self, des):
         self.write_one_arg(ResultStdout.PY_EXCEPTION, des)
 
     def trace_ctrl(self, des):
-        self.write_one_arg(ResultStdout.TRACE, des)
+        # delay sending
+        self.delay_trace_ctrl = des
+        
+
+
+
 
 class ResultCounter:
     """ class to count result
@@ -340,11 +357,14 @@ class ResultScript:
     def __init__(self, name):
         self.name = name
         self.case = []
+        self.trace = None
     
     def __str__(self):
         str = "%s\n" % self.name
         for cas in self.case:
             str += "%s\n" % cas.__str__()
+        if self.trace is not None:
+            str += "TRACE:%s" % self.trace
         return str
 
 
@@ -402,16 +422,6 @@ class ResultStdoutReader:
         except Exception , error:
             print data
             raise error    
-        
-#import UserDict
-# 
-#value = "{'a':{'b':'c', 'd':'e'}}"
-# 
-#try:
-#  a = UserDict.UserDict(eval(value))
-#except:
-#  print "Ce n'est pas un dictionnaire"
-
     
     def process(self, key, value):
         print "key=%s value=%s" % (key, value)
@@ -451,12 +461,23 @@ class ResultStdoutReader:
             obj.set_not_executed()
             obj.name = value
             self.script[-1].case.append(obj)
+        # TRACE
+        elif    key == ResultStdout.TRACE :
+            self.check_started(self.script_started)
+            self.script[-1].trace = self.conv_dict(value)
         # CASE_XX
-        else :
+        elif        key == ResultStdout.ERROR_CONFIG\
+                or  key == ResultStdout.ERROR_IO\
+                or  key == ResultStdout.ERROR_TEST\
+                or  key == ResultStdout.WARNING\
+                or  key == ResultStdout.ASSERT_OK\
+                or  key == ResultStdout.ASSERT_KO\
+                or  key == ResultStdout.PY_EXCEPTION :
             self.check_started(self.case_started)
             dic = self.conv_dict(value)
             self.script[-1].case[-1].add_result(key, dic)
-
+        else :
+            print "key=%s value=%s" % (key, value)
         
 
 
@@ -517,7 +538,7 @@ class ResultStandalone(Result):
     def cleanup_stop(self):
         pass
   
-      
+    @stamp
     @trace   
     def case_start(self, des):
         self.result.append({"case":des["name"]}) 
@@ -525,30 +546,37 @@ class ResultStandalone(Result):
         self.result[-1]["assert_ko"] = 0
         sys.stdout.write("Case \"%s\" :\n" % des["name"])
         
+    @stamp    
     @trace 
     def case_stop(self, des):
         pass
 
+    @stamp
     @trace 
     def case_not_executed(self, des):
         pass
     
+    @stamp
     @trace 
     def error_config(self, des):
         self.result[-1]["error_config"]
-    
+
+    @stamp
     @trace    
     def error_io(self, des):
         pass
     
+    @stamp
     @trace     
     def error_test(self, des):
         pass
-    
+
+    @stamp    
     @trace 
     def warning(self, des):
         pass
  
+    @stamp
     @trace    
     def assert_ok(self, des):
         #sys.stdout.write("%s\n" % des["info"])      
@@ -562,6 +590,7 @@ class ResultStandalone(Result):
         sys.stdout.write("        - expression : \"%s\"\n" % des["expression"])
         self.result[-1]["assert_ko"] += 1
 
+    @stamp
     @trace
     def py_exception(self, des):
         dis = "Exception :\n"
@@ -576,7 +605,7 @@ class ResultStandalone(Result):
             pass
         
         
-    def trace_info(self, des):
+    def trace_ctrl(self, des):
         sys.stdout.write("Trace info : %s\n" % des.__str__())
         
 

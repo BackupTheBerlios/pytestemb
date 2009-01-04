@@ -1,9 +1,19 @@
+# -*- coding: UTF-8 -*-
+###########################################################
+# Project  : PyTestEmb                                    #
+# License  : GNU General Public License (GPL)             #
+# Author   : JMB                                          #
+# Date     : 04/01/09                                     #
+###########################################################
+
+
+__version__ = "$Revision: 1.2 $"
+__author__ = "$Author: octopy $"
 
 
  
 import pytestemb
 
- 
 
   
 

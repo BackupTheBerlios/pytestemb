@@ -7,17 +7,24 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "$Author: octopy $"
 
 
 import sys
 import time
 
-class ConfigutationError(Exception):
-    "Error in configuration"
-    pass
 
+
+class ConfigError(Exception):
+    "Exception raised by config"
+    def __init__(self, info):
+        Exception.__init__(self)
+        self.info = info
+    def __str__(self):
+        return self.info.__str__() 
+    
+    
 
 
 
@@ -30,12 +37,14 @@ class Config:
     def trace_config(self, msg):
         self.trace.trace_config(msg)
         
-    def load_config(self):
+    def start(self):
         pass
 
     def get_config(self, key):
-        return self.conf[key]
-    
+        if self.conf.has_key(key):
+            return self.conf[key]
+        else:
+            raise ConfigError("Key \"%s\" not in configuration" % key.__str__())
     
     def to_string(self):
         ret = ""
@@ -51,7 +60,6 @@ class ConfigStdin(Config):
     
     def __init__(self, trace):
         Config.__init__(self, trace)
-        self.load_config()
         
         
     def add_line(self, line):
@@ -61,11 +69,9 @@ class ConfigStdin(Config):
         except :
             self.trace_config("Error line invalid : %s" % line)
         
-    
-    def load_config(self):
+    def start(self):
         
         #print sys.stdin.mode
-
         self.trace_config("CONFIG = STDIN")
         time.sleep(0.5)
         try:
@@ -79,7 +85,6 @@ class ConfigStdin(Config):
                 line = sys.stdin.readline()
         except Exception , ex:
             self.trace_config("CONFIG = Exception %s" % ex.__str__())
-            
             
         self.trace_config(self.conf.__str__())
         

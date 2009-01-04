@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "$Author: octopy $"
 
 
@@ -96,7 +96,10 @@ __valid__   = valid.Valid(__config__, __result__)
 
 
 __trace__.set_result(__result__)
+__trace__.set_config(__config__)
 __trace__.start()
+
+__config__.start()
 
 
 def set_setup(funcSetup):
@@ -167,7 +170,8 @@ def trace_io(interface, data):
 def trace_script(msg):
     __trace__.trace_script(msg)
     
-
+def config_get(key):
+    __config__.get_config(key)
 
     
     
