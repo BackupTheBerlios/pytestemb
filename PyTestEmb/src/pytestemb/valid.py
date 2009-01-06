@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "$Author: octopy $"
 
 
@@ -125,7 +125,9 @@ class Valid:
             del traceback
         des = {}
         des["stack"] = stack
-        des["exception"] = exception.__str__()    
+        des["exception_info"] = exception.__str__()    
+        des["exception_class"] = exception.__class__.__name__    
+        
         self.result.py_exception(des)
             
 

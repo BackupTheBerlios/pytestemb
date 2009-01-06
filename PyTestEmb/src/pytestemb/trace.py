@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "$Author: octopy $"
 
 
@@ -54,6 +54,9 @@ class Trace:
 
     def trace_config(self, msg):
         pass
+    
+    def trace_env(self, scope, data):
+        pass
 
     
 
@@ -85,13 +88,17 @@ class TraceOctopylog(Trace):
         self.trace_scope("script", msg)
 
     def trace_io(self, interface, data):
-        self.trace_scope(interface, data)
+        self.trace_scope("io.%s" % interface, data)
     
     def trace_result(self, name, des):
         self.trace_scope("result", "%s : %s" % (name, des.__str__()))
 
     def trace_config(self, msg):
         self.trace_scope("config", msg)
+        
+    def trace_env(self, scope, data):
+        self.trace_scope("env.%s" % scope, data)
+     
 
 
 class TraceStdout(Trace):
@@ -112,7 +119,8 @@ class TraceStdout(Trace):
     def trace_config(self, msg):
         sys.stdout.write("Config::%s" % msg)
 
-
+    def trace_env(self, scope, data):
+        sys.stdout.write("%s::%s" % (scope, data.__str__()))
 
 
 from config import ConfigError
@@ -186,7 +194,8 @@ class TraceTxt(Trace):
     def trace_config(self, msg):
         self.add_line("Config", msg)
 
-
+    def trace_env(self, scope, data):
+        self.add_line(scope, data.__str__())     
 
 
 

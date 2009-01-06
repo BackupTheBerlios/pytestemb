@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "$Author: octopy $"
 
 
@@ -588,6 +588,8 @@ class ResultStandalone(Result):
         sys.stdout.write("    assert ko  :\n")
         sys.stdout.write("        - function   : \"%s\"\n" % des["function"])   
         sys.stdout.write("        - expression : \"%s\"\n" % des["expression"])
+        if des.has_key("msg"):
+            sys.stdout.write("        - message    : \"%s\"\n" % des["msg"])
         self.result[-1]["assert_ko"] += 1
 
     @stamp
@@ -597,8 +599,10 @@ class ResultStandalone(Result):
         for sline in des["stack"] :
             dis += "    File \"%s\", line %d, in %s\n" % (sline["path"], sline["line"], sline["function"])
             dis += "        %s\n" % (sline["code"])
-        dis += "    %s\n" % (des["exception"])
+        dis += "    %s\n" % (des["exception_class"])
+        dis += "    %s\n" % (des["exception_info"])
         sys.stdout.write(dis)
+        
         try :
             self.result[-1]["assert_ko"] += 1
         except :
@@ -621,30 +625,3 @@ def create(interface, trace):
         assert False
 
 
-
-
-    
-
-
-
-        
-        
-        
- 
-
-    
-    
-   
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

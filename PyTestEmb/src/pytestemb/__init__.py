@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "$Author: octopy $"
 
 
@@ -161,17 +161,23 @@ def fail_fatal(msg=None):
 
 
 
+def trace_env(scope, data):
+    __trace__.trace_env(scope, data)
 
 
 def trace_io(interface, data):
     __trace__.trace_io(interface, data)
 
-
 def trace_script(msg):
     __trace__.trace_script(msg)
     
 def config_get(key):
-    __config__.get_config(key)
+    return __config__.get_config(key)
+
+
+
+
+
 
     
     
