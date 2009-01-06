@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "$Author: octopy $"
 
 
@@ -42,7 +42,6 @@ class Valid:
     def __init__(self, config, result):
         self.config = config
         self.result = result
-        #self.trace = trace
         self.setup = self._nothing_
         self.cleanup = self._nothing_
         self.case = []

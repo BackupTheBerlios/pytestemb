@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "$Author: octopy $"
 
 
@@ -71,7 +71,6 @@ class ConfigStdin(Config):
         
     def start(self):
         
-        #print sys.stdin.mode
         self.trace_config("CONFIG = STDIN")
         time.sleep(0.5)
         try:

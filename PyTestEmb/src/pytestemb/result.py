@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "$Author: octopy $"
 
 
@@ -578,8 +578,7 @@ class ResultStandalone(Result):
  
     @stamp
     @trace    
-    def assert_ok(self, des):
-        #sys.stdout.write("%s\n" % des["info"])      
+    def assert_ok(self, des):  
         self.result[-1]["assert_ok"] += 1
     
     @stamp
