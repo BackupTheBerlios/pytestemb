@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "$Author: octopy $"
 
 
@@ -162,9 +162,10 @@ class TraceTxt(Trace):
  
              
     def format(self, gtime, scope, msg):
-        marge1 = (" " * (16-len(gtime)))
-        marge2 = (" " * (24-len(scope) ))
-        return "%s%s%s%s%s\n"  % (gtime, marge1, scope, marge2, msg)      
+        gtime = gtime.ljust(16)
+        scope = scope.ljust(24)
+        msg = msg.strip()       
+        return "%s%s%s\n"  % (gtime, scope, msg)      
             
     def add_header(self):        
         if self.file is not None :

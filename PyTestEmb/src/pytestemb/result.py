@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.10 $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "$Author: octopy $"
 
 
@@ -498,9 +498,9 @@ class ResultStandalone(Result):
         return (len(data)-size)    
     
     def add_line(self, col1, col2):
-        marge1 = (" " * (48-2-len(col1)))
-        marge2 = (" " * (48-2-len(col2) ))
-        sys.stdout.write("| %s%s| %s%s|\n"  % (col1, marge1, col2, marge2)) 
+        col1 = col1.ljust(46)
+        col2 = col2.ljust(46)
+        sys.stdout.write("| %s| %s|\n"  % (col1, col2)) 
                  
     @trace     
     def script_stop(self, des):
@@ -584,17 +584,18 @@ class ResultStandalone(Result):
     @stamp
     @trace     
     def assert_ko(self, des):
-        sys.stdout.write("    assert ko  :\n")
-        sys.stdout.write("        - function   : \"%s\"\n" % des["function"])   
-        sys.stdout.write("        - expression : \"%s\"\n" % des["expression"])
+        sys.stdout.write("    assert ko\n")
+        sys.stdout.write("        + function   : \"%s\"\n" % des["function"])  
         if des.has_key("msg"):
-            sys.stdout.write("        - message    : \"%s\"\n" % des["msg"])
+            sys.stdout.write("        + message    : \"%s\"\n" % des["msg"])       
+        sys.stdout.write("        + expression : \"%s\"\n" % des["expression"])
+
         self.result[-1]["assert_ko"] += 1
 
     @stamp
     @trace
     def py_exception(self, des):
-        dis = "Exception :\n"
+        dis = "Exception \n"
         for sline in des["stack"] :
             dis += "    File \"%s\", line %d, in %s\n" % (sline["path"], sline["line"], sline["function"])
             dis += "        %s\n" % (sline["code"])
