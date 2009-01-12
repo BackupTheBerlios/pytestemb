@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "$Author: octopy $"
 
 
@@ -25,21 +25,6 @@ class TestErrorFatal(Exception):
     "Fatal Error"
     pass
 
-
-
-
-
-
-#def finspect():
-#    lst = inspect.stack()
-#    try :
-#        
-#        print lst[4][3]
-##        for l in lst:
-##            print "%s" % l.__str__()
-#    finally:
-#        del lst
-#        
 
 
 
@@ -75,14 +60,15 @@ class Result:
             del lst
             return dict
  
-    def _assert_(self, exp, fatal, des):
+    def _assert_(self, exp, fatal, des, values=""):
         if exp :
-            self.assert_ok(des) 
+            self.assert_ok(des)
         else :
             info = self.get_assert_caller()
+            des["values"] = values
             des.update(info)
             self.assert_ko(des)
-            if fatal : 
+            if fatal :
                 raise TestErrorFatal
         
     def fail(self, des):
@@ -92,28 +78,36 @@ class Result:
         self._assert_(False, True, des)
         
     def assert_true(self, exp, des):
-        self._assert_(exp, False, des)
+        values = "%s" % exp
+        self._assert_(exp, False, des, values)
         
     def assert_false(self, exp, des):
-        self._assert_(not(exp), False, des)           
+        values = "%s" % exp
+        self._assert_(not(exp), False, des, values)         
     
     def assert_true_fatal(self, exp, des):
-        self._assert_(exp, True, des)
+        values = "%s" % exp
+        self._assert_(exp, True, des, values)
         
     def assert_false_fatal(self, exp, des):
-        self._assert_(not(exp), True, des)   
+        values = "%s" % exp
+        self._assert_(not(exp), True, des, values)   
  
     def assert_equal(self, exp1, exp2, des):
-        self._assert_((exp1 == exp2), False, des)
+        values = "%s != %s" % (exp1, exp2)
+        self._assert_((exp1 == exp2), False, des, values)
 
     def assert_equal_fatal(self, exp1, exp2, des):
-        self._assert_((exp1 == exp2), True, des)  
+        values = "%s != %s" % (exp1, exp2)
+        self._assert_((exp1 == exp2), True, des, values)  
 
     def assert_notequal(self, exp1, exp2, des):
-        self._assert_((exp1 != exp2), False, des)
+        values = "%s != %s" % (exp1, exp2)
+        self._assert_((exp1 != exp2), False, des, values)
 
     def assert_notequal_fatal(self, exp1, exp2, des):
-        self._assert_((exp1 != exp2), True, des)  
+        values = "%s != %s" % (exp1, exp2)
+        self._assert_((exp1 != exp2), True, des, values)  
 
 
 
@@ -589,6 +583,7 @@ class ResultStandalone(Result):
         if des.has_key("msg"):
             sys.stdout.write("        + message    : \"%s\"\n" % des["msg"])       
         sys.stdout.write("        + expression : \"%s\"\n" % des["expression"])
+        sys.stdout.write("        + values     : \"%s\"\n" % des["values"])
 
         self.result[-1]["assert_ko"] += 1
 
