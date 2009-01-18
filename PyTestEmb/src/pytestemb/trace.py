@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "$Author: octopy $"
 
 
@@ -27,12 +27,15 @@ import gtime
 
 
 
+
+
+
+
 class Trace:
     def __init__(self):
         self.gtime = gtime.Gtime.create()
         self.result = None
         self.config = None
-        
         
     def set_result(self, result):
         self.result = result
@@ -58,6 +61,54 @@ class Trace:
     def trace_env(self, scope, data):
         pass
 
+
+
+
+class TraceManager(Trace):
+    def __init__(self):
+        Trace.__init__(self)
+        
+        self.dictra = dict()
+
+    def add_trace(self, name, tra):
+        self.dictra[name] = tra
+         
+        
+    def set_result(self, result):
+        for tra in self.dictra.itervalues() :
+            tra.set_result(result)
+    
+    def set_config(self, config):    
+        for tra in self.dictra.itervalues() :
+            tra.set_config(config)       
+        
+    def start(self):    
+         for tra in self.dictra.itervalues() :
+            tra.start()              
+    
+    def trace_script(self, msg):
+         for tra in self.dictra.itervalues() :
+            tra.trace_script(msg)              
+    
+    def trace_io(self, interface, data):
+         for tra in self.dictra.itervalues() :
+            tra.trace_io(interface, data)              
+    
+    def trace_result(self, name, des):
+        for tra in self.dictra.itervalues() :
+            tra.trace_result( name, des)               
+
+    def trace_config(self, msg):
+        for tra in self.dictra.itervalues() :
+            tra.trace_config(msg)               
+    
+    def trace_env(self, scope, data):
+        for tra in self.dictra.itervalues() :
+            tra.trace_env(scope, data)               
+
+
+
+
     
 
 
@@ -66,7 +117,6 @@ class TraceOctopylog(Trace):
     def __init__(self):
         Trace.__init__(self)
         self.scope = {}   
-           
            
     def start(self):    
         socketHandler = logging.handlers.SocketHandler("localhost", logging.handlers.DEFAULT_TCP_LOGGING_PORT)
@@ -127,7 +177,7 @@ from config import ConfigError
 
 
 class TraceTxt(Trace):
-    
+    DEFAULT_DIR = "c:\\temp"
     def __init__(self):
         Trace.__init__(self)
         
@@ -136,7 +186,9 @@ class TraceTxt(Trace):
         try:
             pathfile = self.config.get_config("TRACE_PATH")
         except (ConfigError), (error):
-            pathfile = "c:\\temp\\" 
+            if not(os.path.lexists(TraceTxt.DEFAULT_DIR)):
+                os.mkdir(TraceTxt.DEFAULT_DIR)
+            pathfile = "%s\\" % TraceTxt.DEFAULT_DIR 
         pathfile += self.gen_file_name() 
         # create file
         des = dict({"file":pathfile})
@@ -201,17 +253,17 @@ class TraceTxt(Trace):
 
 
 def create(interface):
-    
-    if   interface == "none" :
-        return Trace()
-    elif interface == "octopylog":
-        return TraceOctopylog()
-    elif interface == "stdout":
-        return TraceStdout()
-    elif interface == "txt":
-        return TraceTxt()    
-    else:
-        assert False
+    tracemanager = TraceManager()
+    for item in interface :
+        if item == "octopylog":
+            tracemanager.add_trace("octopylog", TraceOctopylog())
+        elif item == "stdout":
+            tracemanager.add_trace("stdout", TraceStdout())
+        elif item == "txt":
+            tracemanager.add_trace("txt", TraceTxt())
+        else:
+            assert False
+    return tracemanager
     
     
     

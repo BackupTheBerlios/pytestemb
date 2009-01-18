@@ -7,7 +7,7 @@
 ###########################################################
 
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "$Author: octopy $"
 
 
@@ -40,7 +40,7 @@ interface["config"] = (("none"),
                        ("none", "stdin"))
 interface["result"] = (("standalone"),
                        ("none", "standalone" ,"stdout", "octopylog", "txt"))
-interface["trace"] =  (("none"), 
+interface["trace"] =  ([], 
                        ("none", "stdout", "octopylog", "txt"))
 
 
@@ -52,7 +52,7 @@ parser.add_option("-r", "--result",
                     action="store", type="string", dest="result", default=interface["result"][INTERFACE_DEFAULT],
                     help="set the interface for result, value can be : %s" % interface["result"][INTERFACE_LIST].__str__())
 parser.add_option("-t", "--trace",
-                    action="store", type="string", dest="trace", default=interface["trace"][INTERFACE_DEFAULT],
+                    action="append", type="string", dest="trace", default=interface["trace"][INTERFACE_DEFAULT],
                     help="set the interface for trace, value can be : %s" % interface["trace"][INTERFACE_LIST].__str__()) 
 parser.add_option("-p", "--path",
                     action="store", type="string", dest="path", default=None,
@@ -74,7 +74,8 @@ if args != []:
     parser.error("Argument invalid %s " % args.__str__())
 checker("config", options.config)
 checker("result", options.result)
-checker("trace", options.trace)
+for item in options.trace:
+    checker("trace", item)
 
 
 if options.path is not None:
@@ -86,6 +87,7 @@ __trace__   = None
 __result__  = None
 __config__  = None
 __valid__   = None
+
 
 
 
@@ -173,9 +175,6 @@ def trace_script(msg):
     
 def config_get(key):
     return __config__.get_config(key)
-
-
-
 
 
 
