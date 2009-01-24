@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
-###########################################################
-# Project  : PyTestEmb                                    #
-# License  : GNU General Public License (GPL)             #
-# Author   : JMB                                          #
-# Date     : 04/01/09                                     #
-###########################################################
 
+""" 
+PyTestEmb Project : gtime manages time for time stamping for other modules
+"""
 
-__version__ = "$Revision: 1.2 $"
-__author__ = "$Author: octopy $"
+__author__      = "$Author: octopy $"
+__version__     = "$Revision: 1.3 $"
+__copyright__   = "Copyright 2009, The PyTestEmb Project"
+__license__     = "GPL"
+__email__       = "octopy@gmail.com"
 
 
 

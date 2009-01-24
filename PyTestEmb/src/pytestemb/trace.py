@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
-###########################################################
-# Project  : PyTestEmb                                    #
-# License  : GNU General Public License (GPL)             #
-# Author   : JMB                                          #
-# Date     : 01/12/08                                     #
-###########################################################
 
+""" 
+PyTestEmb Project : trace manages trace coming from module and script execution
+"""
 
-__version__ = "$Revision: 1.8 $"
-__author__ = "$Author: octopy $"
+__author__      = "$Author: octopy $"
+__version__     = "$Revision: 1.9 $"
+__copyright__   = "Copyright 2009, The PyTestEmb Project"
+__license__     = "GPL"
+__email__       = "octopy@gmail.com"
 
 
 import os
@@ -22,10 +22,6 @@ import logging.handlers
         
         
 import gtime        
-
-
-
-
 
 
 

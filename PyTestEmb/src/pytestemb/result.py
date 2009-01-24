@@ -1,14 +1,15 @@
 # -*- coding: UTF-8 -*-
-###########################################################
-# Project  : PyTestEmb                                    #
-# License  : GNU General Public License (GPL)             #
-# Author   : JMB                                          #
-# Date     : 01/12/08                                     #
-###########################################################
 
+""" 
+PyTestEmb Project : result manages result of script execution
+"""
 
-__version__ = "$Revision: 1.12 $"
-__author__ = "$Author: octopy $"
+__author__      = "$Author: octopy $"
+__version__     = "$Revision: 1.13 $"
+__copyright__   = "Copyright 2009, The PyTestEmb Project"
+__license__     = "GPL"
+__email__       = "octopy@gmail.com"
+
 
 
 import sys
@@ -158,7 +159,10 @@ class Result:
         
     def py_exception(self, des):
         pass
-
+    
+    def doc(self, des):
+        pass
+    
     def trace_ctrl(self, des):
         pass
 
@@ -214,6 +218,7 @@ class ResultStdout(Result):
     ASSERT_KO = "ASSERT_KO"
     PY_EXCEPTION = "PY_EXCEPTION"
     TRACE = "TRACE"
+    DOC = "DOC"
 
     
     def __init__(self, trace):
@@ -305,7 +310,12 @@ class ResultStdout(Result):
     @stamp                    
     @trace        
     def py_exception(self, des):
-        self.write_one_arg(ResultStdout.PY_EXCEPTION, des)
+        self.write(ResultStdout.PY_EXCEPTION, des)
+
+    @trace           
+    def doc(self, des):
+        self.write(ResultStdout.DOC, des)
+
 
     def trace_ctrl(self, des):
         # delay sending
@@ -602,6 +612,13 @@ class ResultStandalone(Result):
             self.result[-1]["assert_ko"] += 1
         except :
             pass
+ 
+    @trace           
+    def doc(self, des):
+        dis = "%s :: %s\n" % (des["type"], des["name"])
+        dis += "%s\n" % des["doc"] 
+        sys.stdout.write(dis)
+        
         
         
     def trace_ctrl(self, des):

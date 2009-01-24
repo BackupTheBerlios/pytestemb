@@ -1,16 +1,14 @@
 # -*- coding: UTF-8 -*-
-###########################################################
-# Project  : PyTestEmb                                    #
-# License  : GNU General Public License (GPL)             #
-# Author   : JMB                                          #
-# Date     : 01/12/08                                     #
-###########################################################
 
+""" 
+PyTestEmb Project : valid manages script execution
+"""
 
-__version__ = "$Revision: 1.6 $"
-__author__ = "$Author: octopy $"
-
-
+__author__      = "$Author: octopy $"
+__version__     = "$Revision: 1.7 $"
+__copyright__   = "Copyright 2009, The PyTestEmb Project"
+__license__     = "GPL"
+__email__       = "octopy@gmail.com"
 
 
 
@@ -113,13 +111,16 @@ class Valid:
         CALL_DEPTH = 1
         traceback = inspect.trace()
         stack = []
+        default = dict.fromkeys(["path","line","function","code"], "no info")
         try:
             for index in range(CALL_DEPTH, len(traceback)):
-                stack.append({})
+                stack.append(default)
                 stack[-1]["path"]      = copy.copy(traceback[index][1])
                 stack[-1]["line"]      = copy.copy(traceback[index][2])
                 stack[-1]["function"]  = copy.copy(traceback[index][3])
-                stack[-1]["code"]      = copy.copy(traceback[index][4][0].strip("\n"))     
+                stack[-1]["code"]      = copy.copy(traceback[index][4][0].strip("\n"))    
+        except :
+            pass
         finally:
             del traceback
         des = {}

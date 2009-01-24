@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
-###########################################################
-# Project  : PyTestEmb                                    #
-# License  : GNU General Public License (GPL)             #
-# Author   : JMB                                          #
-# Date     : 01/12/08                                     #
-###########################################################
 
+""" 
+PyTestEmb Project : __init__ manages command line option and interface with other modules
+"""
 
-__version__ = "$Revision: 1.9 $"
-__author__ = "$Author: octopy $"
+__author__      = "$Author: octopy $"
+__version__     = "$Revision: 1.10 $"
+__copyright__   = "Copyright 2009, The PyTestEmb Project"
+__license__     = "GPL"
+__email__       = "octopy@gmail.com"
 
 
 
@@ -21,7 +21,7 @@ import trace
 import valid
 import result
 import config
-
+import pydoc
 
 
 
@@ -39,9 +39,9 @@ INTERFACE_LIST = 1
 interface["config"] = (("none"),
                        ("none", "stdin"))
 interface["result"] = (("standalone"),
-                       ("none", "standalone" ,"stdout", "octopylog", "txt"))
+                       ("none", "standalone", "stdout"))
 interface["trace"] =  ([], 
-                       ("none", "stdout", "octopylog", "txt"))
+                       ("none", "octopylog", "txt"))
 
 
 parser = OptionParser()
@@ -56,6 +56,9 @@ parser.add_option("-t", "--trace",
                     help="set the interface for trace, value can be : %s" % interface["trace"][INTERFACE_LIST].__str__()) 
 parser.add_option("-p", "--path",
                     action="store", type="string", dest="path", default=None,
+                    help="add path to python path") 
+parser.add_option("-d", "--doc",
+                    action="store_true", dest="doc", default=False,
                     help="add path to python path") 
 
 
@@ -87,34 +90,66 @@ __trace__   = None
 __result__  = None
 __config__  = None
 __valid__   = None
+__pydoc__   = None
 
 
 
-
-__trace__   = trace.create(options.trace)
-__result__  = result.create(options.result, __trace__ )
-__config__  = config.create(options.config, __trace__ )
-__valid__   = valid.Valid(__config__, __result__)
+if options.doc :
+    # doc generation   
+    __trace__   = trace.create(options.trace) 
+    __result__  = result.create(options.result, __trace__ )
+    __config__  = config.create(options.config, __trace__ )
+    __pydoc__   = pydoc.Pydoc(None, __result__)
+else :
+    # test execution
+    __trace__   = trace.create(options.trace)
+    __result__  = result.create(options.result, __trace__ )
+    __config__  = config.create(options.config, __trace__ )
+    __valid__   = valid.Valid(__config__, __result__)
 
 
 __trace__.set_result(__result__)
 __trace__.set_config(__config__)
 __trace__.start()
-
+    
 __config__.start()
 
 
+
+
+
+def set_doc(doc):
+    if options.doc :
+        __pydoc__.set_doc(doc)
+
+
 def set_setup(funcSetup):
-    __valid__.set_setup(funcSetup)
+    if options.doc :
+        __pydoc__.set_setup(funcSetup)
+    else :
+        __valid__.set_setup(funcSetup)
 
 def set_cleanup(funcCleanup):
-    __valid__.set_cleanup(funcCleanup)
+    if options.doc :
+        __pydoc__.set_cleanup(funcCleanup)
+    else :
+        __valid__.set_cleanup(funcCleanup)
+
 
 def add_test_case(funcCase):
-    __valid__.add_test_case(funcCase)
+    if options.doc :
+        __pydoc__.add_test_case(funcCase)
+    else :
+        __valid__.add_test_case(funcCase)
+
     
 def run_script():
-    __valid__.run_script()
+    if options.doc :
+        pass
+    else :
+        __valid__.run_script()
+        
+    
 
 
 def _create_des_(msg):

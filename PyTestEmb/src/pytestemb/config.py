@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
-###########################################################
-# Project  : PyTestEmb                                    #
-# License  : GNU General Public License (GPL)             #
-# Author   : JMB                                          #
-# Date     : 01/12/08                                     #
-###########################################################
 
+""" 
+PyTestEmb Project : config manages configuration runtime of other modules
+"""
 
-__version__ = "$Revision: 1.4 $"
-__author__ = "$Author: octopy $"
+__author__      = "$Author: octopy $"
+__version__     = "$Revision: 1.5 $"
+__copyright__   = "Copyright 2009, The PyTestEmb Project"
+__license__     = "GPL"
+__email__       = "octopy@gmail.com"
 
 
 import sys
