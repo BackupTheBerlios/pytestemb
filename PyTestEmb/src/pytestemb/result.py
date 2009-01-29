@@ -5,7 +5,7 @@ PyTestEmb Project : result manages result of script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.13 $"
+__version__     = "$Revision: 1.14 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -502,8 +502,8 @@ class ResultStandalone(Result):
         return (len(data)-size)    
     
     def add_line(self, col1, col2):
-        col1 = col1.ljust(46)
-        col2 = col2.ljust(46)
+        col1 = col1.ljust(60)
+        col2 = col2.ljust(32)
         sys.stdout.write("| %s| %s|\n"  % (col1, col2)) 
                  
     @trace     
@@ -594,7 +594,8 @@ class ResultStandalone(Result):
             sys.stdout.write("        + message    : \"%s\"\n" % des["msg"])       
         sys.stdout.write("        + expression : \"%s\"\n" % des["expression"])
         sys.stdout.write("        + values     : \"%s\"\n" % des["values"])
-
+        loc = "    File \"%s\", line %d, in %s\n" % (des["file"], des["line"], des["function"])
+        sys.stdout.write("%s\n" % loc)
         self.result[-1]["assert_ko"] += 1
 
     @stamp

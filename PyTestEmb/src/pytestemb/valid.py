@@ -5,7 +5,7 @@ PyTestEmb Project : valid manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.7 $"
+__version__     = "$Revision: 1.8 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -114,7 +114,7 @@ class Valid:
         default = dict.fromkeys(["path","line","function","code"], "no info")
         try:
             for index in range(CALL_DEPTH, len(traceback)):
-                stack.append(default)
+                stack.append(copy.copy(default))
                 stack[-1]["path"]      = copy.copy(traceback[index][1])
                 stack[-1]["line"]      = copy.copy(traceback[index][2])
                 stack[-1]["function"]  = copy.copy(traceback[index][3])
