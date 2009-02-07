@@ -1,12 +1,16 @@
 
 
 
+
+
 import pytestemb as test
 
 
 
+
+
 def defaultValue():
-    test.assert_true_fatal(1==2, "1==1")
+    test.assert_true_fatal(1==2, "1==2")
     test.assert_true(1==1, "1==1")
 
 def boundValue():
@@ -15,7 +19,7 @@ def boundValue():
     test.assert_true(1==2, "1==2")
     test.assert_true(1==1, "1==1")
     test.trace_script("Easy trace")
-    
+    pass
 
 
 
