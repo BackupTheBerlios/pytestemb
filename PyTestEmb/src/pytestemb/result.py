@@ -5,7 +5,7 @@ PyTestEmb Project : result manages result of script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.14 $"
+__version__     = "$Revision: 1.15 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -444,10 +444,14 @@ class ResultStdoutReader:
                 or  key == ResultStdout.CLEANUP_START\
                 or  key == ResultStdout.CASE_START :
             self.check_started(not(self.case_started))
-            if key == ResultStdout.SETUP_START :
+            if      key == ResultStdout.SETUP_START :
                 value = "setup"
-            if key == ResultStdout.CLEANUP_START:
+            elif    key == ResultStdout.CLEANUP_START:
                 value = "cleanup"
+            else :
+                dic = self.conv_dict(value)
+                value = dic["name"]
+                
             obj = self.create_resultcounter()
             obj.name = value
             self.script[-1].case.append(obj)
