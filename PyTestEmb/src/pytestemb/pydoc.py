@@ -5,7 +5,7 @@ PyTestEmb Project : pydoc manages doc extraction from script
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -27,6 +27,16 @@ def getScriptName():
         return "error_script_filename" 
 
 
+TYPE_SCRIPT     = "script"
+TYPE_SETUP      = "setup"
+TYPE_CLEANUP    = "cleanup"
+TYPE_CASE       = "case"
+
+KEY_TYPE = "type"
+KEY_NAME = "name"
+KEY_DOC  = "doc"
+
+
 
 class Pydoc:
     
@@ -37,43 +47,41 @@ class Pydoc:
     
     def set_doc(self, doc):
         des = dict()
-        des["type"] = "script"
-        des["name"] = getScriptName()
+        des[KEY_TYPE] = TYPE_SCRIPT
+        des[KEY_NAME] = getScriptName()
         if doc is None :
-            des["doc"] = ""
+            des[KEY_DOC] = ""
         else:
-            des["doc"] = Pydoc.clean(doc)
+            des[KEY_DOC] = Pydoc.clean(doc)
         self.result.doc(des)
         
         
     def set_setup(self, funcSetup):
-        self._function(funcSetup)
+        self._function(TYPE_SETUP, funcSetup)
     
     def set_cleanup(self, funcCleanup):
-        self._function(funcCleanup)
+        self._function(TYPE_CLEANUP, funcCleanup)
     
     def add_test_case(self, funcCase):
-        self._function(funcCase)
+        self._function(TYPE_CASE, funcCase)
         
     
-    def _function(self, func):
+    def _function(self, ftype, func):
         des = dict()
-        des["type"] = "case"
-        des["name"] = func.func_name
+        des[KEY_TYPE] = ftype
+        des[KEY_NAME] = func.func_name
         if func.__doc__ is None :
-            des["doc"] = ""
+            des[KEY_DOC] = ""
         else:
-            des["doc"] = Pydoc.clean(func.__doc__)
+            des[KEY_DOC] = Pydoc.clean(func.__doc__)
         self.result.doc(des)
     
     @staticmethod
     def clean(doc):
-        res = ""
-        doc = doc.strip(" \n")
-        for line in doc.splitlines():
-            res += "%s\n" % line.strip(" \t")
-        return res.strip("\n")
-        
+        doc = doc.expandtabs(4)
+        doc = doc.strip("\n")
+        return doc
+
         
         
         

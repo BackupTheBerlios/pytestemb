@@ -5,7 +5,7 @@ PyTestEmb Project : valid manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.8 $"
+__version__     = "$Revision: 1.9 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -23,6 +23,9 @@ import inspect
 import result
 import trace
 
+
+
+# redirect sys.stderr => sys.stdout
 sys.stderr = sys.stdout
 
 

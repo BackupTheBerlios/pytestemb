@@ -5,7 +5,7 @@ PyTestEmb Project : result manages result of script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.15 $"
+__version__     = "$Revision: 1.16 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -620,9 +620,12 @@ class ResultStandalone(Result):
  
     @trace           
     def doc(self, des):
-        dis = "%s :: %s\n" % (des["type"], des["name"])
-        dis += "%s\n" % des["doc"] 
-        sys.stdout.write(dis)
+        import pydoc
+        sys.stdout.write("\n")
+
+        sys.stdout.write("Name : %s\n" % des[pydoc.KEY_NAME])
+        sys.stdout.write("Type : %s\n" % des[pydoc.KEY_TYPE])
+        sys.stdout.write("Doc :\n%s\n" % des[pydoc.KEY_DOC])
         
         
         

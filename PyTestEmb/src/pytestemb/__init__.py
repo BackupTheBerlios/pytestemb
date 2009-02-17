@@ -5,7 +5,7 @@ PyTestEmb Project : __init__ manages command line option and interface with othe
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.10 $"
+__version__     = "$Revision: 1.11 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -119,17 +119,20 @@ __config__.start()
 
 
 def set_doc(doc):
+    """ set script doc for doc generation """
     if options.doc :
         __pydoc__.set_doc(doc)
 
 
 def set_setup(funcSetup):
+    """ assign the setup function """
     if options.doc :
         __pydoc__.set_setup(funcSetup)
     else :
         __valid__.set_setup(funcSetup)
 
 def set_cleanup(funcCleanup):
+    """ assign the cleanup function """    
     if options.doc :
         __pydoc__.set_cleanup(funcCleanup)
     else :
@@ -137,6 +140,7 @@ def set_cleanup(funcCleanup):
 
 
 def add_test_case(funcCase):
+    """ add function to stack of case """   
     if options.doc :
         __pydoc__.add_test_case(funcCase)
     else :
@@ -144,6 +148,7 @@ def add_test_case(funcCase):
 
     
 def run_script():
+    """ run the execution of setup, stack of case and cleanup """
     if options.doc :
         pass
     else :
@@ -161,9 +166,11 @@ def _create_des_(msg):
 
 
 def assert_true(exp, msg=None):
+    """ assert that expression is True """
     __result__.assert_true(exp, _create_des_(msg))
         
 def assert_false(exp, msg=None):
+    """ assert that expression is False """
     __result__.assert_false(exp, _create_des_(msg))
     
 def assert_true_fatal(exp, msg=None):
@@ -199,14 +206,20 @@ def fail_fatal(msg=None):
 
 
 def trace_env(scope, data):
+    """ 
+    @summary: trace with environment scope level
+    @warning: use only for environment information  
+    """
     __trace__.trace_env(scope, data)
 
-
 def trace_io(interface, data):
+    """ trace with io scope level """    
     __trace__.trace_io(interface, data)
 
 def trace_script(msg):
+    """ trace with io script level """  
     __trace__.trace_script(msg)
+    
     
 def config_get(key):
     return __config__.get_config(key)
