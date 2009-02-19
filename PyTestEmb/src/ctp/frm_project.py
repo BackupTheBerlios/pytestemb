@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -31,51 +31,41 @@ import data.project as dpro
 class ProjectFrame(wx.Frame):
     def __init__(self,parent,id = -1,title='',pos = wx.Point(1,1),size = wx.Size(495,420),style = wx.DEFAULT_FRAME_STYLE,name = 'frame'):
         
-
+        
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
         self.tree = wx.TreeCtrl(self,-1)
-        
+        self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivate, self.tree)
+        self.Bind(wx.EVT_TREE_ITEM_MENU, self.OnRightUp, self.tree)
+
         
         self.project = None
         
         
-        self.Bind(wx.EVT_TREE_ITEM_MENU, self.OnRightUp, self.tree)
- 
-        
-        il = wx.ImageList(16, 16)
-        self.im_script      = il.Add( wx.Bitmap("images/script.png", wx.BITMAP_TYPE_PNG))
-        self.im_pool        = il.Add( wx.Bitmap("images/database.png", wx.BITMAP_TYPE_PNG))
-        self.im_folder      = il.Add( wx.Bitmap("images/folder_database.png", wx.BITMAP_TYPE_PNG))
-        self.im_project     = il.Add( wx.Bitmap("images/application_view_tile.png", wx.BITMAP_TYPE_PNG))
-        
-        
-        self.im_campaigns    = il.Add( wx.Bitmap("images/chart_organisation.png", wx.BITMAP_TYPE_PNG))
-        
-        self.im_campaign    = il.Add( wx.Bitmap("images/database_table.png", wx.BITMAP_TYPE_PNG))
-
-
-        self.tree.SetImageList(il)
-        self.il = il
+        self.il = wx.ImageList(16, 16)
+        self.im_script      = self.il.Add( wx.Bitmap("images/script.png", wx.BITMAP_TYPE_PNG))
+        self.im_pool        = self.il.Add( wx.Bitmap("images/database.png", wx.BITMAP_TYPE_PNG))
+        self.im_folder      = self.il.Add( wx.Bitmap("images/folder_database.png", wx.BITMAP_TYPE_PNG))
+        self.im_project     = self.il.Add( wx.Bitmap("images/application_view_tile.png", wx.BITMAP_TYPE_PNG))        
+        self.im_campaigns   = self.il.Add( wx.Bitmap("images/chart_organisation.png", wx.BITMAP_TYPE_PNG))
+        self.im_campaign    = self.il.Add( wx.Bitmap("images/database_table.png", wx.BITMAP_TYPE_PNG))
+        self.tree.SetImageList(self.il)
         
     
         
         
-                
-        proj = dpro.load_from_xml("C:\\CVS_Local\\PyTestEmb\\test\\project_01.xml")
-        self.load_project(proj)
         
+    def load_xml(self, filename):
         
-        
-        
-        
+        self.project = dpro.load_xml(filename)
+        self.project.sort()
+        self.update_tree()
         
         
     def OnRightUp(self, event):
         
         menu = wx.Menu()
-
         item1 = menu.Append(wx.ID_ANY, "New Campaign")
         menu.AppendSeparator()
         item2 = menu.Append(wx.ID_ANY, "Add script to a Campaign")
@@ -83,9 +73,6 @@ class ProjectFrame(wx.Frame):
         menu.AppendSeparator()
         item4 = menu.Append(wx.ID_ANY, "Remove script")
         
-
-
-
         self.Bind(wx.EVT_MENU, self.OnItemNewCampaign, item1)
         self.Bind(wx.EVT_MENU, self.OnItemAddScriptCampaign, item2)
         self.Bind(wx.EVT_MENU, self.OnItemAddScriptPool, item3)
@@ -101,7 +88,7 @@ class ProjectFrame(wx.Frame):
         
     def OnItemNewCampaign(self, event):
         self.project.add_campaign("test")
-        self.update()
+  
 
     def OnItemAddScriptCampaign(self, event):
         pass
@@ -112,27 +99,20 @@ class ProjectFrame(wx.Frame):
     def OnRemoveScript(self, event):
         pass
 
-        
-        
-        
-        #self.import_scripts_from_directory()
-        
-    def __del__(self):
-        pass
-        #save_to_xml(self.project, "c:\\temp\\project.xml")
     
-    def load_project(self, proj):
-        self.project = proj
-        self.update()
-        
-        l = proj.get_campaign_list_absolute("Campaign_02")
-        if l is not None:
-            for o in l:
-                print o
-        l = proj.get_pool_list_absolute()
-        if l is not None:
-            for o in l:
-                print o       
+    
+#    def load_project(self, proj):
+#        self.project = proj
+#        self.update()
+#        
+#        l = proj.get_campaign_list_absolute("Campaign_02")
+#        if l is not None:
+#            for o in l:
+#                print o
+#        l = proj.get_pool_list_absolute()
+#        if l is not None:
+#            for o in l:
+#                print o       
     
     
     
@@ -161,8 +141,12 @@ class ProjectFrame(wx.Frame):
                 
     
     
-    def update(self):    
-        # update gui
+    def update_tree(self):    
+        
+        if self.project is None:
+            return 
+        
+        
         self.tree.DeleteAllItems()
         tree_project = self.tree.AddRoot(self.project.name)
         
@@ -193,33 +177,6 @@ class ProjectFrame(wx.Frame):
 #                self.tree.SetPyData(item__, copy.copy(script))
 
 
-    def import_scripts_from_directory(self):
-
-        ignore_path = ["CVS", "data", "environement"]
-        ignore_file = ["__init__.py"]
-        
-        extention = ".py"
-    
-        lst_files = list()
-    
-        import os
-        path = "C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2"
-        for root, dirs, files in os.walk(path, topdown=True):
-            
-            for p in ignore_path:
-                if p in dirs:
-                    #print "remove : %s" % p
-                    dirs.remove(p)  # don't visit CVS directories       
-            for f in files:
-                if os.path.splitext(f)[1] == extention :
-                    if f in ignore_file :
-                        continue
-                    lst_files.append("%s\\%s" % (root, f))  
-                    #print lst_files[-1]
-                    
-        for f in lst_files:
-            self.project.add_script_file_in_scripts(f)
-        self.update()
             
 
 
@@ -239,6 +196,8 @@ class MyApp(wx.App):
         self.SetTopWindow(frameMain)
         frameMain.Show()
         
+        import os.path
+        frameMain.load_xml(os.path.realpath("..\\..\\test\\script\\project_01.xml"))
         return 1
 
 

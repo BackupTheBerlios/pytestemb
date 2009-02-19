@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -137,17 +137,39 @@ class CaseRes:
         return "%s\n%s" % (self.name, self.result)
 
     
+    
+    
+ST_EXEC_NOT_YET_EXECUTED    = 0
+ST_EXEC_EXECUTED_NO_ERROR   = 1
+ST_EXEC_EXECUTED_FILE_ERROR = 2
+ST_EXEC_EXECUTED_PY_ERROR   = 3
+ST_EXEC_EXECUTED_INT_ERROR  = 4
+
+    
+    
+SCRIPT_STATUS = {   ST_EXEC_NOT_YET_EXECUTED    : "Script has not been executed",\
+                    ST_EXEC_EXECUTED_NO_ERROR   : "Script executed, no error",\
+                    ST_EXEC_EXECUTED_FILE_ERROR : "Script executed, error : problem with script file",\
+                    ST_EXEC_EXECUTED_INT_ERROR  : "Script executed, error : internal error",\
+                    ST_EXEC_EXECUTED_PY_ERROR   : "Script executed, error : python error"}    
+    
         
 
 class ScriptRes:
     
+    
+    
     def __init__(self, script):
         self.script = script
-        self.start_time = None
-        self.stop_time = None
-        self.trace_info = None
+        self.start_time     = None
+        self.stop_time      = None
+        self.trace_info     = None
+        self.status         = None
         self.cases = dict()
-    
+        
+        self.set_status(ST_EXEC_NOT_YET_EXECUTED)
+        
+  
     def stamp_start(self):
         self.start_time = time.localtime()
     
@@ -157,14 +179,23 @@ class ScriptRes:
     def get_key(self):
         pass
     
+    def get_status(self):
+        return self.status
+    
+    def set_status(self, status, param=None):
+        self.status = [status, param]
+    
     def import_resultstdoutreader(self, resreader):
-        name = resreader.script[0].name
-        trace = resreader.script[0].trace
-        
-        self.trace_info = trace
-        for index, rcase in  enumerate(resreader.script[0].case):
-            case = CaseRes.create_from_resultcounter(rcase)
-            self.cases[index] = case
+        if len(resreader.script) < 1 :
+            self.set_status(ST_EXEC_EXECUTED_INT_ERROR)
+        else:
+            self.set_status(ST_EXEC_EXECUTED_NO_ERROR)
+        #name = resreader.script[0].name
+            trace = resreader.script[0].trace
+            self.trace_info = trace
+            for index, rcase in  enumerate(resreader.script[0].case):
+                case = CaseRes.create_from_resultcounter(rcase)
+                self.cases[index] = case
         
 
     def __str__(self):

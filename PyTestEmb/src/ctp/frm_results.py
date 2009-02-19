@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -24,7 +24,7 @@ class ResultFrame(wx.Frame):
 
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
         self.tree = wx.TreeCtrl(self,-1)
-        
+        self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivate, self.tree)
         
@@ -82,51 +82,67 @@ class ResultFrame(wx.Frame):
                 
                 
     
+    
+    
+    
     def update(self):    
         # update gui
         self.tree.DeleteAllItems()
+        
+        # Root
         tree_result = self.tree.AddRoot("Results")
-        
-        
         self.tree.SetItemImage(tree_result, self.im_result, wx.TreeItemIcon_Normal)
-    
         
         
         for k,scr in self.res.data.iteritems():
+            
             item_script = self.tree.AppendItem(tree_result, scr.script.str_relative())
-            script_status = "ok"
-            for k,cas in scr.cases.iteritems():
-                item_case = self.tree.AppendItem(item_script, cas.name)
+            status, param = scr.get_status()
+            
+            
+            if status != dres.ST_EXEC_EXECUTED_NO_ERROR :
+                self.tree.SetItemImage(item_script, self.im_script_warn, wx.TreeItemIcon_Normal)
+                item_case = self.tree.AppendItem(item_script, "%s" % dres.SCRIPT_STATUS[status])
+                if param is not None :
+                    item_case = self.tree.AppendItem(item_script, "%s" % param)
+            elif  status == dres.ST_EXEC_EXECUTED_NO_ERROR :
+                #item_script = self.tree.AppendItem(tree_result, scr.script.str_relative())
+                if scr.trace_info is None :
+                    item_case = self.tree.AppendItem(item_script, "No trace" )
+                else:
+                    item_case = self.tree.AppendItem(item_script, "%s" % scr.trace_info )
                 
-                case_status = "default" 
-                for k,res in cas.result.data.iteritems():
-                    if res is not None:  
-                        item_res = self.tree.AppendItem(item_case, "%s" % k )
-                        if k == RES_ASSERT_OK :
-                            case_status = "ok"
-                        else:
-                            case_status = "ko"
-                            script_status = "ko"                        
-                        
-                        for d in res:
+                script_status = "ok"
+                for k,cas in scr.cases.iteritems():
+                    item_case = self.tree.AppendItem(item_script, cas.name)
+                
+                    case_status = "default" 
+                    for k,res in cas.result.data.iteritems():
+                        if res is not None:  
+                            item_res = self.tree.AppendItem(item_case, "%s" % k )
+                            if k == dres.RES_ASSERT_OK :
+                                case_status = "ok"
+                            else:
+                                case_status = "ko"
+                                script_status = "ko"                        
                             
+                            for d in res:
+                                for k,v in d.iteritems():
+                                    item_l = self.tree.AppendItem(item_res, "%s :: %s" % (k.ljust(8),v) )  
 
-                            for k,v in d.iteritems():
-                                item_l = self.tree.AppendItem(item_res, "%s :: %s" % (k.ljust(16),v) )  
 
 
-
-                if case_status == "default":
-                    self.tree.SetItemImage(item_case, self.im_case, wx.TreeItemIcon_Normal)
-                elif case_status == "ok":
-                    self.tree.SetItemImage(item_case, self.im_case_ok, wx.TreeItemIcon_Normal)
-                elif case_status == "ko":
-                    self.tree.SetItemImage(item_case, self.im_case_ko, wx.TreeItemIcon_Normal)                   
+                    if case_status == "default":
+                        self.tree.SetItemImage(item_case, self.im_case, wx.TreeItemIcon_Normal)
+                    elif case_status == "ok":
+                        self.tree.SetItemImage(item_case, self.im_case_ok, wx.TreeItemIcon_Normal)
+                    elif case_status == "ko":
+                        self.tree.SetItemImage(item_case, self.im_case_ko, wx.TreeItemIcon_Normal)                   
           
-            if script_status == "ok":
-                self.tree.SetItemImage(item_script, self.im_script_ok, wx.TreeItemIcon_Normal)
-            elif script_status == "ko":
-                self.tree.SetItemImage(item_script, self.im_script_ko, wx.TreeItemIcon_Normal)
+                if script_status == "ok":
+                    self.tree.SetItemImage(item_script, self.im_script_ok, wx.TreeItemIcon_Normal)
+                elif script_status == "ko":
+                    self.tree.SetItemImage(item_script, self.im_script_ko, wx.TreeItemIcon_Normal)
                                                                    
                 
                 #self.tree.SetItemImage(item_case, self.im_script_ko, wx.TreeItemIcon_Normal)           
@@ -171,4 +187,7 @@ if __name__ == "__main__":
 
 
     App = MyApp(0)
-    App.MainLoop()    
+    App.MainLoop()
+    
+    
+        

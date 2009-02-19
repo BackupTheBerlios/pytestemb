@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -23,12 +23,12 @@ import logging
 import logging.handlers
 
 
-import results
+
 
 import pytestemb.result as result
 
 
-import project
+import data.results as dres
 
 
 
@@ -68,8 +68,9 @@ def getScriptName(pathfilename):
 
 
 
-
-
+PY_EXE_RET_CODE_OK              = 0
+PY_EXE_RET_CODE_ERROR_FILE      = 1
+PY_EXE_RET_CODE_ERROR_SYNTAX    = 2
 
 
 # data dict
@@ -78,13 +79,18 @@ SCRIPT_LIST     = 1
 CONFIG          = 2
 TRACE           = 3
 PYPATH          = 4
+RUN_TYPE        = 5
 
 # trace config
 TRACE_NONE          = 0
 TRACE_OCTOPYLOG     = 1
 TRACE_TXT           = 2
 TRACE_OCTOPYLOG_TXT = 3
-    
+
+# run type
+RUN_SCRIPT = 0
+RUN_DOC    = 1
+
     
 
 class DialogRunner(wx.Dialog):
@@ -102,6 +108,7 @@ class DialogRunner(wx.Dialog):
         
         # create control  
         self.lstboxScript = wx.ListBox(self, -1,  size=wx.Size(400,200))
+        self.lstboxScript.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.activity = wx.Gauge(self, -1, size=wx.Size(400,30))
         self.start = wx.Button(self, -1,"Start")
         self.stop = wx.Button(self, -1, "Stop")
@@ -125,6 +132,8 @@ class DialogRunner(wx.Dialog):
         # process management
         self.process = None
         self.pid = None
+        self.exit_code = None
+        
         self.Bind(wx.EVT_END_PROCESS, self.OnProcessEnded)
         EVT_CUSTOM_STARTPROCESS(self, self.OnStartProcess)
         EVT_CUSTOM_ENDSCRIPTS(self, self.OnEndScripts)
@@ -135,7 +144,7 @@ class DialogRunner(wx.Dialog):
         self.evtReaderRun = threading.Event()
         self.thdScriptRun = threading.Thread(target=self.thread_scripts_runner,  name="scripts_runner")
         
-        self.results = results.Results()
+        self.results = dres.Results()
         
         
         
@@ -205,6 +214,8 @@ class DialogRunner(wx.Dialog):
         must be called in main thread """
         
         
+        
+        
         #scriptArgument = " --config=stdin --result=stdout"
         scriptArgument = " --config=stdin --result=stdout"
         if self.data[PYPATH] is not None:
@@ -221,9 +232,14 @@ class DialogRunner(wx.Dialog):
         else:
             assert False
     
+        if self.data[RUN_TYPE] == RUN_DOC :
+            scriptArgument += " --doc" 
+
 
         interpretor = "python -u"
         cmd = interpretor + " " + pathfilename + scriptArgument
+        
+        self.exit_code = None
         self.pid = wx.Execute(cmd, wx.EXEC_ASYNC, self.process)
         LOG.info("Start process : %s pid %s\n" % (cmd, self.pid))
         
@@ -241,16 +257,28 @@ class DialogRunner(wx.Dialog):
         LOG.info("Process Ended pid:%s,  exitCode: %s\n" % \
                               (evt.GetPid(), evt.GetExitCode()))
         time.sleep(0.1)         # let some times to reader to finish reading
+        
+        self.exit_code = evt.GetExitCode()
+        
         self.evtReaderRun.set() # stop reader on process
         
         
     def update_result(self, script, resultstdoutreader):
         
-        scriptres = results.ScriptRes(script)
-        scriptres.import_resultstdoutreader(resultstdoutreader)    
-        self.results.update(scriptres)
+        scriptres = dres.ScriptRes(script)
 
+        if self.exit_code == PY_EXE_RET_CODE_OK :
+            scriptres.import_resultstdoutreader(resultstdoutreader)    
+        elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_FILE:
+            param = "python: can't open file \"%s\""  % script.str_absolute(self.data[BASE_PATH])
+            scriptres.set_status(dres.ST_EXEC_EXECUTED_FILE_ERROR, param )
+        elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_SYNTAX:
+            param = "SyntaxError: invalid syntax"
+            scriptres.set_status(dres.ST_EXEC_EXECUTED_PY_ERROR, param)        
+        else :
+            scriptres.set_status(dres.ST_EXEC_EXECUTED_FILE_ERROR)
         
+        self.results.update(scriptres)
         
 
 
@@ -265,7 +293,8 @@ class DialogRunner(wx.Dialog):
         evt = EventEndScript()
         self.AddPendingEvent(evt)
         
-        print self.results.__str__()
+        
+        #print self.results.__str__()
         self.results.save()
         
         
@@ -392,7 +421,7 @@ class DialogRunner(wx.Dialog):
 
 if __name__ == "__main__":
     
-    
+    import data.project as dproj
 
     rootLogger = logging.getLogger("")
     rootLogger.setLevel(logging.DEBUG)
@@ -402,12 +431,14 @@ if __name__ == "__main__":
     
     class MyApp(wx.App):
         def OnInit(self):
+   
+   
+            import os.path
             
             
+            proj = dproj.load_xml(os.path.realpath("..\\..\\test\\script\\project_01.xml")) 
             
-            proj = project.load_from_xml("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml")
-            
-            slist = proj.get_campaign_list_absolute("bluetooth_no_device")
+            slist = proj.get_campaign_list_absolute("Campaign_03")
             
             
             
@@ -416,9 +447,10 @@ if __name__ == "__main__":
             data[BASE_PATH] = proj.get_base_path()
             data[SCRIPT_LIST] = slist
             data[CONFIG] = None
-            data[TRACE] = TRACE_OCTOPYLOG_TXT
-            data[PYPATH] = "C:\\CVS_LOCAL_ECLIPSE\\scripts"
-        
+            data[TRACE] = TRACE_TXT
+            data[PYPATH] = None
+            #data[RUN_TYPE] = RUN_SCRIPT
+            data[RUN_TYPE] = RUN_DOC
             
 
             

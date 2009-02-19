@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -612,7 +612,6 @@ class PyAUIFrame(wx.Frame):
         tree = wx.GenericDirCtrl(self, -1,  size=(160, 250), style=wx.DIRCTRL_SHOW_FILTERS,
                                 filter="All files (*.*)|*.*|Python files (*.py)|*.py")
 
-
 #        tree = wx.TreeCtrl(self, -1, wx.Point(0, 0), wx.Size(160, 250),
 #                           wx.TR_DEFAULT_STYLE | wx.NO_BORDER)
         
@@ -633,13 +632,13 @@ class PyAUIFrame(wx.Frame):
         page = wx.TextCtrl(ctrl, -1, "", style=wx.TE_MULTILINE)
         ctrl.AddPage(page, "Welcome0")
         
-        
-        import pyeditor
-        page = pyeditor.PythonSTC(ctrl, -1, style = wx.NO_FULL_REPAINT_ON_RESIZE)
-
-        ctrl.AddPage(page, "Welcome1")      
-        
-        
+#        
+#        import pyeditor
+#        page = pyeditor.PythonSTC(ctrl, -1, style = wx.NO_FULL_REPAINT_ON_RESIZE)
+#
+#        ctrl.AddPage(page, "Welcome1")      
+#        
+#        
         
                       
         return ctrl

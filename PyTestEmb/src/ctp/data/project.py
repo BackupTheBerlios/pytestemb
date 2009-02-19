@@ -5,7 +5,7 @@ PyTestEmb Project : project manages project aspect : files, scripts, campaign
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -95,6 +95,7 @@ class Project:
                         
             
     def sort(self):
+        self.scripts.sort()
         self.campaigns.sort()
     
                                   
@@ -231,43 +232,52 @@ XML_PATH_SEP = "\\"
 def load_xml(filename):
     import xml.etree.ElementTree as et
 
-
-
     project = Project()    
     path,name, ext = utils.split_fullpath(filename)
     
-    e = et.parse(filename)
+    project.absolutepath = path
     
+    e = et.parse(filename)    
     root = e.getroot()
-    iter = root.getiterator()
-    re = et.ElementTree()
-    
-
-#    for elt in root.get():
-#        print elt.tag 
-    
-    child = root.getchildren()
+    it_project = root.getchildren()
     
     # Project Name
-    if child[0].tag == "Name":
-        project.name = child[0].text
+    if it_project[0].tag == "Name":
+        project.name = it_project[0].text
     else :
-        KeyError("No project name")
- 
+        raise KeyError("No project name")
     # Script pool
-    if child[1].tag == "Scripts":
-        pass
+    if it_project[2].tag == "Scripts":
+        it_scripts = it_project[2].getchildren()
+        for it_script in it_scripts:            
+            it_script = it_script.getchildren()
+            name = it_script[0].text
+            path = it_script[1].text
+            if path is None :
+                path_lst = list()
+            else:
+                path_lst = path.split(XML_PATH_SEP)
+            project.add_script_in_pool(Script(name, path_lst))    
     else :
-        KeyError("No project name")   
+        raise KeyError("No project name")   
     
-    for camp in child[2:]:
-        # Project Name
-        if camp[0].tag == "Name":
-            project.add_campaign(camp[0].text)
+    for it_cam in it_project[3:]:
+        if it_cam.tag == "Campaign":
+            it_cam = it_cam.getchildren()
+            campaign = it_cam[0].text
+            project.add_campaign(campaign)
+            for it_script in it_cam[2:]:
+                if it_script.tag == "Script":
+                    it_script = it_script.getchildren()
+                    name = it_script[0].text
+                    path = it_script[1].text
+                    if path is None :
+                        path_lst = list()
+                    else:
+                        path_lst = path.split(XML_PATH_SEP)
+                    project.add_script_in_campaign(campaign, Script(name, path_lst))
         else :
-            KeyError("No campaign name")
-        
-        
+            raise KeyError("No campaign name")
         
     return project
 
@@ -363,7 +373,38 @@ def save_to_xml(proj, filename):
     file = codecs.open(filename, "w", "utf-8")
     file.write(data)
     file.close()
-    
+
+
+
+
+
+#    def import_scripts_from_directory(self):
+#
+#        ignore_path = ["CVS", "data", "environement"]
+#        ignore_file = ["__init__.py"]
+#        
+#        extention = ".py"
+#    
+#        lst_files = list()
+#    
+#        import os
+#        path = "C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2"
+#        for root, dirs, files in os.walk(path, topdown=True):
+#            
+#            for p in ignore_path:
+#                if p in dirs:
+#                    #print "remove : %s" % p
+#                    dirs.remove(p)  # don't visit CVS directories       
+#            for f in files:
+#                if os.path.splitext(f)[1] == extention :
+#                    if f in ignore_file :
+#                        continue
+#                    lst_files.append("%s\\%s" % (root, f))  
+#                    #print lst_files[-1]
+#                    
+#        for f in lst_files:
+#            self.project.add_script_file_in_scripts(f)
+#        self.update() 
 
 
 
