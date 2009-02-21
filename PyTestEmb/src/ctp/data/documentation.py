@@ -1,130 +1,122 @@
 # -*- coding: UTF-8 -*-
 
-""" 
+"""
 PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
 
 
+
+import copy
+import shelve
+
+
 import project
 import utils
+
+
+
 
 class Documentation:
     def __init__(self, name=""):
         self.name = name
         self.data = dict()
-        
-        
-    def add_script(self, scriptdoc):
+
+    def save(self):
+        s = shelve.open('doc.dbm', writeback=True)
+        try:
+            for k,v in self.data.iteritems():
+                d = dict()
+                d["status"]  = (v.get_status()[0] == ST_PARSE_DOC_NO_ERROR, v.get_status()[1])
+                d["doc"]  = v.data
+                d["name"] = v.script.get_name()
+                d["path"] = v.script.get_path()
+                s[str(k)] = d
+        finally:
+            s.close()
+
+    def load(self):
+        s = shelve.open('doc.dbm', writeback=False)
+        try:
+            print "load"
+            for k,v in s.iteritems():
+                print k, v
+                self.data[k] = v
+        finally:
+            s.close()
+
+    def update(self, scriptdoc):
         self.data[scriptdoc.script.get_key()] = scriptdoc
-        
-        
+
+
     def get_sorted_key_list(self):
         l = list()
         for k,v in self.data.iteritems():
             l.append(v)
         l.sort()
         return l
-    
+
 
     def __iter__(self):
         l = self.data.values()
         l.sort()
-        return l 
-        
-        
-        
+        return l
+
+
+
+
+
+
+ST_PARSE_NOT_YET_PARSE   = 0
+ST_PARSE_DOC_NO_ERROR    = 1
+ST_PARSE_FILE_ERROR      = 2
+ST_PARSE_PY_ERROR        = 3
+ST_PARSE_INT_ERROR       = 4
+ST_PARSE_FORMAT_ERROR    = 5
+
+
+SCRIPT_STATUS = {   ST_PARSE_NOT_YET_PARSE   : "Script has not been parse",\
+                    ST_PARSE_DOC_NO_ERROR    : "Script parsed, no error",\
+                    ST_PARSE_FILE_ERROR      : "Script parsed, error : problem with script file",\
+                    ST_PARSE_PY_ERROR        : "Script parsed, error : python error",\
+                    ST_PARSE_INT_ERROR       : "Script parsed, error : internal error",\
+                    ST_PARSE_FORMAT_ERROR    : "Script parsed, error : format error"}
+
+
 class ScriptDoc:
     def __init__(self, script):
         self.script = script
-             
+
+        self.set_status(ST_PARSE_NOT_YET_PARSE)
+        self.data = list()
+
+
+    def get_status(self):
+        return self.status
+
+    def set_status(self, status, param=None):
+        self.status = [status, param]
+
+
+    def import_doctstdoutreader(self, resreader):
+        self.data = copy.copy(resreader.data)
+        self.set_status(ST_PARSE_DOC_NO_ERROR)
+
     def __cmp__(self, other):
         return utils.cmp_string(self.script.str_relative(), other.script.str_relative())
 
 
-class DocData:
-    def __init__(self):
-        self.fields = dict()
-        
-
-    
-
-#
-#fields = {}
-#
-#current = None
-#
-#for line in data2.splitlines(False):
-#
-#    line = line.strip(" ")
-#
-#    if line.startswith("@"):
-#
-#        current,sep,data = line.partition("::")
-#
-#        if sep != "::":
-#
-#            assert False
-#
-#        current = current.strip(" @\t")
-#
-#        data = data.strip(" \t")
-#
-#        fields[current] = []
-#
-#        fields[current].append(data)
-#
-#    else :
-#
-#        if current is not None :
-#
-#            data = line.strip(" \t")
-#
-#            fields[current].append(data)
-#
-#        else:
-#
-#            assert False
-#
-# 
-#
-# 
-#
-#for k,v in fields.iteritems():
-#
-#    print k
-#
-#    for item in v:
-#
-#        print "\t%s" % item
 
 
 
 
 
-if __name__ == "__main__":
-    
-    
-    s1 = project.Script("script_01", ["path01","path02"])
-    s2 = project.Script("script_02", ["path01","path02"])
-    s3 = project.Script("script_03", ["path01","path02"])
-
-    
-    d = Documentation()
-    d.add_script(ScriptDoc(s1))
-    d.add_script(ScriptDoc(s2))
-    d.add_script(ScriptDoc(s3))
 
 
-    for s in d:
-        print d.script
 
-  
-        
-        
-        
+

@@ -5,7 +5,7 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.9 $"
+__version__     = "$Revision: 1.10 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -20,7 +20,8 @@ import logging
 import logging.handlers
 
         
-        
+
+import utils        
 import gtime        
 
 
@@ -203,7 +204,7 @@ class TraceTxt(Trace):
         m = md5.new()
         m.update(sys.argv[0])
         m.update(time.strftime("%d_%m_%Y_%H_%M_%S", self.gtime.start_date)) 
-        name = os.path.splitext(os.path.split(sys.argv[0])[1])[0]      
+        name = utils.get_script_name()   
         name += "_%s.log" % (m.hexdigest()[0:16].upper())
         return name
  

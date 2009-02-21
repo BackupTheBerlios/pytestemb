@@ -5,7 +5,7 @@ PyTestEmb Project : valid manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.9 $"
+__version__     = "$Revision: 1.10 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -15,14 +15,13 @@ __email__       = "octopy@gmail.com"
 
 import sys
 import copy
-import os.path
 import inspect
 
 
 
 import result
 import trace
-
+import utils
 
 
 # redirect sys.stderr => sys.stdout
@@ -30,12 +29,6 @@ sys.stderr = sys.stdout
 
 
 
-
-def getScriptName():
-    try:
-        return os.path.splitext(os.path.split(sys.argv[0])[1])[0]      
-    except:
-        return "error_script_filename" 
 
 
 
@@ -46,7 +39,7 @@ class Valid:
         self.setup = self._nothing_
         self.cleanup = self._nothing_
         self.case = []
-        self.name = getScriptName()
+        self.name = utils.get_script_name()
     
     def _nothing_(self):
         pass

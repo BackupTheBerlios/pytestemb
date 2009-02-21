@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Project>
 	<Name>myproject</Name>	
-	<Information></Information>
 	<Scripts>
 		<Script>
 			<Name>script_01</Name>
@@ -62,34 +61,71 @@
 	</Scripts>
 	<Campaign>
 		<Name>Campaign_01</Name>
-		<Information></Information>
 		<Script>
 			<Name>script_01</Name>
 			<Path></Path>
 		</Script>
 		<Script>
 			<Name>script_02</Name>
-			<Path>bluetooth</Path>
+			<Path></Path>
 		</Script>
 		<Script>
 			<Name>script_03</Name>
-			<Path>bluetooth\devicelist</Path>
+			<Path></Path>
+		</Script>
+		<Script>
+			<Name>script_04</Name>
+			<Path></Path>
+		</Script>	
+		<Script>
+			<Name>script_01</Name>
+			<Path>folder_01</Path>
+		</Script>
+		<Script>
+			<Name>script_02</Name>
+			<Path>folder_01</Path>
+		</Script>
+		<Script>
+			<Name>script_03</Name>
+			<Path>folder_01</Path>
+		</Script>
+		<Script>
+			<Name>script_04</Name>
+			<Path>folder_01</Path>
+		</Script>	
+		<Script>
+			<Name>script_cases</Name>
+			<Path></Path>
+		</Script>			
+		<Script>
+			<Name>script_exception_01</Name>
+			<Path></Path>
 		</Script>		
+		<Script>
+			<Name>script_exception_02</Name>
+			<Path></Path>
+		</Script>						
 	</Campaign>
 	<Campaign>
 		<Name>Campaign_02</Name>
-		<Information></Information>
 		<Script>
-			<Name>script_01</Name>
+			<Name>script_syntax</Name>
 			<Path></Path>
 		</Script>
 		<Script>
-			<Name>script_02</Name>
-			<Path>bluetooth</Path>
+			<Name>script_04</Name>
+			<Path></Path>
 		</Script>
 		<Script>
-			<Name>script_03</Name>
-			<Path>bluetooth\devicelist</Path>
+			<Name>script_zz</Name>
+			<Path></Path>
 		</Script>		
+	</Campaign>
+	<Campaign>
+		<Name>Campaign_03</Name>
+		<Script>
+			<Name>script_doc</Name>
+			<Path></Path>
+		</Script>	
 	</Campaign>
 </Project>

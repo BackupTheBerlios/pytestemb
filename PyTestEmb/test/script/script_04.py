@@ -10,15 +10,11 @@ import pytestemb as test
 
 
 def defaultValue():
-    test.assert_true_fatal(1==2, "1==2")
     test.assert_true(1==1, "1==1")
 
 def boundValue():
-    test.trace_msg("No wait")
     test.assert_true(1==1, "1==1")
-    test.assert_true(1==2, "1==2")
     test.assert_true(1==1, "1==1")
-    test.trace_msg("Easy trace")
     pass
 
 

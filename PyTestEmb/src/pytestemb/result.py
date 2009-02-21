@@ -5,7 +5,7 @@ PyTestEmb Project : result manages result of script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.16 $"
+__version__     = "$Revision: 1.17 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -16,7 +16,7 @@ import sys
 import copy
 import time
 import inspect
-import UserDict
+
 
 
 import gtime
@@ -25,8 +25,6 @@ import gtime
 class TestErrorFatal(Exception):
     "Fatal Error"
     pass
-
-
 
 
 
@@ -372,120 +370,7 @@ class ResultScript:
         return str
 
 
-class ResultStdoutReader:
-    
-    def __init__(self):
-        self.script = []
-        
-        self.script_started = False 
-        self.case_started = False
-        
-    
-    def new_script(self):
-        self.script_started = False 
-        self.case_started = False
-        
-    def check_started(self, state):
-        if state :
-            return
-        else :
-            raise Exception   
-        
-    def __str__(self):
-        str = ""
-        for scr in self.script:
-            str += "%s\n" % scr.__str__()
-        return str
-    
 
-    def create_resultcounter(self):
-        obj = ResultCounter()
-        obj.add_kind(ResultStdout.ERROR_CONFIG)
-        obj.add_kind(ResultStdout.ERROR_IO)
-        obj.add_kind(ResultStdout.ERROR_TEST)
-        obj.add_kind(ResultStdout.WARNING)
-        obj.add_kind(ResultStdout.ASSERT_OK)
-        obj.add_kind(ResultStdout.ASSERT_KO)
-        obj.add_kind(ResultStdout.PY_EXCEPTION)        
-        return obj
-    
-    
-    def add_line(self, line):
-        pos = line.find(ResultStdout.SEPARATOR)
-        print line
-        if pos == line[-1] :
-            self.process(line, None)
-        else :
-            self.process(line[0:pos], line[pos+1:-1])
-
-
-
-    def conv_dict(self, data):
-        try:
-            return UserDict.UserDict(eval(data))
-        except Exception , error:
-            print data
-            raise error    
-    
-    def process(self, key, value):
-        print "key=%s value=%s" % (key, value)
-        
-        # SCRIPT_START
-        if      key == ResultStdout.SCRIPT_START :
-            self.check_started(not(self.script_started))
-            self.script.append(ResultScript(value))
-            self.script_started = True
-        # SCRIPT_STOP
-        elif    key == ResultStdout.SCRIPT_STOP :
-            self.check_started(self.script_started)
-            self.script_started = False
-        # SETUP_START, CLEANUP_START, CASE_START
-        elif        key == ResultStdout.SETUP_START\
-                or  key == ResultStdout.CLEANUP_START\
-                or  key == ResultStdout.CASE_START :
-            self.check_started(not(self.case_started))
-            if      key == ResultStdout.SETUP_START :
-                value = "setup"
-            elif    key == ResultStdout.CLEANUP_START:
-                value = "cleanup"
-            else :
-                dic = self.conv_dict(value)
-                value = dic["name"]
-                
-            obj = self.create_resultcounter()
-            obj.name = value
-            self.script[-1].case.append(obj)
-            self.case_started = True
-        # SETUP_STOP, CLEANUP_STOP, CASE_STOP
-        elif        key == ResultStdout.SETUP_STOP\
-                or  key == ResultStdout.CLEANUP_STOP\
-                or  key == ResultStdout.CASE_STOP :
-            self.check_started(self.case_started)
-            self.case_started = False
-        # CASE_NOTEXECUTED
-        elif    key == ResultStdout.CASE_NOTEXECUTED :
-            self.check_started(not(self.case_started))
-            obj = self.create_resultcounter()
-            obj.set_not_executed()
-            obj.name = value
-            self.script[-1].case.append(obj)
-        # TRACE
-        elif    key == ResultStdout.TRACE :
-            self.check_started(self.script_started)
-            self.script[-1].trace = self.conv_dict(value)
-        # CASE_XX
-        elif        key == ResultStdout.ERROR_CONFIG\
-                or  key == ResultStdout.ERROR_IO\
-                or  key == ResultStdout.ERROR_TEST\
-                or  key == ResultStdout.WARNING\
-                or  key == ResultStdout.ASSERT_OK\
-                or  key == ResultStdout.ASSERT_KO\
-                or  key == ResultStdout.PY_EXCEPTION :
-            self.check_started(self.case_started)
-            dic = self.conv_dict(value)
-            self.script[-1].case[-1].add_result(key, dic)
-        else :
-            print "key=%s value=%s" % (key, value)
         
 
 

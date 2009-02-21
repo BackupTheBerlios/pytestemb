@@ -5,7 +5,7 @@ PyTestEmb Project : pydoc manages doc extraction from script
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -16,15 +16,11 @@ __email__       = "octopy@gmail.com"
 import sys
 import copy
 import os.path
-import inspect
 
 
 
-def getScriptName():
-    try:
-        return os.path.splitext(os.path.split(sys.argv[0])[1])[0]      
-    except:
-        return "error_script_filename" 
+
+import utils
 
 
 TYPE_SCRIPT     = "script"
@@ -48,7 +44,7 @@ class Pydoc:
     def set_doc(self, doc):
         des = dict()
         des[KEY_TYPE] = TYPE_SCRIPT
-        des[KEY_NAME] = getScriptName()
+        des[KEY_NAME] = utils.get_script_name()
         if doc is None :
             des[KEY_DOC] = ""
         else:

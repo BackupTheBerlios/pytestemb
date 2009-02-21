@@ -5,7 +5,7 @@ PyTestEmb Project : unit test for result utils
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -15,7 +15,7 @@ __email__       = "octopy@gmail.com"
 
 import unittest
 
-import gui.utils as utils
+import ctp.data.utils as utils
 
 
 

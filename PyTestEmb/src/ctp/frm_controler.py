@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -25,11 +25,11 @@ import logging.handlers
 
 
 
-import pytestemb.result as result
+import pytestemb.parser as parser
 
 
 import data.results as dres
-
+import data.documentation as ddoc
 
 
 LOG = logging.getLogger("ScriptRunner")
@@ -63,8 +63,6 @@ class EventEndScript(wx.PyEvent):
     def clone(self):
         return EventEndScript()
 
-def getScriptName(pathfilename):
-    return os.path.splitext(os.path.split(pathfilename)[1])[0]      
 
 
 
@@ -144,7 +142,21 @@ class DialogRunner(wx.Dialog):
         self.evtReaderRun = threading.Event()
         self.thdScriptRun = threading.Thread(target=self.thread_scripts_runner,  name="scripts_runner")
         
-        self.results = dres.Results()
+        
+        self.docs       = None
+        self.results    = None
+        
+        
+        
+        if      self.data[RUN_TYPE] == RUN_SCRIPT :
+            self.results = dres.Results()
+        elif    self.data[RUN_TYPE] == RUN_DOC :
+            self.docs = ddoc.Documentation()
+        else :
+            raise Exception("No type run define")        
+        
+        
+        
         
         
         
@@ -184,7 +196,6 @@ class DialogRunner(wx.Dialog):
         # init lstbox with scripts filename
         scriptName = []
         for script in  self.data[SCRIPT_LIST]:
-            #scriptName.append(getScriptName(script))
             scriptName.append(script.str_relative())
         self.lstboxScript.InsertItems(scriptName, 0)
                 
@@ -263,22 +274,40 @@ class DialogRunner(wx.Dialog):
         self.evtReaderRun.set() # stop reader on process
         
         
-    def update_result(self, script, resultstdoutreader):
+    def update_result(self, script, sdoutreader):
         
-        scriptres = dres.ScriptRes(script)
-
-        if self.exit_code == PY_EXE_RET_CODE_OK :
-            scriptres.import_resultstdoutreader(resultstdoutreader)    
-        elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_FILE:
-            param = "python: can't open file \"%s\""  % script.str_absolute(self.data[BASE_PATH])
-            scriptres.set_status(dres.ST_EXEC_EXECUTED_FILE_ERROR, param )
-        elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_SYNTAX:
-            param = "SyntaxError: invalid syntax"
-            scriptres.set_status(dres.ST_EXEC_EXECUTED_PY_ERROR, param)        
+        if      self.data[RUN_TYPE] == RUN_SCRIPT :
+            scriptres = dres.ScriptRes(script)
+            if self.exit_code == PY_EXE_RET_CODE_OK :
+                scriptres.import_resultstdoutreader(sdoutreader)    
+            elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_FILE:
+                param = "python: can't open file \"%s\""  % script.str_absolute(self.data[BASE_PATH])
+                scriptres.set_status(dres.ST_EXEC_EXECUTED_FILE_ERROR, param )
+            elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_SYNTAX:
+                param = "SyntaxError: invalid syntax"
+                scriptres.set_status(dres.ST_EXEC_EXECUTED_PY_ERROR, param)        
+            else :
+                scriptres.set_status(dres.ST_EXEC_EXECUTED_FILE_ERROR)
+            self.results.update(scriptres)
+        
+        elif    self.data[RUN_TYPE] == RUN_DOC :
+            scriptdoc = ddoc.ScriptDoc(script)
+            if self.exit_code == PY_EXE_RET_CODE_OK :
+                scriptdoc.import_doctstdoutreader(sdoutreader)    
+            elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_FILE:
+                param = "python: can't open file \"%s\""  % script.str_absolute(self.data[BASE_PATH])
+                scriptdoc.set_status(ddoc.ST_PARSE_FILE_ERROR, param )
+            elif self.exit_code ==  PY_EXE_RET_CODE_ERROR_SYNTAX:
+                param = "SyntaxError: invalid syntax"
+                scriptdoc.set_status(ddoc.ST_PARSE_PY_ERROR, param)        
+            else :
+                 scriptdoc.set_status(ddoc.ST_PARSE_FILE_ERROR) 
+            self.docs.update(scriptdoc)
         else :
-            scriptres.set_status(dres.ST_EXEC_EXECUTED_FILE_ERROR)
+            raise Exception("No type run define")
         
-        self.results.update(scriptres)
+        
+
         
 
 
@@ -295,7 +324,15 @@ class DialogRunner(wx.Dialog):
         
         
         #print self.results.__str__()
-        self.results.save()
+        
+        if      self.data[RUN_TYPE] == RUN_SCRIPT :
+            self.results.save()
+        elif    self.data[RUN_TYPE] == RUN_DOC :
+            self.docs.save()
+        else :
+            raise Exception("No type run define")              
+        
+        
         
         
 
@@ -362,7 +399,13 @@ class DialogRunner(wx.Dialog):
     
     def reader_process(self):
         
-        resultstdoutreader = result.ResultStdoutReader()
+        if      self.data[RUN_TYPE] == RUN_SCRIPT :
+            stdoutreader = parser.ResultStdoutReader()
+        elif    self.data[RUN_TYPE] == RUN_DOC :
+            stdoutreader = parser.DocStdoutReader()
+        else :
+            raise Exception("No type run define")
+        
         waiting = 0.05   
         while not(self.evtReaderRun.isSet()):
             if self.process is None:
@@ -376,14 +419,13 @@ class DialogRunner(wx.Dialog):
                     if stream.CanRead():
                         text = stream.readline()
                         LOG.info(text)
-                        resultstdoutreader.add_line(text)
+                        stdoutreader.add_line(text)
                     else:   
                         time.sleep(waiting)
-                        
         self.process.CloseOutput()
         self.process.Destroy()
         self.process = None     
-        return resultstdoutreader   
+        return stdoutreader   
         #LOG.info("End reader")
                         
 
@@ -435,26 +477,27 @@ if __name__ == "__main__":
    
             import os.path
             
-            
             proj = dproj.load_xml(os.path.realpath("..\\..\\test\\script\\project_01.xml")) 
+            #proj = dproj.load_xml(os.path.realpath("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml"))
             
-            slist = proj.get_campaign_list_absolute("Campaign_03")
+            #slist = proj.get_campaign_list_absolute("bluetooth_no_device")
+            slist = proj.get_pool_list_absolute()
             
-            
+
+
             
             data = {}
             
             data[BASE_PATH] = proj.get_base_path()
             data[SCRIPT_LIST] = slist
             data[CONFIG] = None
-            data[TRACE] = TRACE_TXT
-            data[PYPATH] = None
+            data[TRACE] = TRACE_OCTOPYLOG
+            data[PYPATH] = "c:\\CVS_LOCAL_ECLIPSE\\scripts"
             #data[RUN_TYPE] = RUN_SCRIPT
-            data[RUN_TYPE] = RUN_DOC
+            data[RUN_TYPE] = RUN_SCRIPT
             
 
             
-
             wx.InitAllImageHandlers()
             dlg = DialogRunner(data, None, -1, "")
             dlg.ShowModal()

@@ -5,7 +5,7 @@ PyTestEmb Project : project manages project aspect : files, scripts, campaign
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -247,8 +247,8 @@ def load_xml(filename):
     else :
         raise KeyError("No project name")
     # Script pool
-    if it_project[2].tag == "Scripts":
-        it_scripts = it_project[2].getchildren()
+    if it_project[1].tag == "Scripts":
+        it_scripts = it_project[1].getchildren()
         for it_script in it_scripts:            
             it_script = it_script.getchildren()
             name = it_script[0].text
@@ -261,7 +261,7 @@ def load_xml(filename):
     else :
         raise KeyError("No project name")   
     
-    for it_cam in it_project[3:]:
+    for it_cam in it_project[2:]:
         if it_cam.tag == "Campaign":
             it_cam = it_cam.getchildren()
             campaign = it_cam[0].text

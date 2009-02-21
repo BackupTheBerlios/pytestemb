@@ -5,7 +5,7 @@ PyTestEmb Project : unit test for result module
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -17,7 +17,7 @@ import unittest
 
 import pytestemb.trace as trace
 import pytestemb.result as result
-
+import pytestemb.parser as parser
 
 
 
@@ -37,7 +37,7 @@ class Test_ResultReader(unittest.TestCase):
     
     
     def test_case_ResultCounter(self):
-        reader = result.ResultStdoutReader()
+        reader = parser.ResultStdoutReader()
         resultcounter = reader.create_resultcounter()
     
         compare = {}
@@ -54,7 +54,7 @@ class Test_ResultReader(unittest.TestCase):
     
     def test_case_01(self):
 
-        reader = result.ResultStdoutReader()
+        reader = parser.ResultStdoutReader()
         
         reader.add_line("%s%sscript_01\n" % (result.ResultStdout.SCRIPT_START, result.ResultStdout.SEPARATOR))
         reader.add_line("%s%s\n" % (result.ResultStdout.SETUP_START, result.ResultStdout.SEPARATOR))
@@ -77,7 +77,7 @@ class Test_ResultReader(unittest.TestCase):
     
     def test_case_02(self):
 
-        reader = result.ResultStdoutReader()
+        reader = parser.ResultStdoutReader()
         
         reader.add_line("%s%sscript_01\n" % (result.ResultStdout.SCRIPT_START, result.ResultStdout.SEPARATOR))
         reader.add_line("%s%s\n" % (result.ResultStdout.SETUP_START, result.ResultStdout.SEPARATOR))
@@ -175,7 +175,7 @@ class Test_ResultReader(unittest.TestCase):
 
     def test_case_03(self):
 
-        reader = result.ResultStdoutReader()
+        reader = parser.ResultStdoutReader()
         
         reader.add_line("%s%sscript_01\n" % (result.ResultStdout.SCRIPT_START, result.ResultStdout.SEPARATOR))
         
@@ -263,7 +263,7 @@ class Test_ResultReader(unittest.TestCase):
         
     def test_case_error_not_start(self):
 
-        reader = result.ResultStdoutReader()
+        reader = parser.ResultStdoutReader()
         
         reader.add_line("%s%sscript_01\n" % (result.ResultStdout.SCRIPT_START, result.ResultStdout.SEPARATOR))
         
@@ -277,7 +277,7 @@ class Test_ResultReader(unittest.TestCase):
         
     def test_case_error_not_stop(self):
 
-        reader = result.ResultStdoutReader()
+        reader = parser.ResultStdoutReader()
         
         reader.add_line("%s%sscript_01\n" % (result.ResultStdout.SCRIPT_START, result.ResultStdout.SEPARATOR))
         

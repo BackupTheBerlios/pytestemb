@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -197,7 +197,7 @@ class MyApp(wx.App):
         frameMain.Show()
         
         import os.path
-        frameMain.load_xml(os.path.realpath("..\\..\\test\\script\\project_01.xml"))
+        frameMain.load_xml(os.path.realpath("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml"))
         return 1
 
 
