@@ -5,7 +5,7 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.10 $"
+__version__     = "$Revision: 1.11 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -174,7 +174,14 @@ from config import ConfigError
 
 
 class TraceTxt(Trace):
-    DEFAULT_DIR = "c:\\temp"
+     
+    if sys.platform == "linux2":
+        DEFAULT_DIR = "/tmp/pytestemb"
+    else:
+        DEFAULT_DIR = "c:\\temp\\pytestemb"
+    
+    
+    
     def __init__(self):
         Trace.__init__(self)
         
@@ -185,8 +192,8 @@ class TraceTxt(Trace):
         except (ConfigError), (error):
             if not(os.path.lexists(TraceTxt.DEFAULT_DIR)):
                 os.mkdir(TraceTxt.DEFAULT_DIR)
-            pathfile = "%s\\" % TraceTxt.DEFAULT_DIR 
-        pathfile += self.gen_file_name() 
+            #pathfile = "%s\\" % TraceTxt.DEFAULT_DIR
+        pathfile =  os.path.join(TraceTxt.DEFAULT_DIR, self.gen_file_name() ) 
         # create file
         des = dict({"file":pathfile})
         try :
