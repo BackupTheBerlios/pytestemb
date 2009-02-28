@@ -5,7 +5,7 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.11 $"
+__version__     = "$Revision: 1.12 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -15,6 +15,7 @@ import os
 import md5
 import sys
 import time
+import platform
 
 import logging
 import logging.handlers
@@ -175,12 +176,12 @@ from config import ConfigError
 
 class TraceTxt(Trace):
      
-    if sys.platform == "linux2":
+    if      platform.system() == "Linux":
         DEFAULT_DIR = "/tmp/pytestemb"
-    else:
+    elif    platform.system() == "Windows":
         DEFAULT_DIR = "c:\\temp\\pytestemb"
-    
-    
+    else:
+        raise Exception("Platform not supported")
     
     def __init__(self):
         Trace.__init__(self)
