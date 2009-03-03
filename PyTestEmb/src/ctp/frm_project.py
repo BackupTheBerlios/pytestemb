@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.3 $"
+__version__     = "$Revision: 1.4 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -31,8 +31,33 @@ import data.project as dpro
 class ProjectFrame(wx.Frame):
     def __init__(self,parent,id = -1,title='',pos = wx.Point(1,1),size = wx.Size(495,420),style = wx.DEFAULT_FRAME_STYLE,name = 'frame'):
         
-        
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
+        
+        
+        
+        
+        # create menu
+        mb = wx.MenuBar()
+        file_menu = wx.Menu()
+        file_menu.Append(wx.ID_OPEN,    "Open ...")
+        file_menu.Append(wx.ID_REFRESH, "Refresh ...")
+        file_menu.Append(wx.ID_EXIT,    "Exit")
+        
+        help_menu = wx.Menu()
+        help_menu.Append(wx.ID_ABOUT, "About...")
+        
+        mb.Append(file_menu, "File")
+        mb.Append(help_menu, "Help")
+        
+        self.SetMenuBar(mb)
+        
+        
+        
+        self.Bind(wx.EVT_MENU, self.on_open_xml, id=wx.ID_OPEN)
+        self.Bind(wx.EVT_MENU, self.on_refresh_xml, id=wx.ID_REFRESH)
+        
+        
+        
         self.tree = wx.TreeCtrl(self,-1)
         self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         
@@ -41,7 +66,6 @@ class ProjectFrame(wx.Frame):
 
         
         self.project = None
-        
         
         self.il = wx.ImageList(16, 16)
         self.im_script      = self.il.Add( wx.Bitmap("images/script.png", wx.BITMAP_TYPE_PNG))
@@ -53,7 +77,45 @@ class ProjectFrame(wx.Frame):
         self.tree.SetImageList(self.il)
         
     
+        self.wildcard = "Project file (*.xml)|*.xml|"     \
+           "All files (*.*)|*.*"
+    
+    
+    
+    
+    def on_open_xml(self, event):
+        self.open_and_load_xml()
+    
+    def on_refresh_xml(self, event):
+        self.refresh_xml()
+      
+      
+    def open_and_load_xml(self):
+        import os
         
+        dlg = wx.FileDialog(
+            self, message="Choose a file",
+            #"defaultDir=os.getcwd(), 
+            defaultDir="../../test/script/",
+            defaultFile="",
+            wildcard=self.wildcard,
+            style=wx.OPEN | wx.CHANGE_DIR
+            )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.path = dlg.GetPath()
+        else :
+            self.path = None
+        dlg.Destroy()   
+        
+        if self.path is not None :
+            self.load_xml(self.path)
+
+        
+    def refresh_xml(self):
+        if self.path is not None:
+            self.load_xml(self.path)
+          
         
         
     def load_xml(self, filename):
@@ -64,40 +126,59 @@ class ProjectFrame(wx.Frame):
         
         
     def OnRightUp(self, event):
+        type = ["script", "campaign"]
+        id = self.tree.GetSelection()
+        node = self.tree.GetItemPyData(id)
+        
+        if node is None : return
+        if type.count(node["type"]) != 1: return 
+            
+            
+        type_menu = "script"
         
         menu = wx.Menu()
-        item1 = menu.Append(wx.ID_ANY, "New Campaign")
-        menu.AppendSeparator()
-        item2 = menu.Append(wx.ID_ANY, "Add script to a Campaign")
-        item3 = menu.Append(wx.ID_ANY, "Add script to Pool")
-        menu.AppendSeparator()
-        item4 = menu.Append(wx.ID_ANY, "Remove script")
-        
-        self.Bind(wx.EVT_MENU, self.OnItemNewCampaign, item1)
-        self.Bind(wx.EVT_MENU, self.OnItemAddScriptCampaign, item2)
-        self.Bind(wx.EVT_MENU, self.OnItemAddScriptPool, item3)
-        self.Bind(wx.EVT_MENU, self.OnRemoveScript, item4)
-        #self.Bind(wx.EVT_MENU, self.OnRemoveCampaign, item5)
-        
+        if      node["type"] == "script" :
+            item1 = menu.Append(wx.ID_ANY, "Run script")
+            menu.AppendSeparator()
+            item2 = menu.Append(wx.ID_ANY, "View script")
+            self.Bind(wx.EVT_MENU, self.on_run_script,      item1)
+            self.Bind(wx.EVT_MENU, self.on_view_script,     item2)            
+
+        elif    node["type"] == "campaign" :
+            item1 = menu.Append(wx.ID_ANY, "Run campaign")
+            self.Bind(wx.EVT_MENU, self.on_run_campaign,      item1)
+        else:
+            assert False
         self.PopupMenu(menu)
         menu.Destroy()
         
-
+    
+    def on_run_campaign(self, event):
+        id = self.tree.GetSelection()
+        node = self.tree.GetItemPyData(id)
+        assert node["type"] == "campaign"
+        print node["data"]
         
+        for s in self.project.get_campaign_list_scripts(node["data"]):
+            print s.str_absolute(self.project.get_base_path())
+    
+    
+    
+    
+    
+    def on_run_script(self, event):
+        id = self.tree.GetSelection()
+        node = self.tree.GetItemPyData(id)
+        assert node["type"] == "script"
         
-        
-    def OnItemNewCampaign(self, event):
-        self.project.add_campaign("test")
-  
+        print node["data"].str_absolute(self.project.get_base_path())
+            
 
-    def OnItemAddScriptCampaign(self, event):
-        pass
-
-    def OnItemAddScriptPool(self, event):
-        pass
-
-    def OnRemoveScript(self, event):
-        pass
+    def on_view_script(self, event):
+        id = self.tree.GetSelection()
+        node = self.tree.GetItemPyData(id)
+        assert node["type"] == "script"
+        print node["data"]
 
     
     
@@ -121,12 +202,16 @@ class ProjectFrame(wx.Frame):
         
         
         if node.is_behavior(rftree.B_FILE) :
-            item_ = self.tree.AppendItem(item, node.key)
 
+            item_ = self.tree.AppendItem(item, node.key)
+            self.tree.SetPyData(item_, {"type":"script", "data":node.data})
             self.tree.SetItemImage(item_, self.im_script, wx.TreeItemIcon_Normal)          
             
         if node.is_behavior(rftree.B_DIR) : 
             item_ = self.tree.AppendItem(item, node.key)
+        
+            self.tree.SetPyData(item_, {"type":"directory", "data":None})
+            
             self.tree.SetItemImage(item_, self.im_folder, wx.TreeItemIcon_Normal)
             for n in node:
                 self._add_node(item_, n)               
@@ -167,6 +252,7 @@ class ProjectFrame(wx.Frame):
             
             
             item_ = self.tree.AppendItem(item_campaign, campaign.name)
+            self.tree.SetPyData(item_, {"type":"campaign", "data":campaign.name})
             self.tree.SetItemImage(item_, self.im_campaign, wx.TreeItemIcon_Normal)
             
             for node in campaign.scripts.root :
@@ -197,7 +283,7 @@ class MyApp(wx.App):
         frameMain.Show()
         
         import os.path
-        frameMain.load_xml(os.path.realpath("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml"))
+        #frameMain.load_xml(os.path.realpath("../../test/script/project_01.xml"))
         return 1
 
 
