@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -24,8 +24,7 @@ class ResultFrame(wx.Frame):
 
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
         self.tree = wx.TreeCtrl(self,-1)
-        self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        
+        self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivate, self.tree)
         
         self.project = None
@@ -128,7 +127,11 @@ class ResultFrame(wx.Frame):
                             
                             for d in res:
                                 for k,v in d.iteritems():
-                                    item_l = self.tree.AppendItem(item_res, "%s :: %s" % (k.ljust(8),v) )  
+                                    if len(k) >= 8 :
+                                        jsize = 16
+                                    else:
+                                        jsize = 8
+                                    item_l = self.tree.AppendItem(item_res, "%s :: %s" % (k.ljust(jsize),v) )  
 
 
 

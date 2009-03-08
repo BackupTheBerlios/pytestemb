@@ -8,8 +8,10 @@ if __name__ == '__main__':
     pass
 
 
+import time
 
 import wx
+
 
 
 
@@ -21,6 +23,9 @@ WARNING  = 30
 INFO     = 20
 DEBUG    = 10
 NOTSET   =  0
+
+
+
 
 
 # ***************************************************
@@ -38,9 +43,12 @@ class EventTrace(wx.PyEvent):
         self.m_propagationLevel = wx.EVENT_PROPAGATE_MAX
         self.data = data
         self.level = level
+        self.tstamp = time.localtime()
         
     def clone(self):
-        return EventTrace(self.data, self.level)
+        evt = EventTrace(self.data, self.level)
+        evt.tstamp = self.tstamp
+        return evt
     
     @staticmethod
     def create_critical(data):
@@ -71,12 +79,13 @@ class EventTrace(wx.PyEvent):
 
 
 class LoggingFrame(wx.Panel):
-    def __init__(self,parent, size = wx.Size(400,400)):
+    def __init__(self, *p, **pp):
         
-        wx.Panel.__init__(self, parent, -1, size=size)
+        wx.Panel.__init__(self, *p, **pp)
         
-        self.txtdis = wx.TextCtrl(self, -1, size=size, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
-        self.txtdis.SetFont(wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        
+        self.txtdis = wx.TextCtrl(self, -1,  style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+        self.txtdis.SetFont(wx.Font(10, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         
         EVT_CUSTOM_TRACE(self, self.on_trace)
         
@@ -100,10 +109,14 @@ class LoggingFrame(wx.Panel):
         
     def on_trace(self, event):
         
-        tl, style = self.level[event.level]
+        
+        
+        tstamp = time.strftime("%H:%M:%S", event.tstamp)
+        
+        txt, style = self.level[event.level]
         
         self.txtdis.SetDefaultStyle(style)
-        self.txtdis.AppendText("%s: %s\n" % (tl.ljust(10), event.data))
+        self.txtdis.AppendText("%s ::%s:: %s\n" % (tstamp.ljust(8) ,txt.ljust(8), event.data))
 
 
 

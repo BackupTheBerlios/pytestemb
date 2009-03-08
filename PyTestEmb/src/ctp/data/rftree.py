@@ -5,7 +5,7 @@ PyTestEmb Project : rftree for relative file tree
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -75,8 +75,8 @@ class Node:
 
 
 class Directory(Node):
-    def __init__(self, name):
-        Node.__init__(self, name, None, B_DIR)
+    def __init__(self, name, path):
+        Node.__init__(self, name, path, B_DIR)
         
     def __str__(self):
         return "Directory \"%s\"" % self.key 
@@ -96,8 +96,8 @@ class Directory(Node):
         
         
 class File(Node):
-    def __init__(self, name):
-        Node.__init__(self, name, None, B_FILE)    
+    def __init__(self, name, data):
+        Node.__init__(self, name, data, B_FILE)    
     
     def __str__(self):
         return "File \"%s\"" % self.key     
@@ -127,7 +127,7 @@ class RfTree:
         self._iter_sort(self.root) 
    
     
-    def add_item(self, pathname, filename=None):
+    def add_item(self, pathname, filename=None, data=None):
         """ pathname = list of directory """
         parent = self.root
         child = self.root
@@ -135,12 +135,12 @@ class RfTree:
         for directory in pathname:
             child = parent.find_node(directory, B_DIR)
             if child is None :
-                child = Directory(directory)
+                child = Directory(directory, pathname[:pathname.index(directory)])
                 parent.add_node(child)  
             parent = child
             
         if filename is not None:
-            child.add_node(File(filename))    
+            child.add_node(File(filename, data))    
 
 
     def delete_item(self, pathname, filename=None):

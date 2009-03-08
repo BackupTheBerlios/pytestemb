@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.3 $"
+__version__     = "$Revision: 1.4 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -37,16 +37,33 @@ LOG = logging.getLogger("ScriptRunner")
 
 
 
-EVT_CUSTOM_STARTPROCESS_ID = wx.NewId()
+
+
+
+
+# ***************************************************
+# wxEvent : EVT_CUSTOM_ENDSCRIPTS
+# ***************************************************
 EVT_CUSTOM_ENDSCRIPTS_ID = wx.NewId()
 
+def EVT_CUSTOM_ENDSCRIPTS(win, func):
+    win.Connect(-1, -1, EVT_CUSTOM_ENDSCRIPTS_ID, func)    
+
+class EventEndScript(wx.PyEvent):
+    def __init__(self):
+        wx.PyEvent.__init__(self) 
+        self.SetEventType(EVT_CUSTOM_ENDSCRIPTS_ID)
+    def clone(self):
+        return EventEndScript()
+
+
+# ***************************************************
+# wxEvent : EVT_CUSTOM_ENDSCRIPTS
+# *************************************************** 
+EVT_CUSTOM_STARTPROCESS_ID = wx.NewId()
 
 def EVT_CUSTOM_STARTPROCESS(win, func):
     win.Connect(-1, -1, EVT_CUSTOM_STARTPROCESS_ID, func)
-
-def EVT_CUSTOM_ENDSCRIPTS(win, func):
-    win.Connect(-1, -1, EVT_CUSTOM_ENDSCRIPTS_ID, func)
-
 
 class EventStartProcess(wx.PyEvent):
     def __init__(self, pathfilename):
@@ -56,12 +73,40 @@ class EventStartProcess(wx.PyEvent):
     def clone(self):
         return EventStartProcess(self.pathfilename)
 
-class EventEndScript(wx.PyEvent):
-    def __init__(self):
+
+# ***************************************************
+# wxEvent : EVT_CUSTOM_EXECSTATUS
+# *************************************************** 
+EVT_CUSTOM_EXECSTATUS_ID = wx.NewId()
+
+def EVT_CUSTOM_EXECSTATUS(win, func):
+    win.Connect(-1, -1, EVT_CUSTOM_EXECSTATUS_ID, func)
+
+class EventExecStatus(wx.PyEvent):
+    STATE_START = 0
+    STATE_END = 1
+    def __init__(self, status):
         wx.PyEvent.__init__(self) 
-        self.SetEventType(EVT_CUSTOM_ENDSCRIPTS_ID)
+        self.status = status
+        self.SetEventType(EVT_CUSTOM_EXECSTATUS_ID)
+    def get_script(self):
+        return self.status["name"]
+    def is_state_start(self):
+        return (self.status["state"] == EventExecStatus.STATE_START)
+    def is_state_end(self):
+        return (self.status["state"] == EventExecStatus.STATE_END)    
     def clone(self):
-        return EventEndScript()
+        return EventExecStatus(self.status)
+    @staticmethod
+    def create_start_script(script_name):
+        status = {"name":script_name, "state":EventExecStatus.STATE_START}
+        return EventExecStatus(status)
+    @staticmethod
+    def create_end_script(script_name):
+        status = {"name":script_name, "state":EventExecStatus.STATE_END}
+        return EventExecStatus(status)
+               
+
 
 
 
@@ -135,6 +180,7 @@ class DialogRunner(wx.Dialog):
         self.Bind(wx.EVT_END_PROCESS, self.OnProcessEnded)
         EVT_CUSTOM_STARTPROCESS(self, self.OnStartProcess)
         EVT_CUSTOM_ENDSCRIPTS(self, self.OnEndScripts)
+        EVT_CUSTOM_EXECSTATUS(self, self.on_execstatus)
         
         
         # scripts runner
@@ -171,7 +217,7 @@ class DialogRunner(wx.Dialog):
 
         self.SetTitle("Script Runner")
         _icon = wx.EmptyIcon()
-        _icon.CopyFromBitmap(wx.Bitmap("images\\cog_go.png", wx.BITMAP_TYPE_ANY))
+        _icon.CopyFromBitmap(wx.Bitmap("images/cog_go.png", wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
 
 
@@ -198,6 +244,7 @@ class DialogRunner(wx.Dialog):
         for script in  self.data[SCRIPT_LIST]:
             scriptName.append(script.str_relative())
         self.lstboxScript.InsertItems(scriptName, 0)
+        self.activity.SetRange(len(scriptName))
                 
     
         
@@ -260,6 +307,22 @@ class DialogRunner(wx.Dialog):
         self.process.GetOutputStream().write("case : case_02\n")
         self.process.GetOutputStream().write("END\n")        
         
+        
+    def on_execstatus(self, evt):
+
+
+        n = self.lstboxScript.FindString(evt.get_script())
+        if      evt.is_state_start():
+            self.lstboxScript.Select(n)
+        elif    evt.is_state_end():
+            self.lstboxScript.Deselect(n)
+            
+            self.activity.SetValue(n+1) 
+            
+        else:
+            assert False
+        
+
 
 
     def OnProcessEnded(self, evt):
@@ -385,12 +448,16 @@ class DialogRunner(wx.Dialog):
         """ thread that run a list of scripts """
         LOG.info("Thread is running")
         for index, script in enumerate(self.data[SCRIPT_LIST]):
-            self.lstboxScript.Select(index)
+            # update GUI
+            self.AddPendingEvent(EventExecStatus.create_start_script(script.str_relative()))
+            # run script
             self.evtReaderRun.clear()
             self.post_event_startprocess(script.str_absolute(self.data[BASE_PATH]))
             res = self.reader_process()
-            self.lstboxScript.Deselect(index)
+            # update GUI and result
+            self.AddPendingEvent(EventExecStatus.create_end_script(script.str_relative()))
             self.update_result(script, res)
+            # Stop script execution
             if self.evtScriptRun.isSet() :
                 break
         self.post_event_endscripts()
@@ -410,6 +477,7 @@ class DialogRunner(wx.Dialog):
         while not(self.evtReaderRun.isSet()):
             if self.process is None:
                 time.sleep(waiting) 
+                continue
             stream = self.process.GetInputStream()
             if stream is None :
                 #LOG.info("sleep : %f" % waiting)
@@ -432,7 +500,7 @@ class DialogRunner(wx.Dialog):
         
       
     def onStart(self, event):
-        self.start_Gauge_Activity()
+        #self.start_Gauge_Activity()
         self.start_thread_scripts_runner()
 
       
@@ -443,8 +511,11 @@ class DialogRunner(wx.Dialog):
         self.stop_thread_scripts_runner()  
         if self.pid is not None :
             LOG.info("Stop process ... by kill pid:%d" % self.pid)
-            self.process.Kill(self.pid, wx.SIGKILL)
-        
+            try :
+                self.process.Kill(self.pid, wx.SIGKILL)
+            except Exception:
+                pass
+                
         
 
     def onClose(self, event): 
@@ -476,12 +547,12 @@ if __name__ == "__main__":
    
    
             import os.path
-            
-            proj = dproj.load_xml(os.path.realpath("..\\..\\test\\script\\project_01.xml")) 
+        
+            proj = dproj.load_xml(os.path.realpath("../../test/script/project_01.xml")) 
             #proj = dproj.load_xml(os.path.realpath("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml"))
             
-            #slist = proj.get_campaign_list_absolute("bluetooth_no_device")
-            slist = proj.get_pool_list_absolute()
+            slist = proj.get_campaign_list_scripts("Campaign_01")
+            #slist = proj.get_pool_list_absolute()
             
 
 
@@ -492,7 +563,8 @@ if __name__ == "__main__":
             data[SCRIPT_LIST] = slist
             data[CONFIG] = None
             data[TRACE] = TRACE_OCTOPYLOG
-            data[PYPATH] = "c:\\CVS_LOCAL_ECLIPSE\\scripts"
+            #data[PYPATH] = "c:\\CVS_LOCAL_ECLIPSE\\scripts"
+            data[PYPATH] = None
             #data[RUN_TYPE] = RUN_SCRIPT
             data[RUN_TYPE] = RUN_SCRIPT
             

@@ -5,7 +5,7 @@ PyTestEmb Project : project manages project aspect : files, scripts, campaign
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.3 $"
+__version__     = "$Revision: 1.4 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -51,7 +51,7 @@ class Project:
         return lst        
 
     def add_script_in_pool(self, script):
-        self.scripts.add_item(script.get_path(), script.get_name())
+        self.scripts.add_item(script.get_path(), script.get_name(), script)
   
     def add_script_in_campaign(self, name, script):
         for campaign in self.campaigns:
@@ -82,10 +82,10 @@ class Project:
   
             
                                   
-    def get_campaign_list_absolute(self, name):      
-        for campaign in self.campaigns:
-            if name == campaign.name :
-                return self.get_lst_scripts(campaign.scripts)
+#    def get_campaign_list_absolute(self, name):      
+#        for campaign in self.campaigns:
+#            if name == campaign.name :
+#                return self.get_lst_scripts(campaign.scripts)
 
 
     def get_campaign_list_scripts(self, name):      
@@ -137,7 +137,7 @@ class Campaign:
             
     
     def add_script(self, script):
-        self.scripts.add_item(script.get_path(), script.get_name())
+        self.scripts.add_item(script.get_path(), script.get_name(), script)
         
     def __str__(self):
         dis = "Campaign : %s\n" % self.name
@@ -230,6 +230,8 @@ XML_PATH_SEP = "\\"
 
     
 def load_xml(filename):
+    
+    
     import xml.etree.ElementTree as et
 
     project = Project()    
@@ -266,7 +268,7 @@ def load_xml(filename):
             it_cam = it_cam.getchildren()
             campaign = it_cam[0].text
             project.add_campaign(campaign)
-            for it_script in it_cam[2:]:
+            for it_script in it_cam[1:]:
                 if it_script.tag == "Script":
                     it_script = it_script.getchildren()
                     name = it_script[0].text
