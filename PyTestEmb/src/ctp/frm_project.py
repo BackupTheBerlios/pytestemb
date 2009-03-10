@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.5 $"
+__version__     = "$Revision: 1.6 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -27,8 +27,12 @@ import data.rftree as rftree
 import data.project as dpro
 
 import wxcustom.evt_file as evt_file
+import wxcustom.evt_run as evt_run   
     
-    
+
+
+import frm_controler as frm_controler
+
 
         
 class ProjectFrame(wx.Panel):
@@ -157,19 +161,30 @@ class ProjectFrame(wx.Panel):
         id = self.tree.GetSelection()
         node = self.tree.GetItemPyData(id)
         assert node["type"] == "campaign"
-        print node["data"]
-        self.log_debug("Run Campaign : \"%s\"" % node["data"])
-        for s in self.project.get_campaign_list_scripts(node["data"]):
-            self.log_debug("+%s" % s.str_absolute(self.project.get_base_path()))
+        self.log_debug("Run Campaign : \"%s\"" % node["data"])  
+        # EventRunScript
+        slist = list()
+        for script in self.project.get_campaign_list_scripts(node["data"]):
+            slist.append(script)
+        config = dict()
+        config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        evt = evt_run.EventRunScript(slist, config)
+        self.post_event(evt)
     
     
     def on_run_script(self, event):
         id = self.tree.GetSelection()
         node = self.tree.GetItemPyData(id)
         assert node["type"] == "script"
-        
-        self.log_debug(node["data"].str_absolute(self.project.get_base_path()))
-
+        self.log_debug("Run Script : \"%s\"" % node["data"].get_name())  
+        # EventRunScript
+        slist = list()
+        slist.append(node["data"])
+        config = dict()
+        config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        evt = evt_run.EventRunScript(slist, config)
+        self.post_event(evt)
+    
             
 
     def on_view_script(self, event):

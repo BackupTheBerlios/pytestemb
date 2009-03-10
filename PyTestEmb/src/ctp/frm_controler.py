@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.4 $"
+__version__     = "$Revision: 1.5 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -139,7 +139,7 @@ RUN_DOC    = 1
 class DialogRunner(wx.Dialog):
     
     def __init__(self, data, *args, **kwds):
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP
+        kwds["style"] = wx.STAY_ON_TOP
         wx.Dialog.__init__(self, *args, **kwds)
         
         LOG.info("Start init window")
@@ -216,9 +216,9 @@ class DialogRunner(wx.Dialog):
     def __set_properties(self):
 
         self.SetTitle("Script Runner")
-        _icon = wx.EmptyIcon()
-        _icon.CopyFromBitmap(wx.Bitmap("images/cog_go.png", wx.BITMAP_TYPE_ANY))
-        self.SetIcon(_icon)
+#        _icon = wx.EmptyIcon()
+#        _icon.CopyFromBitmap(wx.Bitmap("images/cog_go.png", wx.BITMAP_TYPE_ANY))
+#        self.SetIcon(_icon)
 
 
     def __do_layout(self):

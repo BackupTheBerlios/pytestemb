@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.3 $"
+__version__     = "$Revision: 1.4 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -17,12 +17,17 @@ import wx.html
 import wx.aui
 
 
+import data.utils
+
 import wxcustom.evt_file as evt_file
+import wxcustom.evt_run as evt_run
+
 import wxcustom.editor_py as editor_py
 
 import frm_logging
 import frm_project
 import frm_results
+import frm_controler
 
 
 
@@ -48,13 +53,13 @@ ID_CreateLog = wx.NewId()
 ID_LogContent = wx.NewId()
 ID_TreeContent = wx.NewId()
 ID_SizeReportContent = wx.NewId()
-ID_CreatePerspective = wx.NewId()
-ID_CopyPerspective = wx.NewId()
+#ID_CreatePerspective = wx.NewId()
+#ID_CopyPerspective = wx.NewId()
 
 
 ID_Settings = wx.NewId()
 ID_About = wx.NewId()
-ID_FirstPerspective = ID_CreatePerspective+1000
+#ID_FirstPerspective = ID_CreatePerspective+1000
 
 
 
@@ -83,6 +88,7 @@ class PyAUIFrame(wx.Frame):
         
     
         evt_file.EVT_CUSTOM_FILE_VIEW(self, self.on_file_view)
+        evt_run.EVT_CUSTOM_RUN_SCRIPT(self, self.on_run_script)
         
         
         self.SetTitle("Control Test - PyTestEmb")
@@ -182,7 +188,6 @@ class PyAUIFrame(wx.Frame):
 
 
 
-
         self._mgr.AddPane(tb2, wx.aui.AuiPaneInfo().
                           Name("tb2").Caption("Toolbar 2").
                           ToolbarPane().Top().Row(1).
@@ -251,11 +256,14 @@ class PyAUIFrame(wx.Frame):
 
 
     
-        self.Bind(wx.EVT_MENU_RANGE, self.OnRestorePerspective, id=ID_FirstPerspective,
-                  id2=ID_FirstPerspective+1000)
+#        self.Bind(wx.EVT_MENU_RANGE, self.OnRestorePerspective, id=ID_FirstPerspective,
+#                  id2=ID_FirstPerspective+1000)
         
     
         self.log_info("Application is ready")
+        
+        
+        
         
         
     def log_info(self, data):
@@ -267,8 +275,33 @@ class PyAUIFrame(wx.Frame):
             evt = frm_logging.EventTrace.create_debug(data)
             self.ctrl["log"].AddPendingEvent(evt)
 
+    def log_error(self, data):
+        evt = frm_logging.EventTrace.create_error(data)
+        self.ctrl["log"].AddPendingEvent(evt)
 
 
+    def on_run_script(self, event):
+        
+        slist = event.slist
+        config = event.config
+        
+        self.log_info("Run %d script(s)" % len(slist))
+        
+        self.log_debug("Base path : \"%s\"" % config[frm_controler.BASE_PATH])
+        for s in slist:
+            self.log_debug(s.str_relative())
+            
+            
+        config[frm_controler.SCRIPT_LIST] = slist
+        config[frm_controler.CONFIG] = None
+        config[frm_controler.TRACE] = frm_controler.TRACE_OCTOPYLOG
+        config[frm_controler.PYPATH] = None
+        config[frm_controler.RUN_TYPE] = frm_controler.RUN_SCRIPT
+            
+        dlg = frm_controler.DialogRunner(config, None, -1, "")
+        dlg.ShowModal()    
+        
+        
 
 
     def on_file_view(self, event):
@@ -286,21 +319,23 @@ class PyAUIFrame(wx.Frame):
 
     def create_view_editor_py(self, path):
         
-        
         # read file
         try:
             import codecs
             fileObj = codecs.open( path, "r", "utf-8" )     
             t = fileObj.read()
-        except :
+        except Exception, exc :
+            self.log_error("Error reading File : %s" % path)
+            self.log_debug("Exception : %s" % exc.__str__())
             wx.MessageBox("Error reading File : %s" % path)
             return
             
-        
         ctrl = self.ctrl["mdi"]
-        page = editor_py.Editor_py(ctrl, -1, style = wx.NO_FULL_REPAINT_ON_RESIZE)
+        page = editor_py.Editor_py(ctrl, -1, style = wx.FULL_REPAINT_ON_RESIZE)
         page.SetText(t)
-        ctrl.AddPage(page, "PyEditor")
+        
+        s_absolutepath, filename, ext = data.utils.split_fullpath(path)
+        ctrl.AddPage(page, "%s.%s" % (filename, ext))
 
 
 
@@ -464,15 +499,14 @@ class PyAUIFrame(wx.Frame):
         return ctrl
 
 
-
-
-
-
     def Create_MDI(self):
         ctrl = wx.aui.AuiNotebook(self, -1,  size=(640,480),\
                                           style=wx.DEFAULT_FRAME_STYLE, pos=wx.DefaultPosition  )
         self.ctrl["mdi"] = ctrl
         return ctrl
+    
+    
+    
         
 #        page = wx.TextCtrl(ctrl, -1, "", style=wx.TE_MULTILINE)
 #        
