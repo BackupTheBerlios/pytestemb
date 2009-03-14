@@ -76,6 +76,31 @@ class EventTrace(wx.PyEvent):
 
     
 
+import sys
+
+class LoggingStdout():
+    def __init__(self, debug=True):
+        self.debug = debug
+    
+    def _log(self, tag, data):
+        
+        
+        
+        tstamp = time.strftime("%H:%M:%S", time.localtime())
+        sys.stdout.write("%s ::%s:: %s\n" % (tstamp.ljust(8) ,tag.ljust(8), data))
+    
+    def log_info(self, data):
+        self._log("info", data)
+        
+    
+    def log_debug(self, data):
+        if self.debug :
+            self._log("debug", data)
+
+    def log_error(self, data):
+        self._log("error", data)
+
+
 
 
 class LoggingFrame(wx.Panel):
@@ -104,8 +129,13 @@ class LoggingFrame(wx.Panel):
         self.level[DEBUG]     = ("DEBUG",    wx.TextAttr(cdb.Find("BLUE")))
         self.level[NOTSET]    = ("NOTSET",   wx.TextAttr(cdb.Find("BLACK")))
 
+        self.file = None
+        self.file = open("ctp.log", "w")
         
-        
+    
+    def __del__(self):
+        self.file.close()
+    
         
     def on_trace(self, event):
         
@@ -118,7 +148,8 @@ class LoggingFrame(wx.Panel):
         self.txtdis.SetDefaultStyle(style)
         self.txtdis.AppendText("%s ::%s:: %s\n" % (tstamp.ljust(8) ,txt.ljust(8), event.data))
 
-
+        self.file.write("%s ::%s:: %s\n" % (tstamp.ljust(8) ,txt.ljust(8), event.data))
+        self.file.flush()
 
 
 class TestFrame(wx.Frame):

@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.4 $"
+__version__     = "$Revision: 1.5 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -297,9 +297,32 @@ class PyAUIFrame(wx.Frame):
         config[frm_controler.TRACE] = frm_controler.TRACE_OCTOPYLOG
         config[frm_controler.PYPATH] = None
         config[frm_controler.RUN_TYPE] = frm_controler.RUN_SCRIPT
+        style=frm_controler.STYLE_AUTO_START_CLOSE
+        dlg = frm_controler.DialogRunner(config, style, None, -1, "")
+        dlg.set_log(self)
+        dlg.ShowModal()
+        ret = dlg.GetReturnCode()   
+        if    ret == frm_controler.RET_CODE_OK :
+            self.log_info("Running scripts success")
+        elif  ret == frm_controler.RET_CODE_ERROR :
+            self.log_error("Running scripts error")
+        elif ret == frm_controler.RET_CODE_USER_ABORT :
+            self.log_error("Running scripts user abortion")
+        else :
+            assert False
             
-        dlg = frm_controler.DialogRunner(config, None, -1, "")
-        dlg.ShowModal()    
+        dlg.Destroy()
+            
+            
+            
+            
+            
+            
+             
+        
+        
+        
+        
         
         
 
@@ -355,12 +378,15 @@ class PyAUIFrame(wx.Frame):
         
 
     def OnClose(self, event):
+        
+        self.log_debug("OnClose")
         self._mgr.UnInit()
         del self._mgr
         self.Destroy()
 
 
     def OnExit(self, event):
+        self.log_debug("OnExit")
         self.Close()
 
     def OnAbout(self, event):

@@ -5,7 +5,7 @@ PyTestEmb Project : parser manages parsing of stdout result
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -37,7 +37,6 @@ class StdoutReader:
     
     def add_line(self, line):
         pos = line.find(result.ResultStdout.SEPARATOR)
-        print line
         if pos == line[-1] :
             self.process(line, None)
         else :
@@ -48,7 +47,6 @@ class StdoutReader:
         try:
             return UserDict.UserDict(eval(data))
         except Exception , error:
-            print data
             raise error    
     
     def process(self, key, value):
@@ -84,7 +82,7 @@ class ResultStdoutReader(StdoutReader):
     
     
     def process(self, key, value):
-        print "key=%s value=%s" % (key, value)
+        #print "key=%s value=%s" % (key, value)
         
         # SCRIPT_START
         if      key == result.ResultStdout.SCRIPT_START :
@@ -141,7 +139,8 @@ class ResultStdoutReader(StdoutReader):
             dic = self.conv_dict(value)
             self.script[-1].case[-1].add_result(key, dic)
         else :
-            print "key=%s value=%s" % (key, value)
+            pass
+            #print "key=%s value=%s" % (key, value)
             
             
 
@@ -163,7 +162,8 @@ class DocStdoutReader(StdoutReader):
         if  key == result.ResultStdout.DOC :
             self.data.append(self.conv_dict(value))
         else:
-            print "key=%s value=%s" % (key, value)
+            pass
+            #print "key=%s value=%s" % (key, value)
             
             
             

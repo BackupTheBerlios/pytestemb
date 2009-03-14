@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.5 $"
+__version__     = "$Revision: 1.6 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -23,7 +23,7 @@ import logging
 import logging.handlers
 
 
-
+import frm_logging
 
 import pytestemb.parser as parser
 
@@ -32,7 +32,7 @@ import data.results as dres
 import data.documentation as ddoc
 
 
-LOG = logging.getLogger("ScriptRunner")
+#LOG = logging.getLogger("ScriptRunner")
 
 
 
@@ -135,37 +135,64 @@ RUN_SCRIPT = 0
 RUN_DOC    = 1
 
     
+    
+STYLE_AUTO_START_CLOSE  = 0
+STYLE_DEFAULT           = 1
+
+
+
+
+RET_CODE_OK         = 0
+RET_CODE_ERROR      = 1
+RET_CODE_USER_ABORT = 2
+
 
 class DialogRunner(wx.Dialog):
     
-    def __init__(self, data, *args, **kwds):
-        kwds["style"] = wx.STAY_ON_TOP
+    def __init__(self, data, style=STYLE_DEFAULT, *args, **kwds):
+        
+        
+        # init wx.Dialog
+        if   style == STYLE_DEFAULT:
+            kwds["style"] = wx.DEFAULT_DIALOG_STYLE
+        elif style == STYLE_AUTO_START_CLOSE:
+            kwds["style"] = wx.THICK_FRAME 
+        else :
+            assert False
         wx.Dialog.__init__(self, *args, **kwds)
         
-        LOG.info("Start init window")
+
         
         # get parameters
         self.data = data
+        self.style = style
 
+        self.log        = None
+        self.docs       = None
+        self.results    = None
+              
         
+        self.start = None
+        self.stop = None
         
-        # create control  
-        self.lstboxScript = wx.ListBox(self, -1,  size=wx.Size(400,200))
-        self.lstboxScript.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.activity = wx.Gauge(self, -1, size=wx.Size(400,30))
-        self.start = wx.Button(self, -1,"Start")
-        self.stop = wx.Button(self, -1, "Stop")
-        self.close = wx.Button(self, -1, "Close")
-        
-        # layout
-        self.__set_properties()
-        self.__do_layout()
-        
+
+        if   style == STYLE_DEFAULT:
+            self.SetTitle("Script Runner")
+            self.start = wx.Button(self, -1,"Start")
+            self.stop = wx.Button(self, -1, "Stop") 
+        elif style == STYLE_AUTO_START_CLOSE:
+            self.stop = wx.Button(self, -1, "Stop")
+        else :
+            assert False
+            
+
         # bind event
-        self.Bind(wx.EVT_BUTTON, self.onStart, self.start)
-        self.Bind(wx.EVT_BUTTON, self.onStop, self.stop)
-        self.Bind(wx.EVT_BUTTON, self.onClose, self.close)
-        self.Bind(wx.EVT_CLOSE,self.onDestroy)        
+        if self.stop is not None :
+            self.Bind(wx.EVT_BUTTON, self.onStop, self.stop)  
+        if self.start is not None :
+            self.Bind(wx.EVT_BUTTON, self.onStart, self.start)
+
+        self.Bind(wx.EVT_CLOSE, self.onClose)        
         
         # timer for activity gauge
         self.Bind(wx.EVT_TIMER, self.handler_timer)
@@ -188,10 +215,7 @@ class DialogRunner(wx.Dialog):
         self.evtReaderRun = threading.Event()
         self.thdScriptRun = threading.Thread(target=self.thread_scripts_runner,  name="scripts_runner")
         
-        
-        self.docs       = None
-        self.results    = None
-        
+
         
         
         if      self.data[RUN_TYPE] == RUN_SCRIPT :
@@ -200,44 +224,69 @@ class DialogRunner(wx.Dialog):
             self.docs = ddoc.Documentation()
         else :
             raise Exception("No type run define")        
+    
+    
+    
+            # create control  
+        self.lstboxScript = wx.ListBox(self, -1,  size=wx.Size(400,200))
+        self.lstboxScript.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.activity = wx.Gauge(self, -1, size=wx.Size(400,30))
         
-        
-        
-        
-        
-        
-
-        self.init_GUI()
-
-        LOG.info("End Init window")
-        
-
-
-    def __set_properties(self):
-
-        self.SetTitle("Script Runner")
-#        _icon = wx.EmptyIcon()
-#        _icon.CopyFromBitmap(wx.Bitmap("images/cog_go.png", wx.BITMAP_TYPE_ANY))
-#        self.SetIcon(_icon)
-
-
-    def __do_layout(self):
-
+    
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_1.Add((400, 20), 0, 0, 0)
         sizer_1.Add(self.lstboxScript, 0, wx.ALL, 5)
         sizer_1.Add(self.activity, 0, wx.ALL, 5)
         sizer_1.Add((400, 20), 0, 0, 0)
         
-        sizer_1.Add(self.start, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(self.stop, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(self.close, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
         
+        
+        if self.start is not None :
+            sizer_1.Add(self.start, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
+        if self.stop is not None :
+            sizer_1.Add(self.stop, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5) 
+
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
-              
     
+        self.init_GUI()
+        
+        
+        
+        # Start
+        if   style == STYLE_DEFAULT:
+            pass
+        elif style == STYLE_AUTO_START_CLOSE:
+            self.start_running_script()
+        else :
+            assert False
+        
+        
+        
+        
+        
+    
+    
+    def set_log(self, log):
+        self.log = log
+        self.log_info("log enable")
+        
+    
+    def log_debug(self, data):
+        if self.log is not None :
+            self.log.log_debug(data)
+        
+    def log_info(self, data):
+        if self.log is not None :
+            self.log.log_info(data)
+
+    def log_error(self, data):
+        if self.log is not None :
+            self.log.log_error(data)
+
+
+
     def init_GUI(self):
         # init lstbox with scripts filename
         scriptName = []
@@ -246,17 +295,17 @@ class DialogRunner(wx.Dialog):
         self.lstboxScript.InsertItems(scriptName, 0)
         self.activity.SetRange(len(scriptName))
                 
-    
-        
-    def clean(self):
-        LOG.info("Start clean")
-        self.timer.Stop()
-        self.stop_thread_scripts_runner()
-        if self.process is not None:
-            self.process.Kill(self.process.GetPid())
-            self.process.CloseOutput()
-            self.process = None
-        LOG.info("Stop clean")        
+#    
+#        
+#    def clean(self):
+#        LOG.info("Start clean")
+#        self.timer.Stop()
+#        self.stop_thread_scripts_runner()
+#        if self.process is not None:
+#            self.process.Kill(self.process.GetPid())
+#            self.process.CloseOutput()
+#            self.process = None
+#        LOG.info("Stop clean")        
 
             
 
@@ -270,9 +319,6 @@ class DialogRunner(wx.Dialog):
     def run_process(self, pathfilename):
         """ run a process 
         must be called in main thread """
-        
-        
-        
         
         #scriptArgument = " --config=stdin --result=stdout"
         scriptArgument = " --config=stdin --result=stdout"
@@ -299,7 +345,7 @@ class DialogRunner(wx.Dialog):
         
         self.exit_code = None
         self.pid = wx.Execute(cmd, wx.EXEC_ASYNC, self.process)
-        LOG.info("Start process : %s pid %s\n" % (cmd, self.pid))
+        self.log_debug("Start process : %s pid %s" % (cmd, self.pid))
         
         self.process.GetOutputStream().write("env : debug\n")
         self.process.GetOutputStream().write("serial : com1\n")
@@ -310,7 +356,6 @@ class DialogRunner(wx.Dialog):
         
     def on_execstatus(self, evt):
 
-
         n = self.lstboxScript.FindString(evt.get_script())
         if      evt.is_state_start():
             self.lstboxScript.Select(n)
@@ -318,7 +363,6 @@ class DialogRunner(wx.Dialog):
             self.lstboxScript.Deselect(n)
             
             self.activity.SetValue(n+1) 
-            
         else:
             assert False
         
@@ -328,7 +372,9 @@ class DialogRunner(wx.Dialog):
     def OnProcessEnded(self, evt):
         """ call back when event """
         self.pid = None
-        LOG.info("Process Ended pid:%s,  exitCode: %s\n" % \
+        
+        
+        self.log_debug("Process Ended pid:%s,  exitCode: %s" % \
                               (evt.GetPid(), evt.GetExitCode()))
         time.sleep(0.1)         # let some times to reader to finish reading
         
@@ -388,12 +434,12 @@ class DialogRunner(wx.Dialog):
         
         #print self.results.__str__()
         
-        if      self.data[RUN_TYPE] == RUN_SCRIPT :
-            self.results.save()
-        elif    self.data[RUN_TYPE] == RUN_DOC :
-            self.docs.save()
-        else :
-            raise Exception("No type run define")              
+#        if      self.data[RUN_TYPE] == RUN_SCRIPT :
+#            self.results.save()
+#        elif    self.data[RUN_TYPE] == RUN_DOC :
+#            self.docs.save()
+#        else :
+#            raise Exception("No type run define")              
         
         
         
@@ -401,6 +447,20 @@ class DialogRunner(wx.Dialog):
 
     def OnEndScripts(self, event):
         self.stop_Gauge_Activity()
+        
+        self.log_info("end script running")   
+        if   self.style == STYLE_DEFAULT:
+            pass
+        elif self.style == STYLE_AUTO_START_CLOSE:
+            self.log_debug("EndModal(RET_CODE_OK)")  
+            self.EndModal(RET_CODE_OK)
+        else :
+            assert False
+            
+
+        
+
+
         
 
 
@@ -434,19 +494,21 @@ class DialogRunner(wx.Dialog):
     def stop_thread_scripts_runner(self):
         """ stop_thread_scripts_runner """
         if self.thdScriptRun.isAlive() :
-            LOG.info("Thread is stopping ...")
+            
+            self.log_debug("Thread is stopping ...")
             self.evtReaderRun.set()
             self.evtScriptRun.set()
             self.thdScriptRun.join()
-            LOG.info("Thread is stopped")            
+            self.log_debug("Thread is stopped")            
         else :
-            LOG.info("Thread is already stopped")
+            self.log_debug("Thread is already stopped")
         
     
     
     def thread_scripts_runner(self):  
         """ thread that run a list of scripts """
-        LOG.info("Thread is running")
+        self.log_debug("Thread is running")
+        
         for index, script in enumerate(self.data[SCRIPT_LIST]):
             # update GUI
             self.AddPendingEvent(EventExecStatus.create_start_script(script.str_relative()))
@@ -459,7 +521,7 @@ class DialogRunner(wx.Dialog):
             self.update_result(script, res)
             # Stop script execution
             if self.evtScriptRun.isSet() :
-                break
+                return
         self.post_event_endscripts()
             
     
@@ -486,7 +548,7 @@ class DialogRunner(wx.Dialog):
                 while not(self.evtReaderRun.isSet()):
                     if stream.CanRead():
                         text = stream.readline()
-                        LOG.info(text)
+                        #LOG.info(text)
                         stdoutreader.add_line(text)
                     else:   
                         time.sleep(waiting)
@@ -497,36 +559,79 @@ class DialogRunner(wx.Dialog):
         #LOG.info("End reader")
                         
 
-        
+    def start_running_script(self):
+        self.start_thread_scripts_runner()
       
     def onStart(self, event):
-        #self.start_Gauge_Activity()
-        self.start_thread_scripts_runner()
+        self.start_running_script()
+        
+
+
+
 
       
     def onStop(self, event):
-        """ Stop script exection """
-        LOG.info("Stop execution")
-        self.process.CloseOutput()
-        self.stop_thread_scripts_runner()  
-        if self.pid is not None :
-            LOG.info("Stop process ... by kill pid:%d" % self.pid)
-            try :
-                self.process.Kill(self.pid, wx.SIGKILL)
-            except Exception:
-                pass
-                
         
 
-    def onClose(self, event): 
-        self.EndModal(0)
-        event.Skip()
+
+        if   self.style == STYLE_DEFAULT:
+            self.stop_script_running()
+        elif self.style == STYLE_AUTO_START_CLOSE:
+            self.stop_script_running()
+            self.log_debug("EndModal(RET_CODE_USER_ABORT)")
+            self.EndModal(RET_CODE_USER_ABORT)
+        else :
+            assert False
+            
 
 
-    def onDestroy(self, event):
-        #LOG.info("destroy")  
-        #self.clean()
-        self.EndModal(0)
+        
+        
+        
+    def stop_script_running(self):
+        """ Stop script exection """
+        
+        self.log_debug("stop script running")
+        
+            
+        try :
+            self.log_debug("Stop process ... by kill pid:%d" % self.pid)
+            ret = self.process.Kill(self.pid, wx.SIGQUIT)
+            if    ret == wx.KILL_OK :
+                self.log_debug("Process kill success")
+            elif  ret == wx.KILL_NO_PROCESS :
+                self.log_debug("No process existing")
+            else :
+                self.log_error("Error killing process, try manually : name=\"python\", pid=%d " % self.pid)
+                  
+        except Exception, ex:
+            self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
+            
+        try:
+            self.stop_thread_scripts_runner()           
+        except Exception, ex :
+            self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
+            
+         
+    
+    
+    def close_dialog(self):
+        
+        if self.thdScriptRun.isAlive() :
+            self.stop_script_running()
+            self.log_debug("EndModal(RET_CODE_USER_ABORT)")
+            self.EndModal(RET_CODE_USER_ABORT)
+        else: 
+            self.log_debug("EndModal(RET_CODE_OK)")
+            self.EndModal(RET_CODE_OK)        
+    
+                
+        
+    def onClose(self, event):
+        self.close_dialog()
+        evt.skip()
+        
+
 
 
 
@@ -536,11 +641,11 @@ if __name__ == "__main__":
     
     import data.project as dproj
 
-    rootLogger = logging.getLogger("")
-    rootLogger.setLevel(logging.DEBUG)
-    socketHandler = logging.handlers.SocketHandler("localhost", logging.handlers.DEFAULT_TCP_LOGGING_PORT)
-    rootLogger.addHandler(socketHandler)
-        
+#    rootLogger = logging.getLogger("")
+#    rootLogger.setLevel(logging.DEBUG)
+#    socketHandler = logging.handlers.SocketHandler("localhost", logging.handlers.DEFAULT_TCP_LOGGING_PORT)
+#    rootLogger.addHandler(socketHandler)
+#        
     
     class MyApp(wx.App):
         def OnInit(self):
@@ -551,8 +656,9 @@ if __name__ == "__main__":
             proj = dproj.load_xml(os.path.realpath("../../test/script/project_01.xml")) 
             #proj = dproj.load_xml(os.path.realpath("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml"))
             
-            slist = proj.get_campaign_list_scripts("Campaign_01")
-            #slist = proj.get_pool_list_absolute()
+            #slist = proj.get_campaign_list_scripts("Campaign_Infinite_Loop")
+            #slist = proj.get_campaign_list_scripts("Campaign_Infinite_Loop")
+            slist = proj.get_pool_list_absolute()
             
 
 
@@ -569,10 +675,18 @@ if __name__ == "__main__":
             data[RUN_TYPE] = RUN_SCRIPT
             
 
+            style = STYLE_DEFAULT
+            
+            
+            
+            log = frm_logging.LoggingStdout()
             
             wx.InitAllImageHandlers()
-            dlg = DialogRunner(data, None, -1, "")
+            dlg = DialogRunner(data, style, None, -1, "")
+            dlg.set_log(log)
             dlg.ShowModal()
+            
+            print dlg.GetReturnCode()
             return 1    
     
 
