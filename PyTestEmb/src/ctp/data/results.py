@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.3 $"
+__version__     = "$Revision: 1.4 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -39,20 +39,18 @@ class Results:
     def __init__(self):
         self.data = dict()
         
-    def save(self):
-        s = shelve.open('test.dbm', writeback=True)
+    def save(self, filename):
+        s = shelve.open(filename, writeback=True)
         try:
             for k,v in self.data.iteritems():
                 s[str(k)] = v
         finally:
             s.close()
             
-    def load(self):
-        s = shelve.open('test.dbm', writeback=False)
+    def load(self, filename):
+        s = shelve.open(filename, writeback=False)
         try:      
-            print "load"
             for k,v in s.iteritems():
-                print k, v
                 self.data[k] = v 
         finally:
             s.close()

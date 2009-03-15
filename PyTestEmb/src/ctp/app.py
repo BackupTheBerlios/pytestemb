@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.5 $"
+__version__     = "$Revision: 1.6 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -15,6 +15,8 @@ import wx
 import wx.grid
 import wx.html
 import wx.aui
+
+import wx.lib.flatnotebook as fnb
 
 
 import data.utils
@@ -39,6 +41,12 @@ ID_MENU_PROJECT_OPEN = wx.NewId()
 ID_MENU_PROJECT_REFRESH = wx.NewId()
 
 
+ID_MENU_RESULT_NEW = wx.NewId()
+ID_MENU_RESULT_OPEN = wx.NewId()
+ID_MENU_RESULT_SAVE = wx.NewId()
+
+ID_MENU_STACK_CLEAN = wx.NewId()
+
 
 
 
@@ -59,10 +67,6 @@ ID_SizeReportContent = wx.NewId()
 
 ID_Settings = wx.NewId()
 ID_About = wx.NewId()
-#ID_FirstPerspective = ID_CreatePerspective+1000
-
-
-
 
 
 
@@ -83,9 +87,10 @@ class PyAUIFrame(wx.Frame):
         self.ctrl = { "log"     :     None,
                       "project" :     None,
                       "result"  :     None,
-                      "mdi"    :      None,}
+                      "mdi"     :     None,
+                      "res_glo" :     None,
+                      "res_sta" :     None}
 
-        
     
         evt_file.EVT_CUSTOM_FILE_VIEW(self, self.on_file_view)
         evt_run.EVT_CUSTOM_RUN_SCRIPT(self, self.on_run_script)
@@ -95,10 +100,6 @@ class PyAUIFrame(wx.Frame):
         _icon = wx.EmptyIcon()
         _icon.CopyFromBitmap(wx.Bitmap("images/Crystal_Clear_action_run.png", wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)       
-        
-        
-        
-        
         
         
         
@@ -115,26 +116,41 @@ class PyAUIFrame(wx.Frame):
         # create menu
         mb = wx.MenuBar()
 
+        # File menu
         file_menu = wx.Menu()
         file_menu.Append(wx.ID_EXIT, "Exit")
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
+        mb.Append(file_menu,    "File")
 
+        # Project menu
         project_menu = wx.Menu()
         project_menu.Append(ID_MENU_PROJECT_OPEN,     "Open ...")
         project_menu.Append(ID_MENU_PROJECT_REFRESH,  "Refresh")
         self.Bind(wx.EVT_MENU, self.on_menu_project_open, id=ID_MENU_PROJECT_OPEN)
         self.Bind(wx.EVT_MENU, self.on_menu_refresh, id=ID_MENU_PROJECT_REFRESH)
+        mb.Append(project_menu, "Project")
     
-           
+        # Result menu
+        project_menu = wx.Menu()
+        project_menu.Append(ID_MENU_RESULT_NEW,     "New ...")
+        project_menu.Append(ID_MENU_RESULT_OPEN,    "Open ...")
+        project_menu.Append(ID_MENU_RESULT_SAVE,    "Save ...")
+        project_menu.AppendSeparator()
+        project_menu.Append(ID_MENU_STACK_CLEAN,    "Clean Stack")        
+        
+#        self.Bind(wx.EVT_MENU, self.on_menu_result_new, id=ID_MENU_RESULT_NEW)
+#        self.Bind(wx.EVT_MENU, self.on_menu_result_open, id=ID_MENU_RESULT_OPEN)
+#        self.Bind(wx.EVT_MENU, self.on_menu_result_vave, id=ID_MENU_RESULT_SAVE)
+#        self.Bind(wx.EVT_MENU, self.on_menu_result_stack_clean, id=ID_MENU_STACK_CLEAN)
+    
            
         help_menu = wx.Menu()
         help_menu.Append(ID_About, "About...")
         self.Bind(wx.EVT_MENU, self.OnAbout, id=ID_About)      
-        
-        
-        mb.Append(file_menu,    "File")
-        mb.Append(project_menu, "Project")
         mb.Append(help_menu,    "Help")
+        
+        
+        
         
         
         
@@ -183,7 +199,7 @@ class PyAUIFrame(wx.Frame):
 
                 
         
-        self._mgr.AddPane(self.Create_MDI(), wx.aui.AuiPaneInfo().Name("mdi").
+        self._mgr.AddPane(self.Create_Tool(), wx.aui.AuiPaneInfo().Name("mdi").
                           CenterPane())     
 
 
@@ -259,6 +275,8 @@ class PyAUIFrame(wx.Frame):
 #        self.Bind(wx.EVT_MENU_RANGE, self.OnRestorePerspective, id=ID_FirstPerspective,
 #                  id2=ID_FirstPerspective+1000)
         
+        
+        self.Maximize()
     
         self.log_info("Application is ready")
         
@@ -307,12 +325,21 @@ class PyAUIFrame(wx.Frame):
         elif  ret == frm_controler.RET_CODE_ERROR :
             self.log_error("Running scripts error")
         elif ret == frm_controler.RET_CODE_USER_ABORT :
+            import time
+            time.sleep(1)
             self.log_error("Running scripts user abortion")
         else :
             assert False
-            
+
+
+        res = dlg.get_result()    
+        res.save("result.dbm")
+
+
         dlg.Destroy()
-            
+        
+
+        self.ctrl["res_sta"].load_dbm("result.dbm")
             
             
             
@@ -514,38 +541,62 @@ class PyAUIFrame(wx.Frame):
 
 
     def CreateLogCtrl(self):
-        ctrl = frm_logging.LoggingFrame(self, -1, wx.Point(0, 0), wx.Size(150, 90) )
+        ctrl = frm_logging.LoggingFrame(self, -1, wx.Point(0, 0), wx.Size(150, 100) )
         self.ctrl["log"] = ctrl
         return ctrl
 
     def CreateProjectCtrl(self):
-        ctrl = frm_project.ProjectFrame(self, -1, wx.Point(0, 0), wx.Size(300, 400) )
+        ctrl = frm_project.ProjectFrame(self, -1, wx.Point(0, 0), wx.Size(500, 500) )
         ctrl.set_log(self)
         self.ctrl["project"] = ctrl
         return ctrl
 
 
-    def Create_MDI(self):
-        ctrl = wx.aui.AuiNotebook(self, -1,  size=(640,480),\
+
+
+
+
+
+    def Create_Tool(self):
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(mainSizer)
+
+
+        bookStyle = fnb.FNB_ALLOW_FOREIGN_DND 
+        bookStyle |= fnb.FNB_NO_X_BUTTON
+        ctrl = fnb.FlatNotebook(self, wx.ID_ANY, style=bookStyle)
+
+        # Add some pages to the second notebook
+        self.Freeze()
+
+        res_glo = frm_results.ResultFrame(ctrl)
+        res_glo.set_name("Global")
+        self.ctrl["res_glo"] = res_glo
+        ctrl.AddPage(res_glo, "Global Result")
+
+        res_sta = frm_results.ResultFrame(ctrl)
+        res_sta.set_name("Stack")
+        self.ctrl["res_sta"] = res_sta
+        ctrl.AddPage(res_sta,  "Stack Result")
+
+        # MDI document  
+        mdi = wx.aui.AuiNotebook(self, -1,  size=(640,480),\
                                           style=wx.DEFAULT_FRAME_STYLE, pos=wx.DefaultPosition  )
-        self.ctrl["mdi"] = ctrl
+        self.ctrl["mdi"] = mdi
+        ctrl.AddPage(mdi,  "Document")
+
+
+        self.Thaw()    
+
+        mainSizer.Layout()
+        self.SendSizeEvent()
+        
+        self.ctrl["fnb"] = ctrl
+        
         return ctrl
     
-    
-    
-        
-#        page = wx.TextCtrl(ctrl, -1, "", style=wx.TE_MULTILINE)
-#        
-#        ctrl.AddPage(page, "Welcome0")
-        
-#        
-#        import pyeditor
-#        page = pyeditor.PythonSTC(ctrl, -1, style = wx.NO_FULL_REPAINT_ON_RESIZE)
-#
-#        ctrl.AddPage(page, "Welcome1")      
-#        
-#        
-        
+
                       
         
 

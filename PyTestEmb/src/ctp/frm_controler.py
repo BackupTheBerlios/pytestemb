@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.6 $"
+__version__     = "$Revision: 1.7 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -214,7 +214,6 @@ class DialogRunner(wx.Dialog):
         self.evtScriptRun = threading.Event()
         self.evtReaderRun = threading.Event()
         self.thdScriptRun = threading.Thread(target=self.thread_scripts_runner,  name="scripts_runner")
-        
 
         
         
@@ -264,7 +263,11 @@ class DialogRunner(wx.Dialog):
         
         
         
-        
+    def get_result(self):
+        return self.results
+    
+    def get_doc(self):
+        return self.docs
         
     
     
@@ -450,14 +453,14 @@ class DialogRunner(wx.Dialog):
         
         self.log_info("end script running")   
         if   self.style == STYLE_DEFAULT:
-            pass
+            self.log_debug("nop")  
         elif self.style == STYLE_AUTO_START_CLOSE:
             self.log_debug("EndModal(RET_CODE_OK)")  
             self.EndModal(RET_CODE_OK)
         else :
             assert False
             
-
+        
         
 
 
@@ -465,6 +468,7 @@ class DialogRunner(wx.Dialog):
 
 
     def OnStartProcess(self, event):
+        self.log_debug("OnStartProcess")   
         self.process = wx.Process(self)
         self.process.Redirect()
         self.run_process(event.pathfilename)
@@ -496,13 +500,21 @@ class DialogRunner(wx.Dialog):
         if self.thdScriptRun.isAlive() :
             
             self.log_debug("Thread is stopping ...")
+            
             self.evtReaderRun.set()
+            
             self.evtScriptRun.set()
+           
+            
             self.thdScriptRun.join()
             self.log_debug("Thread is stopped")            
         else :
             self.log_debug("Thread is already stopped")
-        
+    
+    
+    
+
+    
     
     
     def thread_scripts_runner(self):  
@@ -516,11 +528,15 @@ class DialogRunner(wx.Dialog):
             self.evtReaderRun.clear()
             self.post_event_startprocess(script.str_absolute(self.data[BASE_PATH]))
             res = self.reader_process()
+            if self.evtScriptRun.isSet() :
+                self.log_debug("Break thread loop")
+                return
             # update GUI and result
             self.AddPendingEvent(EventExecStatus.create_end_script(script.str_relative()))
             self.update_result(script, res)
             # Stop script execution
             if self.evtScriptRun.isSet() :
+                self.log_debug("Break thread loop")
                 return
         self.post_event_endscripts()
             
@@ -535,28 +551,33 @@ class DialogRunner(wx.Dialog):
         else :
             raise Exception("No type run define")
         
-        waiting = 0.05   
-        while not(self.evtReaderRun.isSet()):
-            if self.process is None:
-                time.sleep(waiting) 
-                continue
-            stream = self.process.GetInputStream()
-            if stream is None :
-                #LOG.info("sleep : %f" % waiting)
-                time.sleep(waiting) 
-            else:
-                while not(self.evtReaderRun.isSet()):
-                    if stream.CanRead():
-                        text = stream.readline()
-                        #LOG.info(text)
-                        stdoutreader.add_line(text)
-                    else:   
-                        time.sleep(waiting)
-        self.process.CloseOutput()
-        self.process.Destroy()
-        self.process = None     
+        
+        try :
+            waiting = 0.05   
+            while not(self.evtReaderRun.isSet()):
+                if self.process is None:
+                    time.sleep(waiting) 
+                    continue
+                stream = self.process.GetInputStream()
+                if stream is None :
+                    #LOG.info("sleep : %f" % waiting)
+                    time.sleep(waiting) 
+                else:
+                    while not(self.evtReaderRun.isSet()):
+                        if stream.CanRead():
+                            text = stream.readline()
+                            #LOG.info(text)
+                            stdoutreader.add_line(text)
+                        else:   
+                            time.sleep(waiting)
+                pass
+            self.process.CloseOutput()
+            #self.process.Destroy()
+        except Exception, ex:
+            self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
+        #self.process = None     
+        self.log_debug("end stdoutreader")
         return stdoutreader   
-        #LOG.info("End reader")
                         
 
     def start_running_script(self):
@@ -572,12 +593,13 @@ class DialogRunner(wx.Dialog):
       
     def onStop(self, event):
         
-
+        self.stop_script_running()
 
         if   self.style == STYLE_DEFAULT:
-            self.stop_script_running()
+            pass
         elif self.style == STYLE_AUTO_START_CLOSE:
-            self.stop_script_running()
+            
+            time.sleep(1)
             self.log_debug("EndModal(RET_CODE_USER_ABORT)")
             self.EndModal(RET_CODE_USER_ABORT)
         else :
@@ -593,10 +615,19 @@ class DialogRunner(wx.Dialog):
         
         self.log_debug("stop script running")
         
+
+        try:
+            self.stop_thread_scripts_runner()        
             
+            
+            self.process.Detach()   
+        except Exception, ex :
+            self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
+         
+
         try :
             self.log_debug("Stop process ... by kill pid:%d" % self.pid)
-            ret = self.process.Kill(self.pid, wx.SIGQUIT)
+            ret = wx.Process.Kill(self.pid, wx.SIGTERM)
             if    ret == wx.KILL_OK :
                 self.log_debug("Process kill success")
             elif  ret == wx.KILL_NO_PROCESS :
@@ -607,13 +638,7 @@ class DialogRunner(wx.Dialog):
         except Exception, ex:
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
             
-        try:
-            self.stop_thread_scripts_runner()           
-        except Exception, ex :
-            self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
-            
-         
-    
+
     
     def close_dialog(self):
         
@@ -629,8 +654,7 @@ class DialogRunner(wx.Dialog):
         
     def onClose(self, event):
         self.close_dialog()
-        evt.skip()
-        
+
 
 
 
@@ -675,7 +699,7 @@ if __name__ == "__main__":
             data[RUN_TYPE] = RUN_SCRIPT
             
 
-            style = STYLE_DEFAULT
+            style = STYLE_AUTO_START_CLOSE
             
             
             
@@ -685,6 +709,10 @@ if __name__ == "__main__":
             dlg = DialogRunner(data, style, None, -1, "")
             dlg.set_log(log)
             dlg.ShowModal()
+            
+            res = dlg.get_result()
+            
+            res.save("result.dbm")
             
             print dlg.GetReturnCode()
             return 1    

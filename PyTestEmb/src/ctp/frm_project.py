@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.6 $"
+__version__     = "$Revision: 1.7 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -61,7 +61,7 @@ class ProjectFrame(wx.Panel):
         self.im_campaign    = self.il.Add( wx.Bitmap("images/database_table.png", wx.BITMAP_TYPE_PNG))
         self.tree.SetImageList(self.il)
         
-    
+        self.path = None
         self.wildcard = "Project file (*.xml)|*.xml|"     \
            "All files (*.*)|*.*"
     
