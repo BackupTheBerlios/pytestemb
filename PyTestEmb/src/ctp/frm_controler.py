@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.7 $"
+__version__     = "$Revision: 1.8 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -379,11 +379,20 @@ class DialogRunner(wx.Dialog):
         
         self.log_debug("Process Ended pid:%s,  exitCode: %s" % \
                               (evt.GetPid(), evt.GetExitCode()))
-        time.sleep(0.1)         # let some times to reader to finish reading
+        #time.sleep(0.1)         # let some times to reader to finish reading
         
         self.exit_code = evt.GetExitCode()
         
         self.evtReaderRun.set() # stop reader on process
+        
+        
+
+
+        
+
+        
+        
+        
         
         
     def update_result(self, script, sdoutreader):
@@ -434,15 +443,7 @@ class DialogRunner(wx.Dialog):
         evt = EventEndScript()
         self.AddPendingEvent(evt)
         
-        
-        #print self.results.__str__()
-        
-#        if      self.data[RUN_TYPE] == RUN_SCRIPT :
-#            self.results.save()
-#        elif    self.data[RUN_TYPE] == RUN_DOC :
-#            self.docs.save()
-#        else :
-#            raise Exception("No type run define")              
+                
         
         
         
@@ -460,10 +461,6 @@ class DialogRunner(wx.Dialog):
         else :
             assert False
             
-        
-        
-
-
         
 
 
@@ -528,9 +525,15 @@ class DialogRunner(wx.Dialog):
             self.evtReaderRun.clear()
             self.post_event_startprocess(script.str_absolute(self.data[BASE_PATH]))
             res = self.reader_process()
+            
             if self.evtScriptRun.isSet() :
                 self.log_debug("Break thread loop")
-                return
+                return            
+            
+            self.process.Destroy()
+            self.process = None
+            
+
             # update GUI and result
             self.AddPendingEvent(EventExecStatus.create_end_script(script.str_relative()))
             self.update_result(script, res)
@@ -563,16 +566,16 @@ class DialogRunner(wx.Dialog):
                     #LOG.info("sleep : %f" % waiting)
                     time.sleep(waiting) 
                 else:
-                    while not(self.evtReaderRun.isSet()):
+                    while       not(self.evtReaderRun.isSet())\
+                            or  stream.CanRead():
                         if stream.CanRead():
                             text = stream.readline()
                             #LOG.info(text)
                             stdoutreader.add_line(text)
                         else:   
                             time.sleep(waiting)
+                    
                 pass
-            self.process.CloseOutput()
-            #self.process.Destroy()
         except Exception, ex:
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
         #self.process = None     
@@ -607,7 +610,7 @@ class DialogRunner(wx.Dialog):
             
 
 
-        
+       
         
         
     def stop_script_running(self):
@@ -617,10 +620,18 @@ class DialogRunner(wx.Dialog):
         
 
         try:
-            self.stop_thread_scripts_runner()        
+            self.process.CloseOutput()
+            
+            self.stop_thread_scripts_runner() 
             
             
             self.process.Detach()   
+#            self.process.Destroy()
+            self.process = None                   
+            #
+            
+
+           
         except Exception, ex :
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
          

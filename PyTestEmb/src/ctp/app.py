@@ -5,11 +5,10 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.6 $"
+__version__     = "$Revision: 1.7 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
-
 
 import wx
 import wx.grid
@@ -19,10 +18,17 @@ import wx.aui
 import wx.lib.flatnotebook as fnb
 
 
+import sys
+import os.path
+
 import data.utils
 
 import wxcustom.evt_file as evt_file
 import wxcustom.evt_run as evt_run
+import wxcustom.evt_doc as evt_doc
+
+import wxcustom.exceptlog as exceptlog
+
 
 import wxcustom.editor_py as editor_py
 
@@ -31,6 +37,9 @@ import frm_project
 import frm_results
 import frm_controler
 
+
+
+APP_VERSION = "beta"
 
 
 
@@ -72,6 +81,10 @@ ID_About = wx.NewId()
 
 
 
+def get_app_path():
+    return os.path.split(sys.argv[0])[0]    
+
+
 
 class PyAUIFrame(wx.Frame):
     
@@ -82,7 +95,9 @@ class PyAUIFrame(wx.Frame):
 
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
         
-        
+        self.path = dict()
+        self.path["app_path"] = get_app_path()
+        self.path["stack_file"] = os.path.join(self.path["app_path"], "stack.dbm")
  
         self.ctrl = { "log"     :     None,
                       "project" :     None,
@@ -94,7 +109,7 @@ class PyAUIFrame(wx.Frame):
     
         evt_file.EVT_CUSTOM_FILE_VIEW(self, self.on_file_view)
         evt_run.EVT_CUSTOM_RUN_SCRIPT(self, self.on_run_script)
-        
+        evt_doc.EVT_CUSTOM_DOC(self, self.on_run_doc)
         
         self.SetTitle("Control Test - PyTestEmb")
         _icon = wx.EmptyIcon()
@@ -299,7 +314,7 @@ class PyAUIFrame(wx.Frame):
 
 
     def on_run_script(self, event):
-        
+         
         slist = event.slist
         config = event.config
         
@@ -312,7 +327,7 @@ class PyAUIFrame(wx.Frame):
             
         config[frm_controler.SCRIPT_LIST] = slist
         config[frm_controler.CONFIG] = None
-        config[frm_controler.TRACE] = frm_controler.TRACE_OCTOPYLOG
+        config[frm_controler.TRACE] = frm_controler.TRACE_TXT
         config[frm_controler.PYPATH] = None
         config[frm_controler.RUN_TYPE] = frm_controler.RUN_SCRIPT
         style=frm_controler.STYLE_AUTO_START_CLOSE
@@ -325,33 +340,65 @@ class PyAUIFrame(wx.Frame):
         elif  ret == frm_controler.RET_CODE_ERROR :
             self.log_error("Running scripts error")
         elif ret == frm_controler.RET_CODE_USER_ABORT :
-            import time
-            time.sleep(1)
+#            import time
+#            time.sleep(1)
             self.log_error("Running scripts user abortion")
         else :
             assert False
 
 
         res = dlg.get_result()    
-        res.save("result.dbm")
+        res.save(self.path["stack_file"])
 
 
         dlg.Destroy()
         
 
-        self.ctrl["res_sta"].load_dbm("result.dbm")
+        self.ctrl["res_sta"].update_res(res)
+
+        #self.ctrl["res_sta"].load_dbm(self.path["stack_file"])
             
             
             
             
+    def on_run_doc(self, event):
+        
+        slist = event.slist
+        config = event.config
+        
+        self.log_info("Run %d script(s)" % len(slist))
+        
+        self.log_debug("Base path : \"%s\"" % config[frm_controler.BASE_PATH])
+        for s in slist:
+            self.log_debug(s.str_relative())
             
-             
+        config[frm_controler.SCRIPT_LIST] = slist
+        config[frm_controler.CONFIG] = None
+        config[frm_controler.TRACE] = frm_controler.TRACE_NONE
+        config[frm_controler.PYPATH] = None
+        config[frm_controler.RUN_TYPE] = frm_controler.RUN_DOC
+        style=frm_controler.STYLE_AUTO_START_CLOSE
+        dlg = frm_controler.DialogRunner(config, style, None, -1, "")
+        dlg.set_log(self)
+        dlg.ShowModal()
+        ret = dlg.GetReturnCode()   
+        if    ret == frm_controler.RET_CODE_OK :
+            self.log_info("Gen doc success")
+        elif  ret == frm_controler.RET_CODE_ERROR :
+            self.log_error("Gen doc error")
+        elif ret == frm_controler.RET_CODE_USER_ABORT :
+#            import time
+            self.log_error("Gen doc user abortion")
+        else :
+            assert False
+
+
+        res = dlg.get_result()    
+       
+
+        dlg.Destroy()
         
-        
-        
-        
-        
-        
+
 
 
     def on_file_view(self, event):
@@ -583,6 +630,8 @@ class PyAUIFrame(wx.Frame):
         # MDI document  
         mdi = wx.aui.AuiNotebook(self, -1,  size=(640,480),\
                                           style=wx.DEFAULT_FRAME_STYLE, pos=wx.DefaultPosition  )
+
+        
         self.ctrl["mdi"] = mdi
         ctrl.AddPage(mdi,  "Document")
 
@@ -710,6 +759,9 @@ class MyApp(wx.App):
 
 
 if __name__ == "__main__":
+    
+    
+    exceptlog.add_exception_hook(get_app_path(), APP_VERSION)
 
     # start app
     App = MyApp(0)

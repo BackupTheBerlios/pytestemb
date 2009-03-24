@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.4 $"
+__version__     = "$Revision: 1.5 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -127,7 +127,10 @@ class ResultFrame(wx.Panel):
         self.res.load(filename)
         self.update()
         
-        
+    
+    def update_res(self, res):
+        self.res = res
+        self.update()
         
 
     
@@ -176,10 +179,7 @@ class ResultFrame(wx.Panel):
                             
                             for d in res:
                                 for k,v in d.iteritems():
-                                    if len(k) >= 8 :
-                                        jsize = 16
-                                    else:
-                                        jsize = 8
+                                    jsize = 16
                                     item_l = self.tree.AppendItem(item_res, "%s :: %s" % (k.ljust(jsize),v) )  
 
 

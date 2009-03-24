@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.7 $"
+__version__     = "$Revision: 1.8 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -27,11 +27,12 @@ import data.rftree as rftree
 import data.project as dpro
 
 import wxcustom.evt_file as evt_file
-import wxcustom.evt_run as evt_run   
+import wxcustom.evt_run as evt_run  
+import wxcustom.evt_doc as evt_doc 
     
 
-
-import frm_controler as frm_controler
+import frm_logging 
+import frm_controler
 
 
         
@@ -45,12 +46,17 @@ class ProjectFrame(wx.Panel):
         self.tree = wx.TreeCtrl(self,-1)
         self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         
+        
+        
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, self.tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivate, self.tree)
         self.Bind(wx.EVT_TREE_ITEM_MENU, self.OnRightUp, self.tree)
 
         
         self.project = None
         self.log = None
+        
+        self.sel_id = None
         
         self.il = wx.ImageList(16, 16)
         self.im_script      = self.il.Add( wx.Bitmap("images/script.png", wx.BITMAP_TYPE_PNG))
@@ -129,10 +135,20 @@ class ProjectFrame(wx.Panel):
         self.update_tree()
         
         
+        
+    def OnSelChanged(self, event):
+        self.sel_id = self.tree.GetSelection()
+        self.log_debug("OnSelChanged item=\"%s\"" % self.tree.GetItemText(self.sel_id))
+        
     def OnRightUp(self, event):
         type = ["script", "campaign"]
         id = self.tree.GetSelection()
         node = self.tree.GetItemPyData(id)
+        
+        self.log_debug("OnRightUp item=\"%s\"" % self.tree.GetItemText(self.sel_id))
+        
+        if id != self.sel_id :
+            return
         
         if node is None : return
         if type.count(node["type"]) != 1: return 
@@ -144,18 +160,57 @@ class ProjectFrame(wx.Panel):
         if      node["type"] == "script" :
             item1 = menu.Append(wx.ID_ANY, "Run script")
             menu.AppendSeparator()
-            item2 = menu.Append(wx.ID_ANY, "View script")
+            item2 = menu.Append(wx.ID_ANY, "Doc script")
+            menu.AppendSeparator()
+            item3 = menu.Append(wx.ID_ANY, "View script")
+            
             self.Bind(wx.EVT_MENU, self.on_run_script,      item1)
-            self.Bind(wx.EVT_MENU, self.on_view_script,     item2)            
+            self.Bind(wx.EVT_MENU, self.on_doc_script,      item2)
+            self.Bind(wx.EVT_MENU, self.on_view_script,     item3)            
 
         elif    node["type"] == "campaign" :
             item1 = menu.Append(wx.ID_ANY, "Run campaign")
+            menu.AppendSeparator()
+            item2 = menu.Append(wx.ID_ANY, "Doc campaign")
             self.Bind(wx.EVT_MENU, self.on_run_campaign,      item1)
+            self.Bind(wx.EVT_MENU, self.on_doc_campaign,      item2)
         else:
             assert False
         self.PopupMenu(menu)
         menu.Destroy()
         
+        
+    def on_doc_campaign(self, event):
+        id = self.tree.GetSelection()
+        node = self.tree.GetItemPyData(id)
+        assert node["type"] == "campaign"
+        self.log_debug("Run Campaign : \"%s\"" % node["data"])  
+        # EventRunScript
+        slist = list()
+        for script in self.project.get_campaign_list_scripts(node["data"]):
+            slist.append(script)
+        config = dict()
+        config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        evt = evt_doc.EventDoc(slist, config)
+        self.post_event(evt)
+
+    
+    def on_doc_script(self, event):
+        id = self.tree.GetSelection()
+        node = self.tree.GetItemPyData(id)
+        assert node["type"] == "script"
+        self.log_debug("Run Script : \"%s\"" % node["data"].get_name())  
+        # EventRunScript
+        slist = list()
+        slist.append(node["data"])
+        config = dict()
+        config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        evt = evt_doc.EventDoc(slist, config)
+        self.post_event(evt)  
+    
+    
+
+
     
     def on_run_campaign(self, event):
         id = self.tree.GetSelection()
@@ -294,6 +349,9 @@ class TestFrame(wx.Frame):
         
         self.frm_project = ProjectFrame(self)
         
+        
+        log = frm_logging.LoggingStdout()
+        self.frm_project.set_log(log)
         
         # create menu
         mb = wx.MenuBar()
