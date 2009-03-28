@@ -69,7 +69,7 @@ def add_exception_hook(path_log, app_version='[No version]'):#, ignored_exceptio
             #if wx.MessageBox(message % urlparse.urlparse(cgi_url)[1], 'Uncaught Error', wx.OK|wx.CANCEL|wx.ICON_ERROR) == wx.OK:
             #print 'woof', `wx.GetTextFromUser('x')` # badly returns '' on cancel
             
-            wx.MessageBox("Python exception raised\nWrite log in \"%s\"" % filename)
+            wx.MessageBox("Log in \"%s\"" % filename, "Python exception", wx.ICON_ERROR)
             
             #dlg = wx.TextEntryDialog(None, "Do you mind if an error report is sent to %s?\n\nIf you want to be contacted when a solution is found, please enter your e-mail address:" % "dd", 'Uncaught Error', '', wx.OK|wx.CANCEL) #|wx.ICON_ERROR) -- can use that style only with wx.MessageBox
             #result = dlg.ShowModal()
@@ -97,16 +97,11 @@ def add_exception_hook(path_log, app_version='[No version]'):#, ignored_exceptio
             if sys.platform == 'win32':
                 import win32api
                 info['user-name'] = win32api.GetUserName()
-
-            busy = wx.BusyCursor()
                 
             
                 
             f = open(filename, "w")
                 
-                
-#            for k,v in info.iteritems():
-#                f.write("%s:: %s\n" % (k.ljust(16),v))
 
             order = ['app-title', 
                     'app-version', 
@@ -122,34 +117,23 @@ def add_exception_hook(path_log, app_version='[No version]'):#, ignored_exceptio
                 f.write("%s:: %s\n" % (k.ljust(16),info[k]))
 
             
-            
-            try : 
-            
-                k = "traceback"
+            k = "traceback"
+            if info.has_key(k):
                 f.write("%s::\n" % (k.ljust(16)))
                 f.write("%s%s\n" % (" ".ljust(19),info[k].replace("\n", "\n".ljust(19))))
                 
-                
-                k = "locals"
+            k = "locals"
+            if info.has_key(k):
                 f.write("%s::\n" % (k.ljust(16)))
                 f.write("%s%s\n" % (" ".ljust(19),info[k].replace("\n", "\n".ljust(19))))
            
-    
-                k = "self"
+            k = "self"
+            if info.has_key(k):
                 f.write("%s::\n" % (k.ljust(16)))
                 f.write("%s%s\n" % (" ".ljust(19),info[k].replace("\n", "\n".ljust(19))))
-            except Exception, ex :
-                f.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-                f.write("Exception in the exception handler\n")
-                f.write("%s\n" % ex.__str__())
-                f.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-                
-                
-            
+
             f.close()
         
-
-            del busy
 
 
     sys.excepthook = lambda *args: wx.CallAfter(handle_exception, *args) # this callafter may be unnecessary since it looks like threads ignore sys.excepthook; could have all a thread's code be contained in a big try clause (possibly by subclassing Thread and replacing run())

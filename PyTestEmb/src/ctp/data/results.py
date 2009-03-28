@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.4 $"
+__version__     = "$Revision: 1.5 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -58,6 +58,16 @@ class Results:
 
     def update(self, ScriptRes):    
         self.data[ScriptRes.script.get_key()] = ScriptRes
+    
+    
+    def is_one_result(self, script):
+        return self.data.has_key(script.get_key())
+    
+        
+    def delete_result(self, script):
+        del self.data[ScriptRes.script.get_key()]
+
+
 
 
     def __str__(self):
