@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.9 $"
+__version__     = "$Revision: 1.10 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -25,10 +25,13 @@ import wx
 
 import data.rftree as rftree
 import data.project as dpro
+import data.utils as dutils
 
 import wxcustom.evt_file as evt_file
 import wxcustom.evt_run as evt_run
 import wxcustom.evt_doc as evt_doc
+
+
 
 
 import frm_logging
@@ -37,6 +40,10 @@ import frm_controler
 
 
 class ProjectFrame(wx.Panel):
+    
+    POOL_SCRIPT = 0
+    CAMPAIGN    = 1
+    
     def __init__(self, *p, **pp):
 
         wx.Panel.__init__(self, *p, **pp)
@@ -94,6 +101,34 @@ class ProjectFrame(wx.Panel):
         if self.log is not None :
             self.log.log_info(data)
 
+
+    def new_project(self):
+        
+        
+        dlg = wx.TextEntryDialog(
+                self, "Please enter the name of project :",
+                'New project ...', 'Python')
+        dlg.SetValue("project_name")
+
+        if dlg.ShowModal() == wx.ID_OK:
+            name = dlg.GetValue()
+            self.log_debug("Entered project name : %s" % name)
+            
+            
+            self.project = dpro.Project(name)
+            self.update_tree()
+                   
+            
+        else :
+            self.log_debug("Canceled")           
+        
+        dlg.Destroy()
+    
+
+        
+
+
+     
 
 
     def open_and_load_xml(self):
@@ -155,7 +190,8 @@ class ProjectFrame(wx.Panel):
         type_menu = "script"
 
         menu = wx.Menu()
-        if      node["type"] == "script" :
+        if      node["type"] == "script" \
+            and node["parent_type"] == ProjectFrame.POOL_SCRIPT :
             item1 = menu.Append(wx.ID_ANY, "Run script")
             item2 = menu.Append(wx.ID_ANY, "Doc script")
             menu.AppendSeparator()
@@ -163,12 +199,29 @@ class ProjectFrame(wx.Panel):
             menu.AppendSeparator()
             item4 = menu.Append(wx.ID_ANY, "Add script in campaign ...")
             item5 = menu.Append(wx.ID_ANY, "Add script from files ...")
+            menu.AppendSeparator()
+            item6 = menu.Append(wx.ID_ANY, "Remove script from pool")
 
             self.Bind(wx.EVT_MENU, self.on_run_script,                  item1)
             self.Bind(wx.EVT_MENU, self.on_doc_script,                  item2)
             self.Bind(wx.EVT_MENU, self.on_view_script,                 item3)
             self.Bind(wx.EVT_MENU, self.on_add_script_in_campaign,      item4)
             self.Bind(wx.EVT_MENU, self.on_add_script_from_files,       item5)
+            self.Bind(wx.EVT_MENU, self.on_remove_script_from_pool,     item6)
+
+        elif      node["type"] == "script" \
+            and node["parent_type"] == ProjectFrame.CAMPAIGN :
+            item1 = menu.Append(wx.ID_ANY, "Run script")
+            item2 = menu.Append(wx.ID_ANY, "Doc script")
+            menu.AppendSeparator()
+            item3 = menu.Append(wx.ID_ANY, "View script")
+            menu.AppendSeparator()
+            item4 = menu.Append(wx.ID_ANY, "Remove script from campaign")
+
+            self.Bind(wx.EVT_MENU, self.on_run_script,                  item1)
+            self.Bind(wx.EVT_MENU, self.on_doc_script,                  item2)
+            self.Bind(wx.EVT_MENU, self.on_view_script,                 item3)
+            self.Bind(wx.EVT_MENU, self.on_remove_script_from_campaign, item4)
             
         elif    node["type"] == "campaign" :
             item1 = menu.Append(wx.ID_ANY, "Run campaign")
@@ -192,6 +245,63 @@ class ProjectFrame(wx.Panel):
             assert False
         self.PopupMenu(menu)
         menu.Destroy()
+        
+        
+        
+ 
+    def on_remove_script_from_campaign(self, event):
+        node = self.tree.GetItemPyData(self.sel_item)
+        assert node["type"] == "script"
+        self.log_debug("on_remove_script_from_campaign")
+        
+        script = node["data"]        
+        campaign = node["parent_name"]
+        
+        
+        question = """Confirm removing script ?
+        script : "%s"
+        campaign : "%s" """ % (script.get_name(),campaign)
+        dlg = wx.MessageDialog(self, question,
+                               'Remove script ...',
+                               wx.CANCEL|wx.OK | wx.ICON_QUESTION )
+        ret = dlg.ShowModal()
+        dlg.Destroy()
+        
+        if ret ==  wx.ID_OK :
+            self.log_debug("OK")
+            self.log_debug("Remove \"%s\" from \"%s\"" % (script.get_name(), campaign))
+            self.project.remove_script_in_campaign(campaign, script)
+            self.update_tree()
+        else :
+            self.log_debug("Cancel")
+        
+        
+        
+    def on_remove_script_from_pool(self, event):
+        node = self.tree.GetItemPyData(self.sel_item)
+        assert node["type"] == "script"
+        self.log_debug("on_remove_script_from_pool")
+        
+        script = node["data"]        
+        
+        
+        question = """Confirm removing script ?
+        script : "%s" """ % (script.get_name())
+        dlg = wx.MessageDialog(self, question,
+                               'Remove script ...',
+                               wx.CANCEL|wx.OK | wx.ICON_QUESTION )
+        ret = dlg.ShowModal()
+        dlg.Destroy()
+        
+        if ret ==  wx.ID_OK :
+            self.log_debug("OK")
+            self.log_debug("Remove \"%s\"" % (script.get_name()))
+            self.project.remove_script_in_pool(script)
+            self.update_tree()
+        else :
+            self.log_debug("Cancel")
+            
+            
         
         
 
@@ -228,8 +338,18 @@ class ProjectFrame(wx.Panel):
         
 
     def on_add_script_from_files(self, event):
-        self.log_debug("on_add_script_from_files")        
+        self.log_debug("on_add_script_from_files")    
         
+        dlg = DialogAddScriptFiles(self.project, self, -1, "")
+        dlg.set_log(self)
+        dlg.ShowModal()
+        ret = dlg.GetReturnCode()   
+        dlg.Destroy()
+        
+        if ret > 0 :
+            self.update_tree()
+        
+               
 
     def on_add_script_in_campaign(self, event):
         node = self.tree.GetItemPyData(self.sel_item)
@@ -325,22 +445,32 @@ class ProjectFrame(wx.Panel):
 
 
 
-    def _add_node(self, item, node):
+    def _add_node(self, item, node, parent):
+        
+        data = {}
+        data["parent_type"] = parent["type"]
+        data["parent_name"] = parent["name"]
 
         if node.is_behavior(rftree.B_FILE) :
 
             item_ = self.tree.AppendItem(item, node.key)
-            self.tree.SetPyData(item_, {"type":"script", "data":node.data})
+            data["type"] = "script"
+            data["data"] = node.data
+                
+            self.tree.SetPyData(item_, data)
             self.tree.SetItemImage(item_, self.im_script, wx.TreeItemIcon_Normal)
 
         if node.is_behavior(rftree.B_DIR) :
             item_ = self.tree.AppendItem(item, node.key)
 
-            self.tree.SetPyData(item_, {"type":"directory", "data":None})
+            data["type"] = "directory"
+            data["data"] = None
+
+            self.tree.SetPyData(item_, data)
 
             self.tree.SetItemImage(item_, self.im_folder, wx.TreeItemIcon_Normal)
             for n in node:
-                self._add_node(item_, n)
+                self._add_node(item_, n, parent)
 
 #        if node.is_behavior(ftree.B_ROOT) :
 #            item_ = self.tree.AppendItem(item, node.key)
@@ -368,7 +498,11 @@ class ProjectFrame(wx.Panel):
         self.tree.SetItemImage(item_pool, self.im_pool, wx.TreeItemIcon_Normal)
 
         for node in self.project.scripts.root :
-            self._add_node(item_pool, node)
+            parent = {}
+            parent["type"] = ProjectFrame.POOL_SCRIPT
+            parent["name"] = None
+                
+            self._add_node(item_pool, node, parent)
 
 
         item_campaign = self.tree.AppendItem(item_root, "Campaigns")
@@ -382,8 +516,15 @@ class ProjectFrame(wx.Panel):
             self.tree.SetPyData(item_, {"type":"campaign", "data":campaign.name})
             self.tree.SetItemImage(item_, self.im_campaign, wx.TreeItemIcon_Normal)
 
+
+
             for node in campaign.scripts.root :
-                self._add_node(item_, node)
+                parent = {}
+                parent["type"] = ProjectFrame.CAMPAIGN
+                parent["name"] = campaign.name
+                
+                
+                self._add_node(item_, node, parent)
 
 #            for script in campaign.get_lst_scripts():
 #                item__ = self.tree.AppendItem(item_, "%s.py" % script.get_relativepath())
@@ -403,15 +544,11 @@ class ProjectFrame(wx.Panel):
 class DialogAddScriptInCampaign(wx.Dialog):
     
     def __init__(self, project, script, *args, **kwds):
-        
-        
         wx.Dialog.__init__(self, *args, **kwds)
-        
         
         self.project = project
         self.script = script
         
-
         self.SetTitle("Add Script \"%s\" in Campaign ..." %  script.get_name())
         
         self.add = wx.Button(self, -1,"Add")
@@ -422,20 +559,14 @@ class DialogAddScriptInCampaign(wx.Dialog):
 
         self.Bind(wx.EVT_CLOSE, self.on_close)        
         
-        
-    
+
         # create control  
         self.campaign = wx.ListBox(self, -1,  size=wx.Size(300,200))
         self.campaign.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.Bind(wx.EVT_LISTBOX, self.on_listbox, self.campaign)
 
-
-
         self.lstbox_script = wx.ListBox(self, -1,  size=wx.Size(300,200))
         self.lstbox_script.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        
-        
-        
     
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -443,17 +574,12 @@ class DialogAddScriptInCampaign(wx.Dialog):
     
         
         sizer_1.Add((400, 20), 0, 0, 0)
-        
         sizer_2.Add(self.campaign, 0, wx.ALL, 5)
         sizer_2.Add(self.lstbox_script, 0, wx.ALL, 5)
-        
         sizer_1.Add(sizer_2)
-        
         sizer_1.Add((400, 20), 0, 0, 0)
-        
         sizer_3.Add(self.add, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_3.Add(self.cancel, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5) 
-        
         sizer_1.Add(sizer_3, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
         
         
@@ -486,14 +612,12 @@ class DialogAddScriptInCampaign(wx.Dialog):
     
     
     def fill_script(self, campaign):
-        
         slist = list()
         for script in self.project.get_campaign_list_scripts(campaign):
             slist.append(script.get_name())       
         
         self.lstbox_script.Clear()
         self.lstbox_script.InsertItems(slist, 0)
-        
         
         
             
@@ -507,11 +631,8 @@ class DialogAddScriptInCampaign(wx.Dialog):
         
         
         
-    
-        
     def on_add(self, event):
-        self.log_debug("on_add")
-        
+        self.log_debug("on_add")        
         
         if      self.sel_campaign is None :
             wx.MessageBox("Please select a campaign")
@@ -523,6 +644,127 @@ class DialogAddScriptInCampaign(wx.Dialog):
             self.project.add_script_in_campaign(self.sel_campaign, self.script)
             wx.MessageBox("Added")
             self.EndModal(1)
+        
+    
+    def on_cancel(self, event):
+        self.log_debug("on_cancel")
+        self.EndModal(0)
+
+    def on_close(self, event):
+        self.log_debug("on_close")
+        self.EndModal(0)
+
+
+
+
+
+class DialogAddScriptFiles(wx.Dialog):
+    
+    def __init__(self, project, *args, **kwds):
+        wx.Dialog.__init__(self, *args, **kwds)
+        
+        self.project = project
+
+        self.scripts = []
+        
+        self.SetTitle("Add Script files ...")
+        
+        
+        self.select = wx.Button(self, -1, "Select Script(s)")
+        
+        self.add = wx.Button(self, -1,"Add Script(s)")
+        self.cancel = wx.Button(self, -1, "Cancel") 
+    
+        self.Bind(wx.EVT_BUTTON, self.on_select, self.select)
+        self.Bind(wx.EVT_BUTTON, self.on_add, self.add)  
+        self.Bind(wx.EVT_BUTTON, self.on_cancel, self.cancel)
+
+        self.Bind(wx.EVT_CLOSE, self.on_close)        
+        
+
+        # create control  
+        self.lstbox_script = wx.ListBox(self, -1,  size=wx.Size(300,200))
+        self.lstbox_script.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+    
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        #sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
+    
+        
+        sizer_1.Add((400, 20), 0, 0, 0)
+        
+        sizer_1.Add(self.select, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_1.Add((400, 20), 0, 0, 0)
+        sizer_1.Add(self.lstbox_script, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
+        #sizer_1.Add(sizer_2)
+        sizer_1.Add((400, 20), 0, 0, 0)
+        sizer_3.Add(self.add, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_3.Add(self.cancel, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5) 
+        sizer_1.Add(sizer_3, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
+        
+        
+        self.SetSizer(sizer_1)
+        sizer_1.Fit(self)
+        self.Layout()
+        
+
+
+    def set_log(self, log):
+        self.log = log
+
+
+    def log_debug(self, data):
+        if self.log is not None :
+            self.log.log_debug(data)
+
+    def log_info(self, data):
+        if self.log is not None :
+            self.log.log_info(data)
+            
+        
+        
+    def on_add(self, event):
+        self.log_debug("on_add")
+        
+        for script in self.scripts:
+            self.project.add_script_in_pool(script)
+            self.log_debug("Add script : %s" % script.str_relative())
+                
+        self.EndModal(1)
+        
+    
+    def on_select(self, event):
+        self.log_debug("on_select") 
+
+        wildcard = "Python file (*.py)|*.py|"     \
+           "All files (*.*)|*.*"
+
+        dlg = wx.FileDialog(
+            self, message="Choose a file",
+            defaultDir=self.project.get_base_path(), 
+            defaultFile="",
+            wildcard=wildcard,
+            style=wx.OPEN | wx.MULTIPLE | wx.CHANGE_DIR
+            )
+    
+
+        if dlg.ShowModal() == wx.ID_OK:
+            paths = dlg.GetPaths()
+            
+            for path in paths:
+                try :    
+                    self.scripts.append(dpro.Script.create_from_absolute_pathstr(self.project.get_base_path(), path))
+                    self.lstbox_script.Append(self.scripts[-1].str_relative())
+                except :
+                    msg = "Error script : %s\nIt must be a subpath of : %s" % (path, self.project.get_base_path() )
+                    
+                    dlg = wx.MessageDialog(self, msg, 
+                               'Error script ...',
+                               wx.OK | wx.ICON_ERROR )
+                    dlg.ShowModal()
+                    dlg.Destroy()
+                    break
+        dlg.Destroy()
         
     
     def on_cancel(self, event):
@@ -550,6 +792,8 @@ class TestFrame(wx.Frame):
         # create menu
         mb = wx.MenuBar()
         file_menu = wx.Menu()
+        
+        file_menu.Append(wx.ID_NEW,     "New ...")
         file_menu.Append(wx.ID_OPEN,    "Open ...")
         file_menu.Append(wx.ID_REFRESH, "Refresh ...")
         file_menu.Append(wx.ID_EXIT,    "Exit")
@@ -563,9 +807,12 @@ class TestFrame(wx.Frame):
         self.SetMenuBar(mb)
 
 
+        self.Bind(wx.EVT_MENU, self.on_new, id=wx.ID_NEW)
         self.Bind(wx.EVT_MENU, self.on_open_xml, id=wx.ID_OPEN)
         self.Bind(wx.EVT_MENU, self.on_refresh_xml, id=wx.ID_REFRESH)
 
+    def on_new(self, event):
+        self.frm_project.new_project()
 
     def on_open_xml(self, event):
         self.frm_project.open_and_load_xml()

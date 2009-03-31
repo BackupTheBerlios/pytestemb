@@ -5,14 +5,14 @@ PyTestEmb Project : unit test for result utils
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
 
 
 
-
+import sys
 import unittest
 
 import ctp.data.utils as utils
@@ -20,61 +20,109 @@ import ctp.data.utils as utils
 
 
 
-
-    
-
-class Test_split_fullpath(unittest.TestCase):
-    def setUp(self):
-        pass
-    
-    
-    
-    def test_case_nominal(self):
-        path, file, ext =  utils.split_fullpath("c:\\temp\\file.xml")
-        self.assertEqual(path,"c:\\temp")
-        self.assertEqual(file,"file")
-        self.assertEqual(ext,"xml")
- 
-    def test_case_noext(self):
-        path, file, ext = utils.split_fullpath("c:\\temp\\file")        
-        self.assertEqual(path,"c:\\temp")
-        self.assertEqual(file,"file")
-        self.assertEqual(ext,"")
-                
-    def test_case_nofile(self):
-        path, file, ext = utils.split_fullpath("c:\\temp\\.xml")             
-        self.assertEqual(path,"c:\\temp")
-        self.assertEqual(file,"")
-        self.assertEqual(ext,"xml")
-                
-    def test_case_nopath(self):
-        path, file, ext = utils.split_fullpath("file.xml")    
-        self.assertEqual(path,"")
-        self.assertEqual(file,"file")
-        self.assertEqual(ext,"xml")
+if sys.platform == "win":
         
+    class Test_split_fullpath(unittest.TestCase):
+        def setUp(self):
+            pass
         
+        def test_case_nominal(self):
+            path, file, ext =  utils.split_fullpath("c:\\temp\\file.xml")
+            self.assertEqual(path,"c:\\temp")
+            self.assertEqual(file,"file")
+            self.assertEqual(ext,"xml")
+     
+        def test_case_noext(self):
+            path, file, ext = utils.split_fullpath("c:\\temp\\file")        
+            self.assertEqual(path,"c:\\temp")
+            self.assertEqual(file,"file")
+            self.assertEqual(ext,"")
+                    
+        def test_case_nofile(self):
+            path, file, ext = utils.split_fullpath("c:\\temp\\.xml")             
+            self.assertEqual(path,"c:\\temp")
+            self.assertEqual(file,"")
+            self.assertEqual(ext,"xml")
+                    
+        def test_case_nopath(self):
+            path, file, ext = utils.split_fullpath("file.xml")    
+            self.assertEqual(path,"")
+            self.assertEqual(file,"file")
+            self.assertEqual(ext,"xml")
+            
+            
+            
+            
+    class Test_extract_sub(unittest.TestCase):
+        def setUp(self):
+            pass
         
-        
-class Test_extract_sub(unittest.TestCase):
-    def setUp(self):
-        pass
+        def test_case_nominal(self):
+            path_1 = "c:\\project" 
+            path_2 = "c:\\project\\script\\001"
+            relative = utils.extract_relative(path_1, path_2)
+            self.assertEqual(relative, "script\\001")
     
+    
+        def test_case_equal(self):
+            path_1 = "c:\\project" 
+            path_2 = "c:\\project"
+            relative = utils.extract_relative(path_1, path_2)
+            self.assertEqual(relative, "")
+            
 
-    def test_case_nominal(self):
-        path_1 = "c:\\project" 
-        path_2 = "c:\\project\\script\\001"
-        relative = utils.extract_relative(path_1, path_2)
-        self.assertEqual(relative, "script\\001")
 
 
-    def test_case_equal(self):
-        path_1 = "c:\\project" 
-        path_2 = "c:\\project"
-        relative = utils.extract_relative(path_1, path_2)
-        self.assertEqual(relative, "")
+if sys.platform == "linux2":
         
-
+    class Test_split_fullpath(unittest.TestCase):
+        def setUp(self):
+            pass
+        
+        def test_case_nominal(self):
+            path, file, ext =  utils.split_fullpath("/home/file.xml")
+            self.assertEqual(path,"/home")
+            self.assertEqual(file,"file")
+            self.assertEqual(ext,"xml")
+     
+        def test_case_noext(self):
+            path, file, ext = utils.split_fullpath("/home/file")        
+            self.assertEqual(path,"/home")
+            self.assertEqual(file,"file")
+            self.assertEqual(ext,"")
+                    
+        def test_case_nofile(self):
+            path, file, ext = utils.split_fullpath("/home/.xml")             
+            self.assertEqual(path,"/home")
+            self.assertEqual(file,"")
+            self.assertEqual(ext,"xml")
+                    
+        def test_case_nopath(self):
+            path, file, ext = utils.split_fullpath("file.xml")    
+            self.assertEqual(path,"")
+            self.assertEqual(file,"file")
+            self.assertEqual(ext,"xml")
+            
+            
+            
+            
+    class Test_extract_sub(unittest.TestCase):
+        def setUp(self):
+            pass
+        
+        def test_case_nominal(self):
+            path_1 = "/home" 
+            path_2 = "/home/script/001"
+            relative = utils.extract_relative(path_1, path_2)
+            self.assertEqual(relative, "script/001")
+    
+    
+        def test_case_equal(self):
+            path_1 = "/home" 
+            path_2 = "/home"
+            relative = utils.extract_relative(path_1, path_2)
+            self.assertEqual(relative, "")
+            
 
 
 

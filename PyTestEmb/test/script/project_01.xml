@@ -128,4 +128,11 @@
 			<Path></Path>
 		</Script>	
 	</Campaign>
+	<Campaign>
+		<Name>Campaign_Infinite_Loop</Name>
+		<Script>
+			<Name>script_infinite_loop</Name>
+			<Path></Path>
+		</Script>	
+	</Campaign>
 </Project>

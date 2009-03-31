@@ -5,7 +5,7 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.12 $"
+__version__     = "$Revision: 1.13 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -266,6 +266,8 @@ def create(interface):
             tracemanager.add_trace("stdout", TraceStdout())
         elif item == "txt":
             tracemanager.add_trace("txt", TraceTxt())
+        elif item == "none":
+            pass
         else:
             assert False
     return tracemanager

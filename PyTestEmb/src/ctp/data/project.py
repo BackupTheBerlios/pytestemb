@@ -5,7 +5,7 @@ PyTestEmb Project : project manages project aspect : files, scripts, campaign
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.4 $"
+__version__     = "$Revision: 1.5 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -69,12 +69,16 @@ class Project:
                 self.campaigns.remove(campaign)
                 return
 
-    def remove_script_in_campaign(self, campaign, script):
-        self.scripts.delete_item(script.path, script.name)
-            
-        
+
+
+    def remove_script_in_campaign(self, name, script):
+        for campaign in self.campaigns:
+            if name == campaign.name :
+                campaign.scripts.delete_item(script.get_path(), script.get_name())
+                return
+
     def remove_script_in_pool(self, script):
-        self.scripts.delete_item(script.path, script.name)
+        self.scripts.delete_item(script.get_path(), script.get_name())
             
             
     def get_pool_list_absolute(self):      
@@ -175,8 +179,7 @@ class Script:
         
         
         
-        
-          
+    
     def str_absolute(self, base):
         if len(self._path) == 0:
             return os.path.join(base, "%s%s" % (self._name , SCRIPT_EXT))
@@ -196,8 +199,13 @@ class Script:
     @staticmethod
     def create_from_absolute_pathstr(base, file):
         s_absolutepath, filename, ext = utils.split_fullpath(file)
-        relative = utils.extract_relative(base, s_absolutepath)
-        relative = os.path.split(relative)
+        _relative = utils.extract_relative(base, s_absolutepath)
+        
+        relative = []
+        for d in os.path.split(_relative):
+            if d != "" :
+                relative.append(d)
+        
         return Script(filename, relative)
 
     @staticmethod

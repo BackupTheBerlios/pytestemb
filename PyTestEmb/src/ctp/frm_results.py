@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.5 $"
+__version__     = "$Revision: 1.6 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -141,13 +141,15 @@ class ResultFrame(wx.Panel):
         # Root
         
         
-        tree_result = self.tree.AddRoot(self.name)
-        self.tree.SetItemImage(tree_result, self.im_result, wx.TreeItemIcon_Normal)
+        item_root = self.tree.AddRoot(self.name)
+        self.tree.SetItemImage(item_root, self.im_result, wx.TreeItemIcon_Normal)
+        
+        self.tree.Expand(item_root)
         
         
         for k,scr in self.res.data.iteritems():
             
-            item_script = self.tree.AppendItem(tree_result, scr.script.str_relative())
+            item_script = self.tree.AppendItem(item_root, scr.script.str_relative())
             status, param = scr.get_status()
             
             

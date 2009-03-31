@@ -5,7 +5,7 @@ PyTestEmb Project : utils gathers all util function
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.1 $"
+__version__     = "$Revision: 1.2 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -37,9 +37,9 @@ def extract_relative(absolutepath1, absolutepath2):
     len_1 = len(absolutepath1)
     len_2 = len(absolutepath2)
     if len_1 > len_2 :
-        raise Exception  
+        raise Exception("Incorrect base path")  
     if absolutepath1 != absolutepath2[:len_1]:
-        raise Exception
+        raise Exception("Incorrect base path")  
     return absolutepath2[len_1:].strip(os.sep)
     
     
