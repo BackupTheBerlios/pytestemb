@@ -5,7 +5,7 @@ PyTestEmb Project : project manages project aspect : files, scripts, campaign
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.5 $"
+__version__     = "$Revision: 1.6 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -69,22 +69,27 @@ class Project:
                 self.campaigns.remove(campaign)
                 return
 
-
-
     def remove_script_in_campaign(self, name, script):
         for campaign in self.campaigns:
             if name == campaign.name :
                 campaign.scripts.delete_item(script.get_path(), script.get_name())
                 return
+    
+    def remove_campaign(self, name):
+        for index,campaign in enumerate(self.campaigns):
+            if name == campaign.name :
+                del self.campaigns[index]
+
+
 
     def remove_script_in_pool(self, script):
         self.scripts.delete_item(script.get_path(), script.get_name())
             
             
+            
     def get_pool_list_absolute(self):      
         return self.get_lst_scripts(self.scripts)
-  
-            
+    
                                   
 #    def get_campaign_list_absolute(self, name):      
 #        for campaign in self.campaigns:
@@ -231,7 +236,7 @@ def _get_one_tag(element, tagname):
     
     
 
-XML_PATH_SEP = "\\"
+XML_PATH_SEP = "/"
     
     
     
@@ -367,15 +372,15 @@ def save_to_xml(proj, filename):
     data += utils.xml_create_property(1, "Name", proj.name)
 
     data += utils.xml_create_start_tag(1, "Scripts")
-    for script in proj.scripts:
-        data += _create_script(2, script.name, script.relativepath)
+    for script in proj.get_pool_list_absolute():
+        data += _create_script(2, script.get_name(), XML_PATH_SEP.join(script.get_path()))
     data += utils.xml_create_stop_tag(1, "Scripts")    
     
     for campaign in proj.campaigns :
         data += utils.xml_create_start_tag(1, "Campaign")        
         data += utils.xml_create_property(2, "Name", campaign.name)
-        for script in campaign.scripts:
-            data += _create_script(2, script.name, script.relativepath)
+        for script in proj.get_campaign_list_scripts(campaign.name):
+            data += _create_script(2, script.get_name(), XML_PATH_SEP.join(script.get_path()))
         data += utils.xml_create_stop_tag(1, "Campaign") 
         
     data += utils.xml_create_stop_tag(0, "Project")

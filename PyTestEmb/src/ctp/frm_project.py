@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.10 $"
+__version__     = "$Revision: 1.11 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -47,7 +47,6 @@ class ProjectFrame(wx.Panel):
     def __init__(self, *p, **pp):
 
         wx.Panel.__init__(self, *p, **pp)
-
 
 
         self.tree = wx.TreeCtrl(self,-1)
@@ -125,7 +124,12 @@ class ProjectFrame(wx.Panel):
         dlg.Destroy()
     
 
-        
+    
+    
+    
+    def save_xml(self):
+        if self.path is not None:
+            self.save_file_xml(self.path)
 
 
      
@@ -158,6 +162,11 @@ class ProjectFrame(wx.Panel):
     def refresh_xml(self):
         if self.path is not None:
             self.load_xml(self.path)
+
+
+    def save_file_xml(self, filename):
+        self.log_info("Save project : \"%s\"" % filename)
+        dpro.save_to_xml(self.project, filename)
 
 
 
@@ -228,11 +237,13 @@ class ProjectFrame(wx.Panel):
             item2 = menu.Append(wx.ID_ANY, "Doc campaign")
             menu.AppendSeparator()
             item3 = menu.Append(wx.ID_ANY, "New campaign ...")
+            menu.AppendSeparator()
+            item4 = menu.Append(wx.ID_ANY, "Remove campaign")
             
             self.Bind(wx.EVT_MENU, self.on_run_campaign,      item1)
             self.Bind(wx.EVT_MENU, self.on_doc_campaign,      item2)
             self.Bind(wx.EVT_MENU, self.on_new_campaign,      item3)
-            
+            self.Bind(wx.EVT_MENU, self.on_remove_campaign,      item4)
 
         elif    node["type"] == "root_pool" :
             item1 = menu.Append(wx.ID_ANY, "Add script from files ...")
@@ -247,6 +258,30 @@ class ProjectFrame(wx.Panel):
         menu.Destroy()
         
         
+        
+        
+    def on_remove_campaign(self, event):
+        node = self.tree.GetItemPyData(self.sel_item)
+        assert node["type"] == "campaign"
+        self.log_debug("on_remove_campaign")
+            
+        campaign = node["data"]
+        
+        question = """Confirm removing campaign ?
+        campaign : "%s" """ % (campaign)
+        dlg = wx.MessageDialog(self, question,
+                               'Remove campaign ...',
+                               wx.CANCEL|wx.OK | wx.ICON_QUESTION )
+        ret = dlg.ShowModal()
+        dlg.Destroy()
+        
+        if ret ==  wx.ID_OK :
+            self.log_debug("OK")
+            self.log_debug("Remove \"%s\" " % ( campaign))
+            self.project.remove_campaign(campaign)
+            self.update_tree()
+        else :
+            self.log_debug("Cancel")
         
  
     def on_remove_script_from_campaign(self, event):
@@ -793,8 +828,9 @@ class TestFrame(wx.Frame):
         mb = wx.MenuBar()
         file_menu = wx.Menu()
         
-        file_menu.Append(wx.ID_NEW,     "New ...")
+        file_menu.Append(wx.ID_NEW,     "New")
         file_menu.Append(wx.ID_OPEN,    "Open ...")
+        file_menu.Append(wx.ID_SAVE,    "Save")
         file_menu.Append(wx.ID_REFRESH, "Refresh ...")
         file_menu.Append(wx.ID_EXIT,    "Exit")
 
@@ -810,12 +846,16 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_new, id=wx.ID_NEW)
         self.Bind(wx.EVT_MENU, self.on_open_xml, id=wx.ID_OPEN)
         self.Bind(wx.EVT_MENU, self.on_refresh_xml, id=wx.ID_REFRESH)
+        self.Bind(wx.EVT_MENU, self.on_save_xml, id=wx.ID_SAVE)
 
     def on_new(self, event):
         self.frm_project.new_project()
 
     def on_open_xml(self, event):
         self.frm_project.open_and_load_xml()
+        
+    def on_save_xml(self, event):
+        self.frm_project.save_xml()
 
     def on_refresh_xml(self, event):
         self.frm_project.refresh_xml()
