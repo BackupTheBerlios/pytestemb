@@ -36,19 +36,19 @@
 		</Script>		
 		<Script>
 			<Name>script_01</Name>
-			<Path>folder_02\subfolder_01</Path>
+			<Path>folder_02/subfolder_01</Path>
 		</Script>
 		<Script>
 			<Name>script_02</Name>
-			<Path>folder_02\subfolder_01</Path>
+			<Path>folder_02/subfolder_01</Path>
 		</Script>
 		<Script>
 			<Name>script_03</Name>
-			<Path>folder_02\subfolder_01</Path>
+			<Path>folder_02/subfolder_01</Path>
 		</Script>
 		<Script>
 			<Name>script_04</Name>
-			<Path>folder_02\subfolder_01</Path>
+			<Path>folder_02/subfolder_01</Path>
 		</Script>	
 		<Script>
 			<Name>script_cases</Name>
