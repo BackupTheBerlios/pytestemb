@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.8 $"
+__version__     = "$Revision: 1.9 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -218,7 +218,7 @@ class DialogRunner(wx.Dialog):
         
         
         if      self.data[RUN_TYPE] == RUN_SCRIPT :
-            self.results = dres.Results()
+            self.results = dres.Results("tmp_controler")
         elif    self.data[RUN_TYPE] == RUN_DOC :
             self.docs = ddoc.Documentation()
         else :
@@ -324,7 +324,7 @@ class DialogRunner(wx.Dialog):
         must be called in main thread """
         
         #scriptArgument = " --config=stdin --result=stdout"
-        scriptArgument = " --config=stdin --result=stdout"
+        scriptArgument = " --config=none --result=stdout"
         if self.data[PYPATH] is not None:
             scriptArgument += " --path=%s" % (self.data[PYPATH])
         
@@ -350,11 +350,11 @@ class DialogRunner(wx.Dialog):
         self.pid = wx.Execute(cmd, wx.EXEC_ASYNC, self.process)
         self.log_debug("Start process : %s pid %s" % (cmd, self.pid))
         
-        self.process.GetOutputStream().write("env : debug\n")
-        self.process.GetOutputStream().write("serial : com1\n")
-        self.process.GetOutputStream().write("case : case_01\n")
-        self.process.GetOutputStream().write("case : case_02\n")
-        self.process.GetOutputStream().write("END\n")        
+#        self.process.GetOutputStream().write("env : debug\n")
+#        self.process.GetOutputStream().write("serial : com1\n")
+#        self.process.GetOutputStream().write("case : case_01\n")
+#        self.process.GetOutputStream().write("case : case_02\n")
+#        self.process.GetOutputStream().write("END\n")        
         
         
     def on_execstatus(self, evt):

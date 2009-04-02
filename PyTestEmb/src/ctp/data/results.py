@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.5 $"
+__version__     = "$Revision: 1.6 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -36,12 +36,19 @@ RES_PY_EXCEPTION    = result.ResultStdout.PY_EXCEPTION
 
 class Results:
     
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.data = dict()
         
     def save(self, filename):
         s = shelve.open(filename, writeback=True)
         try:
+            # erase
+            
+            for k,v in s.iteritems():
+                del s[k]            
+            
+            # save
             for k,v in self.data.iteritems():
                 s[str(k)] = v
         finally:
