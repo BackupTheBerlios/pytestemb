@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.7 $"
+__version__     = "$Revision: 1.8 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -51,9 +51,11 @@ class ResultFrame(wx.Panel):
 
 
         self.lst_res = list()
-        
-        self.dic_dest = dict()
-        
+
+        self.lst_dest = list()
+
+        self.sel_item = None
+
 
         self.log = None
         self.path = None
@@ -65,13 +67,37 @@ class ResultFrame(wx.Panel):
         self.il = il
         self.res = dres.Results(name)
         self.update()
+        
+        tsize = (16,16)
+
+        new_bmp =  wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, tsize)
+
+        self.tb1 = wx.ToolBar(self, -1)
+        self.tb1.SetToolBitmapSize(tsize)
+        
+        self.tb1.AddLabelTool(101, "Test", new_bmp)
+        self.tb1.Realize()
+
+
 
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        sizer_1.Add(self.tree, 1, wx.EXPAND, 0)
+        sizer_1.Add(self.tb1, 0, wx.ALL, 2)
+        sizer_1.Add(self.tree, 1, wx.ALL| wx.EXPAND, 2)
+
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
+        
+        
+        
+        
+        
+        
+        
+
+        
+        
 
 
     def set_log(self, log):
@@ -87,34 +113,123 @@ class ResultFrame(wx.Panel):
             self.log.log_info(data)
 
 
-    def add_result_dest(self, res):
-        self.dic_dest[res.name] = res
+    def add_result_dest(self, resultframe):
+
+
+
+        if len(self.lst_dest) < 2 :
+            self.lst_dest.append((resultframe.res.name, resultframe))
+        else :
+            raise Exception("Result dest limit to 2")
+
 
     def remove_result_dest(self, name):
-        del self.dic_dest[res.name]
+        for i,v in enumerate(self.lst_dest):
+            if v[0] == name:
+                del self.lst_dest[i]
 
 
 
-    def update_in_dest(self, script, name):     
-        script_res = self.res.data[script.get_key()]
-        self.dic_dest[name].update(script_res)
+
+
+    def update_in_dest(self, script_res, name):
+        for i,v in enumerate(self.lst_dest):
+            if v[0] == name:
+                v[1].res.update(script_res)
+                v[1].update()
 
 
 
     def OnItemMenu(self, event):
 
+
+        type = ["root", "script", "info"]
+
+        item = event.GetItem()
+        self.log_debug("OnItemMenu item=\"%s\"" % self.tree.GetItemText(item))
+
+        self.sel_item = item
+
+
+        node = self.tree.GetItemPyData(self.sel_item)
+
+        if node is None :
+            self.sel_item = None
+            return
+        if type.count(node["type"]) != 1:
+            self.sel_item = None
+
+
+
+
         menu = wx.Menu()
-        item1 = menu.Append(wx.ID_ANY, "Export csv ...")
-        self.Bind(wx.EVT_MENU, self.on_export_csv,                  item1)
+        if      node["type"] == "root" :
+
+            item1 = menu.Append(wx.ID_ANY, "Export csv ...")
+            self.Bind(wx.EVT_MENU, self.on_export_csv,      item1)
 
 
-        if len(self.dic_dest) :
-            pass
+            if len(self.lst_dest) > 0 :
+                sm = wx.Menu()
+                for k in self.lst_dest:
+                    itemA = sm.Append(wx.ID_ANY, k[0])
+                    self.Bind(wx.EVT_MENU, self.on_update_all_result,      itemA)
+                menu.AppendSeparator()
+                menu.AppendMenu(wx.ID_ANY, "Update all results ...", sm)
+
+        elif    node["type"] == "script" :
 
 
+            item1 = menu.Append(wx.ID_ANY, "Remove")
+            self.Bind(wx.EVT_MENU, self.on_remove_result,      item1)
+
+            if len(self.lst_dest) > 0 :
+                sm = wx.Menu()
+                for k in self.lst_dest:
+                    itemA = sm.Append(wx.ID_ANY, k[0])
+                    self.Bind(wx.EVT_MENU, self.on_update_result,      itemA)
+                menu.AppendSeparator()
+                menu.AppendMenu(wx.ID_ANY, "Update result ...", sm)
+
+
+        elif    node["type"] == "info" :
+            return
+        else:
+            assert False
         self.PopupMenu(menu)
         menu.Destroy()
 
+
+
+
+    def on_update_all_result(self, event):
+
+        node = self.tree.GetItemPyData(self.sel_item)
+        assert node["type"] == "root"
+        self.log_debug("on_update_all_result")
+
+
+        for k,r in self.res.data.iteritems():
+            self.update_in_dest(r, self.lst_dest[0][0])
+        
+        
+        for k in self.res.data.keys():
+            self.remove_result(k)
+        self.update()  
+
+
+
+    def on_update_result(self, event):
+
+        node = self.tree.GetItemPyData(self.sel_item)
+        assert node["type"] == "script"
+        self.log_debug("on_update_result")
+
+        k = node["data"]
+
+        self.update_in_dest(self.res.data[k], self.lst_dest[0][0])
+        self.remove_result(k)
+        self.update()  
 
 
 
@@ -122,7 +237,20 @@ class ResultFrame(wx.Panel):
         self.save_export_csv()
 
 
+    def on_remove_result(self, event):
+        node = self.tree.GetItemPyData(self.sel_item)
+        assert node["type"] == "script"
+        self.log_debug("on_remove_campaign")
 
+        k = node["data"]
+        self.remove_result(k)
+        self.update()  
+
+
+
+    def remove_result(self, key):
+        del self.res.data[key]
+              
 
 
 
@@ -175,9 +303,6 @@ class ResultFrame(wx.Panel):
 
     def clearlst_res(self):
         self.lst_res = list()
-
-
-
 
 
 
@@ -234,33 +359,42 @@ class ResultFrame(wx.Panel):
         self.tree.DeleteAllItems()
 
         item_root = self.tree.AddRoot(self.res.name)
+        self.tree.SetPyData(item_root, {"type":"root", "data":None})
         self.tree.SetItemImage(item_root, self.im_result, wx.TreeItemIcon_Normal)
 
         for k,scr in self.res.data.iteritems():
 
             item_script = self.tree.AppendItem(item_root, scr.script.str_relative())
+            self.tree.SetPyData(item_script, {"type":"script", "data":k})
+
             status, param = scr.get_status()
 
             if status != dres.ST_EXEC_EXECUTED_NO_ERROR :
                 self.tree.SetItemImage(item_script, self.im_script_warn, wx.TreeItemIcon_Normal)
                 item_case = self.tree.AppendItem(item_script, "%s" % dres.SCRIPT_STATUS[status])
+                self.tree.SetPyData(item_case, {"type":"info", "data":k})
                 if param is not None :
                     item_case = self.tree.AppendItem(item_script, "%s" % param)
+                    self.tree.SetPyData(item_case, {"type":"info", "data":k})
             elif  status == dres.ST_EXEC_EXECUTED_NO_ERROR :
                 #item_script = self.tree.AppendItem(tree_result, scr.script.str_relative())
                 if scr.trace_info is None :
                     item_case = self.tree.AppendItem(item_script, "No trace" )
+                    self.tree.SetPyData(item_case, {"type":"info", "data":k})
                 else:
                     item_case = self.tree.AppendItem(item_script, "%s" % scr.trace_info )
+                    self.tree.SetPyData(item_case, {"type":"info", "data":k})
 
                 script_status = "ok"
                 for k,cas in scr.cases.iteritems():
                     item_case = self.tree.AppendItem(item_script, cas.name)
+                    self.tree.SetPyData(item_case, {"type":"info", "data":k})
 
                     case_status = "default"
                     for k,res in cas.result.data.iteritems():
                         if res is not None:
                             item_res = self.tree.AppendItem(item_case, "%s" % k )
+                            self.tree.SetPyData(item_case, {"type":"info", "data":k})
                             if k == dres.RES_ASSERT_OK :
                                 case_status = "ok"
                             else:
@@ -271,7 +405,7 @@ class ResultFrame(wx.Panel):
                                 for k,v in d.iteritems():
                                     jsize = 16
                                     item_l = self.tree.AppendItem(item_res, "%s :: %s" % (k.ljust(jsize),v) )
-
+                                    self.tree.SetPyData(item_case, {"type":"info", "data":k})
 
 
                     if case_status == "default":
@@ -304,15 +438,27 @@ class TestFrame(wx.Frame):
 
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
-        self.frm_result = ResultFrame("TestResult", self)
+        self.frm_result1 = ResultFrame("TestResult1", self, -1,)
+        self.frm_result2 = ResultFrame("TestResult2", self, -1)
 
+
+        self.frm_result1.add_result_dest(self.frm_result2)
+
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_1.Add(self.frm_result1, 1, wx.EXPAND, 0)
+        sizer_1.Add(self.frm_result2, 1, wx.EXPAND, 0)
+        self.SetSizer(sizer_1)
+        sizer_1.Fit(self)
+        self.Layout()
+
+        self.SetSize(wx.Size(500,500))
 
         # create menu
         mb = wx.MenuBar()
         file_menu = wx.Menu()
-        file_menu.Append(wx.ID_OPEN,    "Open ...")
-        file_menu.Append(wx.ID_DUPLICATE,    "Export csv ...")
-        file_menu.Append(wx.ID_EXIT,    "Exit")
+        file_menu.Append(wx.ID_OPEN,        "Open ...")
+        file_menu.Append(wx.ID_DUPLICATE,   "Export csv ...")
+        file_menu.Append(wx.ID_EXIT,        "Exit")
 
         help_menu = wx.Menu()
         help_menu.Append(wx.ID_ABOUT, "About...")
@@ -327,11 +473,15 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_export_csv, id=wx.ID_DUPLICATE)
 
 
+
+
     def on_open_xml(self, event):
-        self.frm_result.load_and_update()
+        self.frm_result1.load_and_update()
 
     def on_export_csv(self, event):
-        self.frm_result.save_export_csv()
+        self.frm_result1.save_export_csv()
+
+
 
 
 class MyApp(wx.App):

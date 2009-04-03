@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.8 $"
+__version__     = "$Revision: 1.9 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -113,7 +113,7 @@ class PyAUIFrame(wx.Frame):
 
         self.SetTitle("Control Test - PyTestEmb")
         _icon = wx.EmptyIcon()
-        _icon.CopyFromBitmap(wx.Bitmap("images/Crystal_Clear_action_run.png", wx.BITMAP_TYPE_ANY))
+        _icon.CopyFromBitmap(wx.Bitmap("images/weather_lightning.png", wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
 
 
@@ -585,6 +585,9 @@ class PyAUIFrame(wx.Frame):
         res_sta = frm_results.ResultFrame( "Stack",ctrl)
         self.ctrl["res_sta"] = res_sta
         ctrl.AddPage(res_sta,  "Stack Result")
+
+        res_sta.add_result_dest(res_glo)
+
 
         # MDI document
         mdi = wx.aui.AuiNotebook(self, -1,  size=(640,480),\
