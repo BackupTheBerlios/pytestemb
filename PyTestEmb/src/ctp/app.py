@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.9 $"
+__version__     = "$Revision: 1.10 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -39,7 +39,7 @@ import frm_controler
 
 
 APP_NAME     = "Control Test"
-APP_VERSION  = "beta"
+APP_VERSION  = "1.0.0"
 
 
 
@@ -471,11 +471,32 @@ class PyAUIFrame(wx.Frame):
 
     def OnAbout(self, event):
         self.log_debug("OnAbout")
-        msg = "Beta"
-        dlg = wx.MessageDialog(self, msg, "About Control Tower PytestEmb",
-                               wx.OK | wx.ICON_INFORMATION)
-        dlg.ShowModal()
-        dlg.Destroy()
+        
+        from wx.lib.wordwrap import wordwrap
+
+        
+        info = wx.AboutDialogInfo()
+        info.Name = APP_NAME
+        info.Version = APP_VERSION
+        info.Copyright = "GNU"
+        info.Description = wordwrap(
+            "Control Test is a script manager execution :\n"
+            "project management\n"
+            "script execution\n"
+            "result management\n",
+            350, wx.ClientDC(self))
+        info.WebSite = ("http://developer.berlios.de/projects/pytestemb/", "home page")
+        info.Developers = [ "Jean-Marc Beguinet" ]
+        licenseText = "GNU"
+        info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
+
+        # Then we call wx.AboutBox giving it that info object
+        wx.AboutBox(info)
+#        msg = "Beta"
+#        dlg = wx.MessageDialog(self, msg, "About Control Tower PytestEmb",
+#                               wx.OK | wx.ICON_INFORMATION)
+#        dlg.ShowModal()
+#        dlg.Destroy()
 
 
     def on_menu_project_open(self, event):
