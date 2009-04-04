@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.10 $"
+__version__     = "$Revision: 1.11 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -44,17 +44,15 @@ APP_VERSION  = "1.0.0"
 
 
 TRACE_DEBUG = True
+EXCEPT_DEBUG = True
 
 
+
+ID_MENU_PROJECT_NEW = wx.NewId()
 ID_MENU_PROJECT_OPEN = wx.NewId()
-ID_MENU_PROJECT_REFRESH = wx.NewId()
+ID_MENU_PROJECT_SAVE = wx.NewId()
+ID_MENU_PROJECT_SAVEAS = wx.NewId()
 
-
-ID_MENU_RESULT_NEW = wx.NewId()
-ID_MENU_RESULT_OPEN = wx.NewId()
-ID_MENU_RESULT_SAVE = wx.NewId()
-
-ID_MENU_STACK_CLEAN = wx.NewId()
 
 
 
@@ -64,14 +62,11 @@ ID_MENU_STACK_CLEAN = wx.NewId()
 
 
 ID_CreateTree = wx.NewId()
-#ID_CreateGrid = wx.NewId()
 ID_CreateLog = wx.NewId()
-#ID_GridContent = wx.NewId()
 ID_LogContent = wx.NewId()
 ID_TreeContent = wx.NewId()
 ID_SizeReportContent = wx.NewId()
-#ID_CreatePerspective = wx.NewId()
-#ID_CopyPerspective = wx.NewId()
+
 
 
 ID_Settings = wx.NewId()
@@ -130,6 +125,12 @@ class PyAUIFrame(wx.Frame):
         self.x = 0
 
 
+        tsize = wx.Size(16,16)
+        bmp_new = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, tsize)
+        bmp_save = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, tsize)
+        bmp_saveas = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, tsize)
+        bmp_open = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, tsize)
+
         # create menu
         mb = wx.MenuBar()
 
@@ -141,19 +142,26 @@ class PyAUIFrame(wx.Frame):
 
         # Project menu
         project_menu = wx.Menu()
-        project_menu.Append(ID_MENU_PROJECT_OPEN,     "Open ...")
-        project_menu.Append(ID_MENU_PROJECT_REFRESH,  "Refresh")
+        
+        project_menu.Append(ID_MENU_PROJECT_NEW,    "New ...")
+        project_menu.Append(ID_MENU_PROJECT_OPEN,   "Open ..")
+        project_menu.Append(ID_MENU_PROJECT_SAVE,   "Save")
+        project_menu.Append(ID_MENU_PROJECT_SAVEAS, "Save As ..")
+        
+        
+        self.Bind(wx.EVT_MENU, self.on_menu_project_new, id=ID_MENU_PROJECT_NEW)
         self.Bind(wx.EVT_MENU, self.on_menu_project_open, id=ID_MENU_PROJECT_OPEN)
-        self.Bind(wx.EVT_MENU, self.on_menu_refresh, id=ID_MENU_PROJECT_REFRESH)
+        self.Bind(wx.EVT_MENU, self.on_menu_project_save, id=ID_MENU_PROJECT_SAVE)
+        self.Bind(wx.EVT_MENU, self.on_menu_project_saveas, id=ID_MENU_PROJECT_SAVEAS)
         mb.Append(project_menu, "Project")
 
-        # Result menu
-        project_menu = wx.Menu()
-        project_menu.Append(ID_MENU_RESULT_NEW,     "New ...")
-        project_menu.Append(ID_MENU_RESULT_OPEN,    "Open ...")
-        project_menu.Append(ID_MENU_RESULT_SAVE,    "Save ...")
-        project_menu.AppendSeparator()
-        project_menu.Append(ID_MENU_STACK_CLEAN,    "Clean Stack")
+#        # Result menu
+#        project_menu = wx.Menu()
+#        project_menu.Append(ID_MENU_RESULT_NEW,     "New ...")
+#        project_menu.Append(ID_MENU_RESULT_OPEN,    "Open ...")
+#        project_menu.Append(ID_MENU_RESULT_SAVE,    "Save ...")
+#        project_menu.AppendSeparator()
+#        project_menu.Append(ID_MENU_STACK_CLEAN,    "Clean Stack")
 
 #        self.Bind(wx.EVT_MENU, self.on_menu_result_new, id=ID_MENU_RESULT_NEW)
 #        self.Bind(wx.EVT_MENU, self.on_menu_result_open, id=ID_MENU_RESULT_OPEN)
@@ -166,22 +174,24 @@ class PyAUIFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnAbout, id=ID_About)
         mb.Append(help_menu,    "Help")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         self.SetMenuBar(mb)
+        
+        
+        
+        
+        tb2 = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
+                         wx.TB_FLAT | wx.TB_NODIVIDER)
+        tb2.SetToolBitmapSize(tsize)
+        tb2_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_QUESTION, wx.ART_OTHER, wx.Size(16, 16))
+        tb2.AddLabelTool(ID_MENU_PROJECT_NEW,   "New", bmp_new)
+        tb2.AddLabelTool(ID_MENU_PROJECT_OPEN,  "Open", bmp_open)
+        tb2.AddLabelTool(ID_MENU_PROJECT_SAVE,  "Save", bmp_save)
+        tb2.AddLabelTool(ID_MENU_PROJECT_SAVEAS,"SaveAs", bmp_saveas)
+                
+        tb2.Realize()
+
+
+
 
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
         self.statusbar.SetStatusWidths([-2, -3])
@@ -195,13 +205,6 @@ class PyAUIFrame(wx.Frame):
 
 
 
-        tb2 = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
-                         wx.TB_FLAT | wx.TB_NODIVIDER)
-        tb2.SetToolBitmapSize(wx.Size(16,16))
-        tb2_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_QUESTION, wx.ART_OTHER, wx.Size(16, 16))
-        tb2.AddLabelTool(101, "Test", tb2_bmp1)
-        tb2.AddLabelTool(101, "Test", tb2_bmp1)
-        tb2.Realize()
 
 
 
@@ -478,16 +481,16 @@ class PyAUIFrame(wx.Frame):
         info = wx.AboutDialogInfo()
         info.Name = APP_NAME
         info.Version = APP_VERSION
-        info.Copyright = "GNU"
+        info.Copyright = "GPL"
         info.Description = wordwrap(
             "Control Test is a script manager execution :\n"
-            "project management\n"
-            "script execution\n"
-            "result management\n",
+            "> project management <\n"
+            "> script execution <\n"
+            "> result management <",
             350, wx.ClientDC(self))
-        info.WebSite = ("http://developer.berlios.de/projects/pytestemb/", "home page")
+        info.WebSite = ("http://developer.berlios.de/projects/pytestemb/", "berlios home page")
         info.Developers = [ "Jean-Marc Beguinet" ]
-        licenseText = "GNU"
+        licenseText = "GPL"
         info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 
         # Then we call wx.AboutBox giving it that info object
@@ -504,12 +507,23 @@ class PyAUIFrame(wx.Frame):
         self.ctrl["project"].open_and_load_xml()
 
 
-    def on_menu_refresh(self, event):
-        self.log_debug("on_menu_refresh")
-        self.ctrl["project"].refresh_xml()
-
-
-
+    def on_menu_project_new(self, event):
+        self.log_debug("on_menu_project_new")
+        self.ctrl["project"].new_project()
+        
+        
+    def on_menu_project_save(self, event):
+        self.log_debug("on_menu_project_save")
+        self.ctrl["project"].save_xml()
+        
+        
+    def on_menu_project_saveas(self, event):
+        self.log_debug("on_menu_project_saveas")
+        dlg = wx.MessageDialog(self, "To do",
+                               'To Do',
+                               wx.OK | wx.ICON_EXCLAMATION )
+        ret = dlg.ShowModal()
+        dlg.Destroy()
 
 
     def GetDockArt(self):
@@ -743,8 +757,8 @@ class MyApp(wx.App):
 
 if __name__ == "__main__":
 
-
-    exceptlog.add_exception_hook(get_app_path(), APP_VERSION)
+    if not(EXCEPT_DEBUG) :
+        exceptlog.add_exception_hook(get_app_path(), APP_VERSION)
 
     # start app
     App = MyApp(0)

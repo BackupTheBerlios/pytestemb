@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.8 $"
+__version__     = "$Revision: 1.9 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -48,39 +48,73 @@ class ResultFrame(wx.Panel):
         self.im_case_ok   = il.Add( wx.Bitmap("images/bullet_green.png", wx.BITMAP_TYPE_PNG))
         self.im_case_ko   = il.Add( wx.Bitmap("images/bullet_red.png", wx.BITMAP_TYPE_PNG))
         self.im_case   = il.Add( wx.Bitmap("images/bullet_purple.png", wx.BITMAP_TYPE_PNG))
+        
+        self.il = il
+        self.tree.SetImageList(il)
+        
 
 
         self.lst_res = list()
-
         self.lst_dest = list()
-
         self.sel_item = None
-
-
         self.log = None
         self.path = None
-        self.wildcard = "Project file (*.dbm)|*.dbm|"     \
+        
+        self.wildcard_dbm = "Project file (*.dbm)|*.dbm|"     \
+           "All files (*.*)|*.*"
+        self.wildcard_csv = "Csv file (*.csv)|*.csv|"     \
            "All files (*.*)|*.*"
 
-
-        self.tree.SetImageList(il)
-        self.il = il
+        
         self.res = dres.Results(name)
         self.update()
         
+        # toolbar
         tsize = (16,16)
-
-        new_bmp =  wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, tsize)
-
         self.tb1 = wx.ToolBar(self, -1)
         self.tb1.SetToolBitmapSize(tsize)
         
-        self.tb1.AddLabelTool(101, "Test", new_bmp)
+        
+        bmp_new = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, tsize)
+        bmp_save = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, tsize)
+        bmp_saveas = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, tsize)
+        bmp_open = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, tsize)
+        bmp_export_csv = wx.Bitmap("images/page_white_c.png", wx.BITMAP_TYPE_PNG)
+        id_new = wx.NewId()
+        id_save = wx.NewId()
+        id_saveas = wx.NewId()
+        id_open = wx.NewId()
+        id_export_csv = wx.NewId()
+        
+        
+    
+        self.tb1.AddLabelTool(id_new,       "New",          bmp_new,)
+        self.tb1.AddSeparator()
+        self.tb1.AddLabelTool(id_open,      "Open",         bmp_open)
+        self.tb1.AddLabelTool(id_save,      "Save",         bmp_save)
+        self.tb1.AddLabelTool(id_saveas,    "Save As",      bmp_saveas)
+        self.tb1.AddSeparator()
+        self.tb1.AddLabelTool(id_export_csv,"Export csv",   bmp_export_csv)
+        
+        
+        self.tb1.SetToolShortHelp(id_new,       "New result")
+        self.tb1.SetToolShortHelp(id_open,      "Open a result")
+        self.tb1.SetToolShortHelp(id_save,      "Save curent result")
+        self.tb1.SetToolShortHelp(id_saveas,    "Save As curent result")
+        self.tb1.SetToolShortHelp(id_export_csv,"Export to csv")
+        
+        self.Bind(wx.EVT_TOOL, self.on_tool_new,    id=id_new)
+        self.Bind(wx.EVT_TOOL, self.on_tool_open,   id=id_open)
+        self.Bind(wx.EVT_TOOL, self.on_tool_save,   id=id_save)
+        self.Bind(wx.EVT_TOOL, self.on_tool_saveas, id=id_saveas)
+        self.Bind(wx.EVT_TOOL, self.on_tool_csv,    id=id_export_csv)
+
+        
         self.tb1.Realize()
 
 
 
-
+        # sizer
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_1.Add(self.tb1, 0, wx.ALL, 2)
         sizer_1.Add(self.tree, 1, wx.ALL| wx.EXPAND, 2)
@@ -91,18 +125,9 @@ class ResultFrame(wx.Panel):
         
         
         
-        
-        
-        
-        
-
-        
-        
-
 
     def set_log(self, log):
         self.log = log
-
 
     def log_debug(self, data):
         if self.log is not None :
@@ -113,9 +138,26 @@ class ResultFrame(wx.Panel):
             self.log.log_info(data)
 
 
+    def on_tool_new(self, event):
+        self.log_debug("on_tool_new")
+
+
+    def on_tool_open(self, event):
+        self.log_debug("on_tool_open")
+        
+    def on_tool_save(self, event):
+        self.log_debug("on_tool_save")
+        
+    def on_tool_saveas(self, event):
+        self.log_debug("on_tool_saveas")
+        
+    def on_tool_csv(self, event):
+        self.log_debug("on_tool_csv")     
+        
+        
+        
+
     def add_result_dest(self, resultframe):
-
-
 
         if len(self.lst_dest) < 2 :
             self.lst_dest.append((resultframe.res.name, resultframe))
@@ -263,7 +305,7 @@ class ResultFrame(wx.Panel):
             #"defaultDir=os.getcwd(),
             defaultDir="",
             defaultFile="",
-            wildcard=self.wildcard,
+            wildcard=self.wildcard_dbm,
             style=wx.OPEN | wx.CHANGE_DIR
             )
 
@@ -331,7 +373,7 @@ class ResultFrame(wx.Panel):
             #"defaultDir=os.getcwd(),
             defaultDir="",
             defaultFile="",
-            wildcard=wildcard,
+            wildcard=self.wildcard_csv,
             style=wx.SAVE | wx.CHANGE_DIR
             )
 
