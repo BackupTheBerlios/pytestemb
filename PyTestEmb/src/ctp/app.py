@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.11 $"
+__version__     = "$Revision: 1.12 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -39,8 +39,7 @@ import frm_controler
 
 
 APP_NAME     = "Control Test"
-APP_VERSION  = "1.0.0"
-
+APP_VERSION  = "1.0.0 beta"
 
 
 TRACE_DEBUG = True
@@ -56,6 +55,7 @@ ID_MENU_PROJECT_SAVEAS = wx.NewId()
 
 
 
+ID_SAVEALL = wx.NewId()
 
 
 
@@ -125,11 +125,7 @@ class PyAUIFrame(wx.Frame):
         self.x = 0
 
 
-        tsize = wx.Size(16,16)
-        bmp_new = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, tsize)
-        bmp_save = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, tsize)
-        bmp_saveas = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, tsize)
-        bmp_open = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, tsize)
+
 
         # create menu
         mb = wx.MenuBar()
@@ -155,19 +151,6 @@ class PyAUIFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_menu_project_saveas, id=ID_MENU_PROJECT_SAVEAS)
         mb.Append(project_menu, "Project")
 
-#        # Result menu
-#        project_menu = wx.Menu()
-#        project_menu.Append(ID_MENU_RESULT_NEW,     "New ...")
-#        project_menu.Append(ID_MENU_RESULT_OPEN,    "Open ...")
-#        project_menu.Append(ID_MENU_RESULT_SAVE,    "Save ...")
-#        project_menu.AppendSeparator()
-#        project_menu.Append(ID_MENU_STACK_CLEAN,    "Clean Stack")
-
-#        self.Bind(wx.EVT_MENU, self.on_menu_result_new, id=ID_MENU_RESULT_NEW)
-#        self.Bind(wx.EVT_MENU, self.on_menu_result_open, id=ID_MENU_RESULT_OPEN)
-#        self.Bind(wx.EVT_MENU, self.on_menu_result_vave, id=ID_MENU_RESULT_SAVE)
-#        self.Bind(wx.EVT_MENU, self.on_menu_result_stack_clean, id=ID_MENU_STACK_CLEAN)
-
 
         help_menu = wx.Menu()
         help_menu.Append(ID_About, "About...")
@@ -178,18 +161,6 @@ class PyAUIFrame(wx.Frame):
         
         
         
-        
-        tb2 = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
-                         wx.TB_FLAT | wx.TB_NODIVIDER)
-        tb2.SetToolBitmapSize(tsize)
-        tb2_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_QUESTION, wx.ART_OTHER, wx.Size(16, 16))
-        tb2.AddLabelTool(ID_MENU_PROJECT_NEW,   "New", bmp_new)
-        tb2.AddLabelTool(ID_MENU_PROJECT_OPEN,  "Open", bmp_open)
-        tb2.AddLabelTool(ID_MENU_PROJECT_SAVE,  "Save", bmp_save)
-        tb2.AddLabelTool(ID_MENU_PROJECT_SAVEAS,"SaveAs", bmp_saveas)
-                
-        tb2.Realize()
-
 
 
 
@@ -224,8 +195,8 @@ class PyAUIFrame(wx.Frame):
 
 
 
-        self._mgr.AddPane(tb2, wx.aui.AuiPaneInfo().
-                          Name("tb2").Caption("Toolbar 2").
+        self._mgr.AddPane(self.create_main_toolbar(), wx.aui.AuiPaneInfo().
+                          Name("tb").Caption("Toolbar").
                           ToolbarPane().Top().Row(1).
                           LeftDockable(False).RightDockable(False))
 
@@ -476,30 +447,40 @@ class PyAUIFrame(wx.Frame):
         self.log_debug("OnAbout")
         
         from wx.lib.wordwrap import wordwrap
+        import platform
+        import pytestemb
 
+
+        description = "Control Test is a script manager\n"
+        description += "\n PyTestEmb-version : %s\n" % pytestemb.VERSION_STRING
+        description += "\n WX-version : %s" % wx.VERSION_STRING
+        description += "\n WX-plateform : %s" % wx.Platform
+        description += "\n Python-version : %s" % platform.python_version()
+        description += "\n Plateform : %s" % platform.platform(terse=True)
+        description += "\n"
+    
+#                    '' : ,
+#                    'wx-platform' : wx.Platform,
+#                    'python-version' : platform.python_version(), #sys.version.split()[0],
+#                    'platform' : platform.platform(),
         
         info = wx.AboutDialogInfo()
         info.Name = APP_NAME
         info.Version = APP_VERSION
-        info.Copyright = "GPL"
-        info.Description = wordwrap(
-            "Control Test is a script manager execution :\n"
-            "> project management <\n"
-            "> script execution <\n"
-            "> result management <",
-            350, wx.ClientDC(self))
+        info.Copyright = "GNU GENERAL PUBLIC LICENSE v3"
+        info.Description = description#wordwrap(description, 350, wx.ClientDC(self))
         info.WebSite = ("http://developer.berlios.de/projects/pytestemb/", "berlios home page")
         info.Developers = [ "Jean-Marc Beguinet" ]
-        licenseText = "GPL"
+        
+        licenseText = "GNU GENERAL PUBLIC LICENSE v3\n"
+        licenseText += "http://www.gnu.org/licenses/licenses.html"
         info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 
         # Then we call wx.AboutBox giving it that info object
         wx.AboutBox(info)
-#        msg = "Beta"
-#        dlg = wx.MessageDialog(self, msg, "About Control Tower PytestEmb",
-#                               wx.OK | wx.ICON_INFORMATION)
-#        dlg.ShowModal()
-#        dlg.Destroy()
+        
+        
+
 
 
     def on_menu_project_open(self, event):
@@ -595,7 +576,38 @@ class PyAUIFrame(wx.Frame):
         return ctrl
 
 
+    def create_main_toolbar(self):
+        
+        tsize = wx.Size(16,16)
+        bmp_new = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, tsize)
+        bmp_save = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, tsize)
+        bmp_saveas = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, tsize)
+        bmp_open = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, tsize)
+        bmp_saveall = wx.ArtProvider.GetBitmap(wx.ART_HARDDISK, wx.ART_TOOLBAR, tsize)
+        
+        toolbar = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
+                         wx.TB_FLAT | wx.TB_NODIVIDER)
+        toolbar.SetToolBitmapSize(tsize)
 
+
+        toolbar.AddLabelTool(ID_MENU_PROJECT_NEW,   "New", bmp_new)
+        toolbar.AddLabelTool(ID_MENU_PROJECT_OPEN,  "Open", bmp_open)
+        toolbar.AddLabelTool(ID_MENU_PROJECT_SAVE,  "Save", bmp_save)
+        toolbar.AddLabelTool(ID_MENU_PROJECT_SAVEAS,"SaveAs", bmp_saveas)
+        toolbar.AddSeparator()
+        toolbar.AddLabelTool(ID_SAVEALL, "SaveAll", bmp_saveall)
+        
+        
+                
+        toolbar.SetToolShortHelp(ID_MENU_PROJECT_NEW,       "New project")
+        toolbar.SetToolShortHelp(ID_MENU_PROJECT_OPEN,      "Open project")
+        toolbar.SetToolShortHelp(ID_MENU_PROJECT_SAVE,      "Save project")
+        toolbar.SetToolShortHelp(ID_MENU_PROJECT_SAVEAS,    "Save As project")
+        
+        toolbar.SetToolShortHelp(ID_SAVEALL,    "Save All : project and results")
+        
+        toolbar.Realize()
+        return toolbar
 
 
 
