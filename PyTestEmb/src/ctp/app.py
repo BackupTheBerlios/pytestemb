@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.12 $"
+__version__     = "$Revision: 1.13 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -93,6 +93,7 @@ class PyAUIFrame(wx.Frame):
         self.path = dict()
         self.path["app_path"] = get_app_path()
         self.path["stack_file"] = os.path.join(self.path["app_path"], "stack.dbm")
+        self.path["global_file"] = os.path.join(self.path["app_path"], "global.dbm")
 
         self.ctrl = { "log"     :     None,
                       "project" :     None,
@@ -626,10 +627,13 @@ class PyAUIFrame(wx.Frame):
         self.Freeze()
 
         res_glo = frm_results.ResultFrame("Global", ctrl)
+        res_glo.set_log(self)
+        res_glo.path = self.path["global_file"]
         self.ctrl["res_glo"] = res_glo
         ctrl.AddPage(res_glo, "Global Result")
 
         res_sta = frm_results.ResultFrame( "Stack",ctrl)
+        res_sta.set_log(self)
         self.ctrl["res_sta"] = res_sta
         ctrl.AddPage(res_sta,  "Stack Result")
 

@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.6 $"
+__version__     = "$Revision: 1.7 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -44,10 +44,8 @@ class Results:
         s = shelve.open(filename, writeback=True)
         try:
             # erase
-            
             for k,v in s.iteritems():
                 del s[k]            
-            
             # save
             for k,v in self.data.iteritems():
                 s[str(k)] = v

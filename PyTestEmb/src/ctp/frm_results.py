@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.9 $"
+__version__     = "$Revision: 1.10 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -144,17 +144,27 @@ class ResultFrame(wx.Panel):
 
     def on_tool_open(self, event):
         self.log_debug("on_tool_open")
+
+        self.load_and_update()
+        
         
     def on_tool_save(self, event):
         self.log_debug("on_tool_save")
         
+        self.res.save(self.path)
+        
+        
     def on_tool_saveas(self, event):
         self.log_debug("on_tool_saveas")
-        
+        dlg = wx.MessageDialog(self, "To do",
+                               'To Do',
+                               wx.OK | wx.ICON_EXCLAMATION )
+        ret = dlg.ShowModal()
+        dlg.Destroy()
+               
     def on_tool_csv(self, event):
         self.log_debug("on_tool_csv")     
-        
-        
+        self.save_export_csv()
         
 
     def add_result_dest(self, resultframe):
