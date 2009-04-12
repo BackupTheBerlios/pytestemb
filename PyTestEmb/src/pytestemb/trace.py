@@ -5,7 +5,7 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.13 $"
+__version__     = "$Revision: 1.14 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -122,7 +122,7 @@ class TraceOctopylog(Trace):
         rootLogger.setLevel(logging.DEBUG)
         rootLogger.addHandler(socketHandler)
         
-        des = dict({"octopylog":"pytestemb"})
+        des = dict({"type":"octopylog"})
         self.result.trace_ctrl(des)
 
     def trace_scope(self, scope, msg):
@@ -153,7 +153,10 @@ class TraceStdout(Trace):
     
     def __init__(self):
         Trace.__init__(self)
-        
+
+    def start(self):    
+        des = dict({"type":"stdout"})
+        self.result.trace_ctrl(des)        
         
     def trace_script(self, msg):
         sys.stdout.write("Script::%s" % msg)
@@ -196,7 +199,8 @@ class TraceTxt(Trace):
             #pathfile = "%s\\" % TraceTxt.DEFAULT_DIR
         pathfile =  os.path.join(TraceTxt.DEFAULT_DIR, self.gen_file_name() ) 
         # create file
-        des = dict({"file":pathfile})
+        
+        des = dict({"type":"txt","file":pathfile})
         try :
             self.file = open(pathfile, 'w')          
         except (IOError) , (error):

@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.13 $"
+__version__     = "$Revision: 1.14 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -26,10 +26,7 @@ import data.utils
 import wxcustom.evt_file as evt_file
 import wxcustom.evt_run as evt_run
 import wxcustom.evt_doc as evt_doc
-
 import wxcustom.exceptlog as exceptlog
-
-
 import wxcustom.editor_py as editor_py
 
 import frm_logging
@@ -42,35 +39,24 @@ APP_NAME     = "Control Test"
 APP_VERSION  = "1.0.0 beta"
 
 
-TRACE_DEBUG = True
-EXCEPT_DEBUG = True
+
+# TRACE_DEBUG :
+#  True   = Debug Trace Activate
+#  False  = Debug Trace DeActivate
+TRACE_DEBUG     = True
+# EXCEPT_DEBUG :
+# True    = std.err for exception output
+# False   = GUI exception handler
+EXCEPT_DEBUG    = True
 
 
 
-ID_MENU_PROJECT_NEW = wx.NewId()
-ID_MENU_PROJECT_OPEN = wx.NewId()
-ID_MENU_PROJECT_SAVE = wx.NewId()
-ID_MENU_PROJECT_SAVEAS = wx.NewId()
+ID_PROJECT_NEW = wx.NewId()
+ID_PROJECT_OPEN = wx.NewId()
+ID_PROJECT_SAVE = wx.NewId()
+ID_PROJECT_SAVEAS = wx.NewId()
 
-
-
-
-ID_SAVEALL = wx.NewId()
-
-
-
-
-
-ID_CreateTree = wx.NewId()
-ID_CreateLog = wx.NewId()
-ID_LogContent = wx.NewId()
-ID_TreeContent = wx.NewId()
-ID_SizeReportContent = wx.NewId()
-
-
-
-ID_Settings = wx.NewId()
-ID_About = wx.NewId()
+ID_ABOUT = wx.NewId()
 
 
 
@@ -95,6 +81,7 @@ class PyAUIFrame(wx.Frame):
         self.path["stack_file"] = os.path.join(self.path["app_path"], "stack.dbm")
         self.path["global_file"] = os.path.join(self.path["app_path"], "global.dbm")
 
+
         self.ctrl = { "log"     :     None,
                       "project" :     None,
                       "result"  :     None,
@@ -103,18 +90,20 @@ class PyAUIFrame(wx.Frame):
                       "res_sta" :     None}
 
 
+        # Custom event from view
         evt_file.EVT_CUSTOM_FILE_VIEW(self, self.on_file_view)
         evt_run.EVT_CUSTOM_RUN_SCRIPT(self, self.on_run_script)
-        evt_doc.EVT_CUSTOM_DOC(self, self.on_run_doc)
+        evt_doc.EVT_CUSTOM_DOC(self,        self.on_run_doc)
 
+
+        # Application Title & Icon
         self.SetTitle("Control Test - PyTestEmb")
         _icon = wx.EmptyIcon()
         _icon.CopyFromBitmap(wx.Bitmap("images/weather_lightning.png", wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
 
-
+        # Configuration application
         self.wxconf = wx.Config(APP_NAME.replace(" ", "_"))
-
 
 
         # tell FrameManager to manage this frame
@@ -125,50 +114,40 @@ class PyAUIFrame(wx.Frame):
         self.n = 0
         self.x = 0
 
-
-
-
-        # create menu
+        # Menu
         mb = wx.MenuBar()
-
-        # File menu
+        self.SetMenuBar(mb)
+        # Menu File
         file_menu = wx.Menu()
         file_menu.Append(wx.ID_EXIT, "Exit")
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
         mb.Append(file_menu,    "File")
 
-        # Project menu
+        # Menu project
         project_menu = wx.Menu()
-        
-        project_menu.Append(ID_MENU_PROJECT_NEW,    "New ...")
-        project_menu.Append(ID_MENU_PROJECT_OPEN,   "Open ..")
-        project_menu.Append(ID_MENU_PROJECT_SAVE,   "Save")
-        project_menu.Append(ID_MENU_PROJECT_SAVEAS, "Save As ..")
-        
-        
-        self.Bind(wx.EVT_MENU, self.on_menu_project_new, id=ID_MENU_PROJECT_NEW)
-        self.Bind(wx.EVT_MENU, self.on_menu_project_open, id=ID_MENU_PROJECT_OPEN)
-        self.Bind(wx.EVT_MENU, self.on_menu_project_save, id=ID_MENU_PROJECT_SAVE)
-        self.Bind(wx.EVT_MENU, self.on_menu_project_saveas, id=ID_MENU_PROJECT_SAVEAS)
+        project_menu.Append(ID_PROJECT_NEW,    "New ...")
+        project_menu.Append(ID_PROJECT_OPEN,   "Open ..")
+        project_menu.Append(ID_PROJECT_SAVE,   "Save")
+        project_menu.Append(ID_PROJECT_SAVEAS, "Save As ..")
+        self.Bind(wx.EVT_MENU, self.on_menu_project_new,    id=ID_PROJECT_NEW)
+        self.Bind(wx.EVT_MENU, self.on_menu_project_open,   id=ID_PROJECT_OPEN)
+        self.Bind(wx.EVT_MENU, self.on_menu_project_save,   id=ID_PROJECT_SAVE)
+        self.Bind(wx.EVT_MENU, self.on_menu_project_saveas, id=ID_PROJECT_SAVEAS)
         mb.Append(project_menu, "Project")
-
-
+        # Menu Help
         help_menu = wx.Menu()
-        help_menu.Append(ID_About, "About...")
-        self.Bind(wx.EVT_MENU, self.OnAbout, id=ID_About)
+        help_menu.Append(ID_ABOUT, "About...")
+        self.Bind(wx.EVT_MENU, self.OnAbout, id=ID_ABOUT)
         mb.Append(help_menu,    "Help")
-
-        self.SetMenuBar(mb)
-        
         
         
 
 
-
+        # Status Bar
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
         self.statusbar.SetStatusWidths([-2, -3])
         self.statusbar.SetStatusText("Ready", 0)
-        self.statusbar.SetStatusText("Welcome To wxPython!", 1)
+        self.statusbar.SetStatusText("", 1)
 
         # min size for the frame itself isn't completely done.
         # see the end up FrameManager::Update() for the test
@@ -177,26 +156,20 @@ class PyAUIFrame(wx.Frame):
 
 
 
-
-
-
-        self._mgr.AddPane(self.CreateProjectCtrl(), wx.aui.AuiPaneInfo().
+        self._mgr.AddPane(self.create_project_ctrl(), wx.aui.AuiPaneInfo().
                           Name("project").Caption("Project").
                           Left().Layer(1).Position(1).CloseButton(False).MaximizeButton(True))
 
 
-        self._mgr.AddPane(self.CreateLogCtrl(), wx.aui.AuiPaneInfo().
+        self._mgr.AddPane(self.create_log_ctrl(), wx.aui.AuiPaneInfo().
                           Name("log").Caption("Log").
                           Bottom().Layer(1).Position(1).CloseButton(False).MaximizeButton(True))
 
 
-
-        self._mgr.AddPane(self.Create_Tool(), wx.aui.AuiPaneInfo().Name("mdi").
+        self._mgr.AddPane(self.create_tool_ctrl(), wx.aui.AuiPaneInfo().Name("mdi").
                           CenterPane())
 
-
-
-        self._mgr.AddPane(self.create_main_toolbar(), wx.aui.AuiPaneInfo().
+        self._mgr.AddPane(self.create_toolbar_ctrl(), wx.aui.AuiPaneInfo().
                           Name("tb").Caption("Toolbar").
                           ToolbarPane().Top().Row(1).
                           LeftDockable(False).RightDockable(False))
@@ -214,8 +187,7 @@ class PyAUIFrame(wx.Frame):
             if not all_panes[ii].IsToolbar():
                 all_panes[ii].Hide()
 
-#        self._mgr.GetPane("tb1").Hide()
-#        self._mgr.GetPane("tb5").Hide()
+
         self._mgr.GetPane("project").Show().Left().Layer(0).Row(0).Position(0)
         self._mgr.GetPane("log").Show().Bottom().Layer(0).Row(0).Position(0)
 
@@ -225,11 +197,6 @@ class PyAUIFrame(wx.Frame):
         for ii in xrange(len(all_panes)):
             if not all_panes[ii].IsToolbar():
                 all_panes[ii].Hide()
-
-#        self._mgr.GetPane("tb1").Hide()
-#        self._mgr.GetPane("tb5").Hide()
-#        self._mgr.GetPane("tbvert").Show()
-#        self._mgr.GetPane("grid_content").Show()
 
         self._mgr.GetPane("project").Show().Left().Layer(0).Row(0).Position(0)
         self._mgr.GetPane("log").Show().Bottom().Layer(0).Row(0).Position(0)
@@ -241,8 +208,6 @@ class PyAUIFrame(wx.Frame):
         self._perspectives.append(perspective_all)
         self._perspectives.append(perspective_vert)
 
-#        self._mgr.GetPane("tbvert").Hide()
-#        self._mgr.GetPane("grid_content").Hide()
 
         # "commit" all changes made to FrameManager
         self._mgr.Update()
@@ -256,16 +221,8 @@ class PyAUIFrame(wx.Frame):
 
 
 
-
-
-        self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
-        self.Bind(wx.EVT_MENU, self.OnAbout, id=ID_About)
-
-
-
-
-#        self.Bind(wx.EVT_MENU_RANGE, self.OnRestorePerspective, id=ID_FirstPerspective,
-#                  id2=ID_FirstPerspective+1000)
+        self.Bind(wx.EVT_MENU, self.OnExit,     id=wx.ID_EXIT)
+        self.Bind(wx.EVT_MENU, self.OnAbout,    id=ID_ABOUT)
 
 
         self.Maximize()
@@ -301,12 +258,12 @@ class PyAUIFrame(wx.Frame):
         for s in slist:
             self.log_debug(s.str_relative())
 
-
-        config[frm_controler.SCRIPT_LIST] = slist
-        config[frm_controler.CONFIG] = None
-        #config[frm_controler.TRACE] = frm_controler.TRACE_OCTOPYLOG_TXT
-        #config[frm_controler.PYPATH] = "c:\\CVS_LOCAL_ECLIPSE\\scripts"
-        config[frm_controler.RUN_TYPE] = frm_controler.RUN_SCRIPT
+            
+        config[frm_controler.SCRIPT_LIST]   = slist
+        config[frm_controler.CONFIG]        = None
+        config[frm_controler.RUN_TYPE]      = frm_controler.RUN_SCRIPT
+        
+        # Create runner
         style=frm_controler.STYLE_AUTO_START_CLOSE
         dlg = frm_controler.DialogRunner(config, style, None, -1, "")
         dlg.set_log(self)
@@ -317,23 +274,17 @@ class PyAUIFrame(wx.Frame):
         elif  ret == frm_controler.RET_CODE_ERROR :
             self.log_error("Running scripts error")
         elif ret == frm_controler.RET_CODE_USER_ABORT :
-#            import time
-#            time.sleep(1)
             self.log_error("Running scripts user abortion")
         else :
             assert False
-
-
+        
         res = dlg.get_result()
         res.save(self.path["stack_file"])
 
-
         dlg.Destroy()
-
-
+        
+        # update view
         self.ctrl["res_sta"].update_res(res)
-
-        #self.ctrl["res_sta"].load_dbm(self.path["stack_file"])
 
 
 
@@ -349,11 +300,11 @@ class PyAUIFrame(wx.Frame):
         for s in slist:
             self.log_debug(s.str_relative())
 
-        config[frm_controler.SCRIPT_LIST] = slist
-        config[frm_controler.CONFIG] = None
-        #config[frm_controler.TRACE] = frm_controler.TRACE_NONE
-        #config[frm_controler.PYPATH] = None
-        config[frm_controler.RUN_TYPE] = frm_controler.RUN_DOC
+        config[frm_controler.SCRIPT_LIST]   = slist
+        config[frm_controler.CONFIG]        = None
+        config[frm_controler.RUN_TYPE]      = frm_controler.RUN_DOC
+        
+        # Create runner
         style=frm_controler.STYLE_AUTO_START_CLOSE
         dlg = frm_controler.DialogRunner(config, style, None, -1, "")
         dlg.set_log(self)
@@ -364,14 +315,11 @@ class PyAUIFrame(wx.Frame):
         elif  ret == frm_controler.RET_CODE_ERROR :
             self.log_error("Gen doc error")
         elif ret == frm_controler.RET_CODE_USER_ABORT :
-#            import time
             self.log_error("Gen doc user abortion")
         else :
             assert False
 
-
         res = dlg.get_result()
-
 
         dlg.Destroy()
 
@@ -415,29 +363,37 @@ class PyAUIFrame(wx.Frame):
 
 
     def OnPaneClose(self, event):
-
-        caption = event.GetPane().caption
-
-        if caption in ["Tree Pane", "Dock Manager Settings", "Fixed Pane"]:
-            msg = "Are You Sure You Want To Close This Pane?"
-            dlg = wx.MessageDialog(self, msg, "AUI Question",
-                                   wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
-
-            if dlg.ShowModal() in [wx.ID_NO, wx.ID_CANCEL]:
-                event.Veto()
-            dlg.Destroy()
+        assert False
+#        caption = event.GetPane().caption
+#
+#        if caption in ["Tree Pane", "Dock Manager Settings", "Fixed Pane"]:
+#            msg = "Are You Sure You Want To Close This Pane?"
+#            dlg = wx.MessageDialog(self, msg, "AUI Question",
+#                                   wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+#
+#            if dlg.ShowModal() in [wx.ID_NO, wx.ID_CANCEL]:
+#                event.Veto()
+#            dlg.Destroy()
 
 
     def OnClose(self, event):
         self.log_debug("OnClose")
+        
+        
+        msg = "Are you sure you want to close application"
+        dlg = wx.MessageDialog(self, msg, self.GetTitle(),
+                                   wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
 
-
-        self.ctrl["project"].finish()
-
-
-        self._mgr.UnInit()
-        del self._mgr
-        self.Destroy()
+        ret = dlg.ShowModal()
+        dlg.Destroy() 
+        
+        if ret in [wx.ID_NO, wx.ID_CANCEL]:
+            return
+        else:
+            self.ctrl["project"].finish()
+            self._mgr.UnInit()
+            del self._mgr
+            self.Destroy()
 
 
     def OnExit(self, event):
@@ -451,7 +407,6 @@ class PyAUIFrame(wx.Frame):
         import platform
         import pytestemb
 
-
         description = "Control Test is a script manager\n"
         description += "\n PyTestEmb-version : %s\n" % pytestemb.VERSION_STRING
         description += "\n WX-version : %s" % wx.VERSION_STRING
@@ -459,105 +414,65 @@ class PyAUIFrame(wx.Frame):
         description += "\n Python-version : %s" % platform.python_version()
         description += "\n Plateform : %s" % platform.platform(terse=True)
         description += "\n"
-    
-#                    '' : ,
-#                    'wx-platform' : wx.Platform,
-#                    'python-version' : platform.python_version(), #sys.version.split()[0],
-#                    'platform' : platform.platform(),
         
         info = wx.AboutDialogInfo()
         info.Name = APP_NAME
         info.Version = APP_VERSION
         info.Copyright = "GNU GENERAL PUBLIC LICENSE v3"
-        info.Description = description#wordwrap(description, 350, wx.ClientDC(self))
+        info.Description = wordwrap(description, 350, wx.ClientDC(self))
         info.WebSite = ("http://developer.berlios.de/projects/pytestemb/", "berlios home page")
         info.Developers = [ "Jean-Marc Beguinet" ]
         
         licenseText = "GNU GENERAL PUBLIC LICENSE v3\n"
+        licenseText += "Please report to :\n"
         licenseText += "http://www.gnu.org/licenses/licenses.html"
         info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 
-        # Then we call wx.AboutBox giving it that info object
         wx.AboutBox(info)
         
-        
-
 
 
     def on_menu_project_open(self, event):
         self.log_debug("on_menu_project_open")
         self.ctrl["project"].open_and_load_xml()
 
-
     def on_menu_project_new(self, event):
         self.log_debug("on_menu_project_new")
         self.ctrl["project"].new_project()
-        
-        
+                
     def on_menu_project_save(self, event):
         self.log_debug("on_menu_project_save")
         self.ctrl["project"].save_xml()
-        
-        
+                
     def on_menu_project_saveas(self, event):
         self.log_debug("on_menu_project_saveas")
-        dlg = wx.MessageDialog(self, "To do",
-                               'To Do',
-                               wx.OK | wx.ICON_EXCLAMATION )
+        dlg = wx.MessageDialog(self, "To do", 'To Do', wx.OK|wx.ICON_EXCLAMATION )
         ret = dlg.ShowModal()
         dlg.Destroy()
 
-
     def GetDockArt(self):
-
         return self._mgr.GetArtProvider()
 
-
     def DoUpdate(self):
-
         self._mgr.Update()
 
-
     def OnEraseBackground(self, event):
-
         event.Skip()
 
 
     def OnSize(self, event):
-
         event.Skip()
-
-
-    def OnSettings(self, event):
-
-        # show the settings pane, and float it
-        floating_pane = self._mgr.GetPane("settings").Float().Show()
-
-        if floating_pane.floating_pos == wx.DefaultPosition:
-            floating_pane.FloatingPosition(self.GetStartPosition())
-
-        self._mgr.Update()
-
-
-
 
 
 
     def GetStartPosition(self):
-
         self.x = self.x + 20
         x = self.x
         pt = self.ClientToScreen(wx.Point(0, 0))
-
         return wx.Point(pt.x + x, pt.y + x)
 
 
-
-
-
-
     def OnChangeContentPane(self, event):
-
 #        self._mgr.GetPane("grid_content").Show(event.GetId() == ID_GridContent)
 #        self._mgr.GetPane("log_content").Show(event.GetId() == ID_LogContent)
 #        self._mgr.GetPane("tree_content").Show(event.GetId() == ID_TreeContent)
@@ -565,47 +480,83 @@ class PyAUIFrame(wx.Frame):
 
 
 
-    def CreateLogCtrl(self):
+    def create_log_ctrl(self):
         ctrl = frm_logging.LoggingFrame(self, -1, wx.Point(0, 0), wx.Size(150, 100) )
         self.ctrl["log"] = ctrl
         return ctrl
 
-    def CreateProjectCtrl(self):
+    def create_project_ctrl(self):
         ctrl = frm_project.ProjectFrame(self.wxconf, self, -1, wx.Point(0, 0), wx.Size(500, 500) )
         ctrl.set_log(self)
         self.ctrl["project"] = ctrl
         return ctrl
 
 
-    def create_main_toolbar(self):
+
+
+    def create_tool_ctrl(self):
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(mainSizer)
+        self.Freeze()
+
+        # Main FlatNoteBook
+        bookStyle = fnb.FNB_ALLOW_FOREIGN_DND
+        bookStyle |= fnb.FNB_NO_X_BUTTON
+        bookStyle |= fnb.FNB_NODRAG
+        ctrl = fnb.FlatNotebook(self, wx.ID_ANY, style=bookStyle)
+
+        
+        # Global result view
+        res_glo = frm_results.ResultFrame("Global", ctrl)
+        res_glo.set_log(self)
+        res_glo.path = self.path["global_file"]
+        self.ctrl["res_glo"] = res_glo
+        ctrl.AddPage(res_glo, "Global Result")
+
+        # Stack result view
+        res_sta = frm_results.ResultFrame( "Stack",ctrl)
+        res_sta.set_log(self)
+        res_sta.add_result_dest(res_glo)
+        self.ctrl["res_sta"] = res_sta
+        ctrl.AddPage(res_sta    ,  "Stack Result")
+
+        # Document AuiNoteBook
+        _style = wx.DEFAULT_FRAME_STYLE
+        mdi = wx.aui.AuiNotebook(self, -1, size=(640,480), style=_style, pos=wx.DefaultPosition) 
+        self.ctrl["mdi"] = mdi
+        ctrl.AddPage(mdi,  "Document")
+
+        self.Thaw()
+        #mainSizer.Layout()
+        self.SendSizeEvent()
+        
+        self.ctrl["fnb"] = ctrl
+        return ctrl
+
+
+    def create_toolbar_ctrl(self):
         
         tsize = wx.Size(16,16)
-        bmp_new = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, tsize)
-        bmp_save = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, tsize)
-        bmp_saveas = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, tsize)
-        bmp_open = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, tsize)
-        bmp_saveall = wx.ArtProvider.GetBitmap(wx.ART_HARDDISK, wx.ART_TOOLBAR, tsize)
+        bmp_new     = wx.ArtProvider.GetBitmap(wx.ART_NEW,          wx.ART_TOOLBAR, tsize)
+        bmp_save    = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE,    wx.ART_TOOLBAR, tsize)
+        bmp_saveas  = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, tsize)
+        bmp_open    = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN,    wx.ART_TOOLBAR, tsize)
         
         toolbar = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
                          wx.TB_FLAT | wx.TB_NODIVIDER)
         toolbar.SetToolBitmapSize(tsize)
 
-
-        toolbar.AddLabelTool(ID_MENU_PROJECT_NEW,   "New", bmp_new)
-        toolbar.AddLabelTool(ID_MENU_PROJECT_OPEN,  "Open", bmp_open)
-        toolbar.AddLabelTool(ID_MENU_PROJECT_SAVE,  "Save", bmp_save)
-        toolbar.AddLabelTool(ID_MENU_PROJECT_SAVEAS,"SaveAs", bmp_saveas)
+        toolbar.AddLabelTool(ID_PROJECT_NEW,   "New",      bmp_new)
+        toolbar.AddLabelTool(ID_PROJECT_OPEN,  "Open",     bmp_open)
+        toolbar.AddLabelTool(ID_PROJECT_SAVE,  "Save",     bmp_save)
+        toolbar.AddLabelTool(ID_PROJECT_SAVEAS,"SaveAs",   bmp_saveas)
         toolbar.AddSeparator()
-        toolbar.AddLabelTool(ID_SAVEALL, "SaveAll", bmp_saveall)
-        
-        
-                
-        toolbar.SetToolShortHelp(ID_MENU_PROJECT_NEW,       "New project")
-        toolbar.SetToolShortHelp(ID_MENU_PROJECT_OPEN,      "Open project")
-        toolbar.SetToolShortHelp(ID_MENU_PROJECT_SAVE,      "Save project")
-        toolbar.SetToolShortHelp(ID_MENU_PROJECT_SAVEAS,    "Save As project")
-        
-        toolbar.SetToolShortHelp(ID_SAVEALL,    "Save All : project and results")
+    
+        toolbar.SetToolShortHelp(ID_PROJECT_NEW,       "New project")
+        toolbar.SetToolShortHelp(ID_PROJECT_OPEN,      "Open project")
+        toolbar.SetToolShortHelp(ID_PROJECT_SAVE,      "Save project")
+        toolbar.SetToolShortHelp(ID_PROJECT_SAVEAS,    "Save As project")
         
         toolbar.Realize()
         return toolbar
@@ -613,151 +564,8 @@ class PyAUIFrame(wx.Frame):
 
 
 
-    def Create_Tool(self):
-
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        self.SetSizer(mainSizer)
-
-
-        bookStyle = fnb.FNB_ALLOW_FOREIGN_DND
-        bookStyle |= fnb.FNB_NO_X_BUTTON
-        ctrl = fnb.FlatNotebook(self, wx.ID_ANY, style=bookStyle)
-
-        # Add some pages to the second notebook
-        self.Freeze()
-
-        res_glo = frm_results.ResultFrame("Global", ctrl)
-        res_glo.set_log(self)
-        res_glo.path = self.path["global_file"]
-        self.ctrl["res_glo"] = res_glo
-        ctrl.AddPage(res_glo, "Global Result")
-
-        res_sta = frm_results.ResultFrame( "Stack",ctrl)
-        res_sta.set_log(self)
-        self.ctrl["res_sta"] = res_sta
-        ctrl.AddPage(res_sta,  "Stack Result")
-
-        res_sta.add_result_dest(res_glo)
-
-
-        # MDI document
-        mdi = wx.aui.AuiNotebook(self, -1,  size=(640,480),\
-                                          style=wx.DEFAULT_FRAME_STYLE, pos=wx.DefaultPosition  )
-
-
-        self.ctrl["mdi"] = mdi
-        ctrl.AddPage(mdi,  "Document")
-
-
-        self.Thaw()
-
-        mainSizer.Layout()
-        self.SendSizeEvent()
-
-        self.ctrl["fnb"] = ctrl
-
-        return ctrl
-
-
-
-
-
-
-
-# -- wx.SizeReportCtrl --
-# (a utility control that always reports it's client size)
-
-class SizeReportCtrl(wx.PyControl):
-
-    def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, mgr=None):
-
-        wx.PyControl.__init__(self, parent, id, pos, size, wx.NO_BORDER)
-
-        self._mgr = mgr
-
-        self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_SIZE, self.OnSize)
-        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
-
-
-    def OnPaint(self, event):
-
-        dc = wx.PaintDC(self)
-
-        size = self.GetClientSize()
-        s = ("Size: %d x %d")%(size.x, size.y)
-
-        dc.SetFont(wx.NORMAL_FONT)
-        w, height = dc.GetTextExtent(s)
-        height = height + 3
-        dc.SetBrush(wx.WHITE_BRUSH)
-        dc.SetPen(wx.WHITE_PEN)
-        dc.DrawRectangle(0, 0, size.x, size.y)
-        dc.SetPen(wx.LIGHT_GREY_PEN)
-        dc.DrawLine(0, 0, size.x, size.y)
-        dc.DrawLine(0, size.y, size.x, 0)
-        dc.DrawText(s, (size.x-w)/2, ((size.y-(height*5))/2))
-
-        if self._mgr:
-
-            pi = self._mgr.GetPane(self)
-
-            s = ("Layer: %d")%pi.dock_layer
-            w, h = dc.GetTextExtent(s)
-            dc.DrawText(s, (size.x-w)/2, ((size.y-(height*5))/2)+(height*1))
-
-            s = ("Dock: %d Row: %d")%(pi.dock_direction, pi.dock_row)
-            w, h = dc.GetTextExtent(s)
-            dc.DrawText(s, (size.x-w)/2, ((size.y-(height*5))/2)+(height*2))
-
-            s = ("Position: %d")%pi.dock_pos
-            w, h = dc.GetTextExtent(s)
-            dc.DrawText(s, (size.x-w)/2, ((size.y-(height*5))/2)+(height*3))
-
-            s = ("Proportion: %d")%pi.dock_proportion
-            w, h = dc.GetTextExtent(s)
-            dc.DrawText(s, (size.x-w)/2, ((size.y-(height*5))/2)+(height*4))
-
-
-    def OnEraseBackground(self, event):
-        # intentionally empty
-        pass
-
-
-    def OnSize(self, event):
-
-        self.Refresh()
-        event.Skip()
-
-
-ID_PaneBorderSize = wx.ID_HIGHEST + 1
-ID_SashSize = ID_PaneBorderSize + 1
-ID_CaptionSize = ID_PaneBorderSize + 2
-ID_BackgroundColor = ID_PaneBorderSize + 3
-ID_SashColor = ID_PaneBorderSize + 4
-ID_InactiveCaptionColor =  ID_PaneBorderSize + 5
-ID_InactiveCaptionGradientColor = ID_PaneBorderSize + 6
-ID_InactiveCaptionTextColor = ID_PaneBorderSize + 7
-ID_ActiveCaptionColor = ID_PaneBorderSize + 8
-ID_ActiveCaptionGradientColor = ID_PaneBorderSize + 9
-ID_ActiveCaptionTextColor = ID_PaneBorderSize + 10
-ID_BorderColor = ID_PaneBorderSize + 11
-ID_GripperColor = ID_PaneBorderSize + 12
-
-
-
-
-
-
-
-
-
 
 class MyApp(wx.App):
-
-
-
     def OnInit(self):
         wx.InitAllImageHandlers()
         frameMain = PyAUIFrame(None, -1, "")
@@ -768,15 +576,11 @@ class MyApp(wx.App):
 
 
 
-
-
-
 if __name__ == "__main__":
 
     if not(EXCEPT_DEBUG) :
-        exceptlog.add_exception_hook(get_app_path(), APP_VERSION)
+        exceptlog.add_exception_hook(get_app_path(), APP_VERSION, __email__)
 
-    # start app
     App = MyApp(0)
     App.MainLoop()
 

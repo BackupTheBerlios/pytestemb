@@ -5,7 +5,7 @@ PyTestEmb Project : __init__ manages command line option and interface with othe
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.13 $"
+__version__     = "$Revision: 1.14 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -14,7 +14,7 @@ __email__       = "octopy@gmail.com"
 
 
 
-VERSION_STRING = "1.1.0"
+VERSION_STRING = "1.2.0"
 
 
 
@@ -66,6 +66,11 @@ parser.add_option("-p", "--path",
 parser.add_option("-d", "--doc",
                     action="store_true", dest="doc", default=False,
                     help="add path to python path") 
+parser.add_option("-v", "--version",
+                    action="store_true", dest="ver", default=False,
+                    help="version of software") 
+
+
 
 
 def checker(name, value):
@@ -91,12 +96,25 @@ if options.path is not None:
     sys.path.append(options.path)
 
 
+if options.ver :
+    sys.stdout.write("pytestemb\n")
+    sys.stdout.write("Version   : %s\n" % VERSION_STRING)
+    sys.stdout.write("Copyright : %s\n" % __copyright__)
+    sys.stdout.write("Copyright : %s\n" % __license__)
+    sys.stdout.write("Contact   : %s\n" % __email__)
+    sys.exit(0)
+
+
+
 
 __trace__   = None
 __result__  = None
 __config__  = None
 __valid__   = None
 __pydoc__   = None
+
+
+
 
 
 
@@ -121,6 +139,7 @@ __trace__.start()
 __config__.start()
 
 
+    
 
 
 

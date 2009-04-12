@@ -5,7 +5,7 @@ PyTestEmb Project : result manages result of script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.17 $"
+__version__     = "$Revision: 1.18 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -37,8 +37,8 @@ class Result:
 
         self.start_date = time.localtime()
         self.start_clock = time.clock()
-        
         self.gtime = gtime.Gtime.create()
+        self.delay_trace_ctrl = []
     
     def trace_result(self, name, des):
         self.trace.trace_result(name, des)
@@ -162,7 +162,8 @@ class Result:
         pass
     
     def trace_ctrl(self, des):
-        pass
+        # delay sending
+        self.delay_trace_ctrl.append(des)
 
 
 def trace(func):
@@ -221,7 +222,7 @@ class ResultStdout(Result):
     
     def __init__(self, trace):
         Result.__init__(self, trace)
-        self.delay_trace_ctrl = None
+        
         
     def write_no_arg(self, key):
         sys.stdout.write("%s%s\n" % (key, ResultStdout.SEPARATOR))
@@ -237,8 +238,8 @@ class ResultStdout(Result):
     @trace
     def script_start(self, des):
         self.write(ResultStdout.SCRIPT_START, des)
-        if self.delay_trace_ctrl is not None:
-            self.write(ResultStdout.TRACE, self.delay_trace_ctrl)
+        for item in self.delay_trace_ctrl:
+            self.write(ResultStdout.TRACE, item)
 
     @trace   
     def script_stop(self, des):
@@ -317,7 +318,7 @@ class ResultStdout(Result):
 
     def trace_ctrl(self, des):
         # delay sending
-        self.delay_trace_ctrl = des
+        self.delay_trace_ctrl.append(des)
         
 
 
@@ -359,14 +360,17 @@ class ResultScript:
     def __init__(self, name):
         self.name = name
         self.case = []
-        self.trace = None
+        self.trace = []
     
     def __str__(self):
         str = "%s\n" % self.name
         for cas in self.case:
             str += "%s\n" % cas.__str__()
-        if self.trace is not None:
-            str += "TRACE:%s" % self.trace
+        
+        
+        for item in self.trace:
+            str += "TRACE:%s" % item
+        
         return str
 
 
@@ -385,7 +389,8 @@ class ResultStandalone(Result):
     @trace  
     def script_start(self, des):
         sys.stdout.write("Start running %s ...\n" % des["name"])
-        
+        for item in self.delay_trace_ctrl:
+            sys.stdout.write("Trace : %s\n" % item)
     
     def magical(self, data, size):
         return (len(data)-size)    
@@ -514,8 +519,8 @@ class ResultStandalone(Result):
         
         
         
-    def trace_ctrl(self, des):
-        sys.stdout.write("Trace info : %s\n" % des.__str__())
+#    def trace_ctrl(self, des):
+#        sys.stdout.write("Trace info : %s\n" % des.__str__())
         
 
 def create(interface, trace):

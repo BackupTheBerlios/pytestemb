@@ -5,7 +5,7 @@ PyTestEmb Project : parser manages parsing of stdout result
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -126,7 +126,7 @@ class ResultStdoutReader(StdoutReader):
         # TRACE
         elif    key == result.ResultStdout.TRACE :
             self.check_started(self.script_started)
-            self.script[-1].trace = self.conv_dict(value)
+            self.script[-1].trace.append(self.conv_dict(value))
         # CASE_XX
         elif        key == result.ResultStdout.ERROR_CONFIG\
                 or  key == result.ResultStdout.ERROR_IO\

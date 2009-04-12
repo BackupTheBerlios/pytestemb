@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.9 $"
+__version__     = "$Revision: 1.10 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -14,29 +14,26 @@ __email__       = "octopy@gmail.com"
 
 
 import os
-import wx
 import time
 import threading
-
 
 import logging
 import logging.handlers
 
 
-import frm_logging
+import wx
 
 import pytestemb.parser as parser
-
 
 import data.results as dres
 import data.documentation as ddoc
 
+import frm_logging
+
+
+
 
 #LOG = logging.getLogger("ScriptRunner")
-
-
-
-
 
 
 

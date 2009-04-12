@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.12 $"
+__version__     = "$Revision: 1.13 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -13,12 +13,7 @@ __email__       = "octopy@gmail.com"
 
 
 
-
-
-
-
-
-
+import os
 
 
 import wx
@@ -30,8 +25,6 @@ import data.utils as dutils
 import wxcustom.evt_file as evt_file
 import wxcustom.evt_run as evt_run
 import wxcustom.evt_doc as evt_doc
-
-
 
 
 import frm_logging
@@ -49,29 +42,27 @@ class ProjectFrame(wx.Panel):
         wx.Panel.__init__(self, *p, **pp)
 
 
-
-
+        # Tree control
         self.tree = wx.TreeCtrl(self,-1)
         self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-
-
         self.Bind(wx.EVT_TREE_ITEM_MENU, self.OnItemMenu, self.tree)
 
         self.configuration = {"trace"   :frm_controler.TRACE_OCTOPYLOG_TXT,
                               "path"    :""}
 
+        # Configuration
         self.config = config
         self.configuration["path"] = self.config.Read("PYTHON_PATH", "")
         self.configuration["trace"] = self.config.ReadInt("TRACE", frm_controler.TRACE_OCTOPYLOG_TXT)
 
 
+        self.project    = None
+        self.log        = None
+        self.sel_item   = None
+        self.path       = None
 
 
-        self.project = None
-        self.log = None
-
-        self.sel_item = None
-
+        # image list for tree control
         self.il = wx.ImageList(16, 16)
         self.im_script          = self.il.Add( wx.Bitmap("images/script.png", wx.BITMAP_TYPE_PNG))
         self.im_wrench          = self.il.Add( wx.Bitmap("images/wrench.png", wx.BITMAP_TYPE_PNG))
@@ -87,17 +78,13 @@ class ProjectFrame(wx.Panel):
         self.im_campaign        = self.il.Add( wx.Bitmap("images/database_table.png", wx.BITMAP_TYPE_PNG))
         self.tree.SetImageList(self.il)
 
-        self.path = None
-        self.wildcard = "Project file (*.xml)|*.xml|"     \
-           "All files (*.*)|*.*"
-
-
-
+        # sizer
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_1.Add(self.tree, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
+
 
 
     def finish(self):
@@ -116,7 +103,6 @@ class ProjectFrame(wx.Panel):
     def set_log(self, log):
         self.log = log
 
-
     def log_debug(self, data):
         if self.log is not None :
             self.log.log_debug(data)
@@ -128,10 +114,8 @@ class ProjectFrame(wx.Panel):
 
     def new_project(self):
 
-
-        dlg = wx.TextEntryDialog(
-                self, "Please enter the name of project :",
-                'New project ...', 'Python')
+        intruction = "Please enter the name of project :"
+        dlg = wx.TextEntryDialog(self, instruction, "New project ...", "Python")
         dlg.SetValue("project_name")
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -139,14 +123,10 @@ class ProjectFrame(wx.Panel):
             self.log_debug("Entered project name : %s" % name)
             self.project = dpro.Project(name)
             self.update_tree()
-
         else :
             self.log_debug("Canceled")
 
         dlg.Destroy()
-
-
-
 
 
     def save_xml(self):
@@ -154,17 +134,16 @@ class ProjectFrame(wx.Panel):
             self.save_file_xml(self.path)
 
 
-
-
     def open_and_load_xml(self):
-        import os
+
+        wildcard = "Project file (*.xml)|*.xml|All files (*.*)|*.*"
 
         dlg = wx.FileDialog(
             self, message="Choose a file",
             #"defaultDir=os.getcwd(),
             defaultDir="../../test/script/",
             defaultFile="",
-            wildcard=self.wildcard,
+            wildcard=wildcard,
             style=wx.OPEN | wx.CHANGE_DIR
             )
 
@@ -180,9 +159,6 @@ class ProjectFrame(wx.Panel):
             self.load_xml(self.path)
 
 
-    def refresh_xml(self):
-        if self.path is not None:
-            self.load_xml(self.path)
 
 
     def save_file_xml(self, filename):
@@ -205,8 +181,6 @@ class ProjectFrame(wx.Panel):
         self.log_debug("OnItemMenu item=\"%s\"" % self.tree.GetItemText(item))
 
         self.sel_item = item
-
-
         node = self.tree.GetItemPyData(self.sel_item)
 
         if node is None :
@@ -215,7 +189,6 @@ class ProjectFrame(wx.Panel):
         if type.count(node["type"]) != 1:
             self.sel_item = None
             return
-
 
         type_menu = "script"
 
@@ -294,7 +267,7 @@ class ProjectFrame(wx.Panel):
         ret = dlg.GetReturnCode()
         dlg.Destroy()
 
-        if ret > 0 :
+        if ret == DIALOG_RET_DONE :
             self.update_tree()
 
 
@@ -421,7 +394,7 @@ class ProjectFrame(wx.Panel):
         ret = dlg.GetReturnCode()
         dlg.Destroy()
 
-        if ret > 0 :
+        if ret == DIALOG_RET_DONE  :
             self.update_tree()
 
 
@@ -439,7 +412,7 @@ class ProjectFrame(wx.Panel):
         ret = dlg.GetReturnCode()
         dlg.Destroy()
 
-        if ret > 0 :
+        if ret == DIALOG_RET_DONE  :
             self.update_tree()
 
 
@@ -456,8 +429,8 @@ class ProjectFrame(wx.Panel):
             slist.append(script)
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
-        config[frm_controler.PYPATH] = self.configuration["path"]
-        config[frm_controler.TRACE] = frm_controler.TRACE_NONE
+        config[frm_controler.PYPATH]    = self.configuration["path"]
+        config[frm_controler.TRACE]     = frm_controler.TRACE_NONE
         evt = evt_doc.EventDoc(slist, config)
         self.post_event(evt)
 
@@ -471,8 +444,8 @@ class ProjectFrame(wx.Panel):
         slist.append(node["data"])
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
-        config[frm_controler.PYPATH] = self.configuration["path"]
-        config[frm_controler.TRACE] = frm_controler.TRACE_NONE
+        config[frm_controler.PYPATH]    = self.configuration["path"]
+        config[frm_controler.TRACE]     = frm_controler.TRACE_NONE
         evt = evt_doc.EventDoc(slist, config)
         self.post_event(evt)
 
@@ -490,8 +463,8 @@ class ProjectFrame(wx.Panel):
             slist.append(script)
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
-        config[frm_controler.PYPATH] = self.configuration["path"]
-        config[frm_controler.TRACE] = self.configuration["trace"]
+        config[frm_controler.PYPATH]    = self.configuration["path"]
+        config[frm_controler.TRACE]     = self.configuration["trace"]
         evt = evt_run.EventRunScript(slist, config)
         self.post_event(evt)
 
@@ -506,8 +479,8 @@ class ProjectFrame(wx.Panel):
         slist.append(node["data"])
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
-        config[frm_controler.PYPATH] = self.configuration["path"]
-        config[frm_controler.TRACE] = self.configuration["trace"]
+        config[frm_controler.PYPATH]    = self.configuration["path"]
+        config[frm_controler.TRACE]     = self.configuration["trace"]
 
         evt = evt_run.EventRunScript(slist, config)
         self.post_event(evt)
@@ -521,13 +494,6 @@ class ProjectFrame(wx.Panel):
         self.log_debug(path)
         evt = evt_file.EventFileView.create_editor_py(path)
         self.post_event(evt)
-
-
-
-
-
-
-
 
 
     def _add_node(self, item, node, parent):
@@ -619,7 +585,7 @@ class ProjectFrame(wx.Panel):
         self.tree.SetItemImage(item_, self.im_folder_link, wx.TreeItemIcon_Normal)
 
 
-        #Script pool
+        # script pool
         item_pool = self.tree.AppendItem(item_root, "Script Pool")
         self.tree.SetPyData(item_pool, {"type":"root_pool", "data":None})
         self.tree.SetItemImage(item_pool, self.im_pool, wx.TreeItemIcon_Normal)
@@ -636,28 +602,24 @@ class ProjectFrame(wx.Panel):
         self.tree.SetPyData(item_campaign, {"type":"root_campaign", "data":None})
         self.tree.SetItemImage(item_campaign, self.im_campaigns, wx.TreeItemIcon_Normal)
 
-        for campaign in self.project.campaigns :
 
+        # campaign
+        for campaign in self.project.campaigns :
 
             item_ = self.tree.AppendItem(item_campaign, campaign.name)
             self.tree.SetPyData(item_, {"type":"campaign", "data":campaign.name})
             self.tree.SetItemImage(item_, self.im_campaign, wx.TreeItemIcon_Normal)
-
-
 
             for node in campaign.scripts.root :
                 parent = {}
                 parent["type"] = ProjectFrame.CAMPAIGN
                 parent["name"] = campaign.name
 
-
                 self._add_node(item_, node, parent)
 
 #            for script in campaign.get_lst_scripts():
 #                item__ = self.tree.AppendItem(item_, "%s.py" % script.get_relativepath())
 #                self.tree.SetPyData(item__, copy.copy(script))
-
-
 
         self.tree.Expand(item_root)
         self.tree.Expand(item_pool)
@@ -668,11 +630,14 @@ class ProjectFrame(wx.Panel):
 
 
 
+DIALOG_RET_CANCELED = 0
+DIALOG_RET_DONE     = 1
+
+
 
 class DialogConfiguration(wx.Dialog):
 
     LOG_CONFIG_TXT = ("txt", "octopylog")
-
 
     def __init__(self, configuration, *args, **kwds):
 
@@ -681,9 +646,7 @@ class DialogConfiguration(wx.Dialog):
 
         kwds["size"] = size=(400,400)
 
-
         wx.Dialog.__init__(self, *args, **kwds)
-
 
         self.SetTitle("Configuration")
 
@@ -735,8 +698,6 @@ class DialogConfiguration(wx.Dialog):
         self.Layout()
 
 
-
-
         self.txt_path.SetValue(self.configuration["path"])
 
         if self.configuration["trace"] == frm_controler.TRACE_OCTOPYLOG_TXT :
@@ -746,11 +707,6 @@ class DialogConfiguration(wx.Dialog):
             self.lstbox.Check(1,True)
         if self.configuration["trace"] == frm_controler.TRACE_TXT :
             self.lstbox.Check(0,True)
-
-
-
-
-
 
 
 
@@ -768,21 +724,14 @@ class DialogConfiguration(wx.Dialog):
 
     def on_directory(self, event):
 
-        dlg = wx.DirDialog(self, "Choose a directory:",
-                          style=wx.DD_DEFAULT_STYLE
-                           | wx.DD_DIR_MUST_EXIST
-                           #| wx.DD_CHANGE_DIR
-                           )
+        _style = wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST
+        dlg = wx.DirDialog(self, "Choose a directory:", _style)
 
-        # If the user selects OK, then we process the dialog's data.
-        # This is done by getting the path data from the dialog - BEFORE
-        # we destroy it.
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.log_info("Path selected : %s"  % path)
             self.txt_path.SetValue(path)
-
-        # Only destroy a dialog after you're done with it.
+            
         dlg.Destroy()
 
 
@@ -801,17 +750,16 @@ class DialogConfiguration(wx.Dialog):
         else :
             self.configuration["trace"] = frm_controler.TRACE_NONE
 
-
-        self.EndModal(1)
+        self.EndModal(DIALOG_RET_DONE)
 
 
     def on_cancel(self, event):
         self.log_debug("on_cancel")
-        self.EndModal(0)
+        self.EndModal(DIALOG_RET_CANCELED)
 
     def on_close(self, event):
         self.log_debug("on_close")
-        self.EndModal(0)
+        self.EndModal(DIALOG_RET_CANCELED)
 
 
 
@@ -893,7 +841,6 @@ class DialogAddScriptInCampaign(wx.Dialog):
 
     def on_listbox(self, event):
         self.log_debug("on_listbox")
-
         name = event.GetString()
         self.sel_campaign = name
         self.log_debug("Campaign : %s" % name)
@@ -911,16 +858,16 @@ class DialogAddScriptInCampaign(wx.Dialog):
         else:
             self.project.add_script_in_campaign(self.sel_campaign, self.script)
             wx.MessageBox("Added")
-            self.EndModal(1)
+            self.EndModal(DIALOG_RET_DONE)
 
 
     def on_cancel(self, event):
         self.log_debug("on_cancel")
-        self.EndModal(0)
+        self.EndModal(DIALOG_RET_CANCELED)
 
     def on_close(self, event):
         self.log_debug("on_close")
-        self.EndModal(0)
+        self.EndModal(DIALOG_RET_CANCELED)
 
 
 
@@ -932,15 +879,12 @@ class DialogAddScriptFiles(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
 
         self.project = project
-
         self.scripts = []
 
         self.SetTitle("Add Script files ...")
 
-
         self.select = wx.Button(self, -1, "Select Script(s)")
-
-        self.add = wx.Button(self, -1,"Add Script(s)")
+        self.add    = wx.Button(self, -1,"Add Script(s)")
         self.cancel = wx.Button(self, -1, "Cancel")
 
         self.Bind(wx.EVT_BUTTON, self.on_select, self.select)
@@ -998,14 +942,13 @@ class DialogAddScriptFiles(wx.Dialog):
             self.project.add_script_in_pool(script)
             self.log_debug("Add script : %s" % script.str_relative())
 
-        self.EndModal(1)
+        self.EndModal(DIALOG_RET_DONE)
 
 
     def on_select(self, event):
         self.log_debug("on_select")
 
-        wildcard = "Python file (*.py)|*.py|"     \
-           "All files (*.*)|*.*"
+        wildcard = "Python file (*.py)|*.py|All files (*.*)|*.*"
 
         dlg = wx.FileDialog(
             self, message="Choose a file",
@@ -1025,10 +968,7 @@ class DialogAddScriptFiles(wx.Dialog):
                     self.lstbox_script.Append(self.scripts[-1].str_relative())
                 except :
                     msg = "Error script : %s\nIt must be a subpath of : %s" % (path, self.project.get_base_path() )
-
-                    dlg = wx.MessageDialog(self, msg,
-                               'Error script ...',
-                               wx.OK | wx.ICON_ERROR )
+                    dlg = wx.MessageDialog(self, msg, 'Error script ...', wx.OK | wx.ICON_ERROR )
                     dlg.ShowModal()
                     dlg.Destroy()
                     break
@@ -1037,11 +977,11 @@ class DialogAddScriptFiles(wx.Dialog):
 
     def on_cancel(self, event):
         self.log_debug("on_cancel")
-        self.EndModal(0)
+        self.EndModal(DIALOG_RET_CANCELED)
 
     def on_close(self, event):
         self.log_debug("on_close")
-        self.EndModal(0)
+        self.EndModal(DIALOG_RET_CANCELED)
 
 
 
@@ -1056,7 +996,6 @@ class TestFrame(wx.Frame):
 
         self.frm_project = ProjectFrame(wxconf, self)
 
-
         log = frm_logging.LoggingStdout()
         self.frm_project.set_log(log)
 
@@ -1067,7 +1006,6 @@ class TestFrame(wx.Frame):
         file_menu.Append(wx.ID_NEW,     "New")
         file_menu.Append(wx.ID_OPEN,    "Open ...")
         file_menu.Append(wx.ID_SAVE,    "Save")
-        file_menu.Append(wx.ID_REFRESH, "Refresh ...")
         file_menu.Append(wx.ID_EXIT,    "Exit")
 
         help_menu = wx.Menu()
@@ -1081,7 +1019,6 @@ class TestFrame(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.on_new, id=wx.ID_NEW)
         self.Bind(wx.EVT_MENU, self.on_open_xml, id=wx.ID_OPEN)
-        self.Bind(wx.EVT_MENU, self.on_refresh_xml, id=wx.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.on_save_xml, id=wx.ID_SAVE)
 
     def on_new(self, event):
@@ -1092,9 +1029,6 @@ class TestFrame(wx.Frame):
 
     def on_save_xml(self, event):
         self.frm_project.save_xml()
-
-    def on_refresh_xml(self, event):
-        self.frm_project.refresh_xml()
 
 
 

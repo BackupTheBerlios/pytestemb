@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.10 $"
+__version__     = "$Revision: 1.11 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -52,18 +52,14 @@ class ResultFrame(wx.Panel):
         self.il = il
         self.tree.SetImageList(il)
         
-
-
-        self.lst_res = list()
-        self.lst_dest = list()
-        self.sel_item = None
-        self.log = None
-        self.path = None
+        self.lst_res   = list()
+        self.lst_dest  = list()
+        self.sel_item  = None
+        self.log       = None
+        self.path      = None
         
-        self.wildcard_dbm = "Project file (*.dbm)|*.dbm|"     \
-           "All files (*.*)|*.*"
-        self.wildcard_csv = "Csv file (*.csv)|*.csv|"     \
-           "All files (*.*)|*.*"
+        self.wildcard_dbm = "Project file (*.dbm)|*.dbm|All files (*.*)|*.*"
+        self.wildcard_csv = "Csv file (*.csv)|*.csv|All files (*.*)|*.*"
 
         
         self.res = dres.Results(name)
@@ -156,9 +152,7 @@ class ResultFrame(wx.Panel):
         
     def on_tool_saveas(self, event):
         self.log_debug("on_tool_saveas")
-        dlg = wx.MessageDialog(self, "To do",
-                               'To Do',
-                               wx.OK | wx.ICON_EXCLAMATION )
+        dlg = wx.MessageDialog(self, "To do", 'To Do', wx.OK | wx.ICON_EXCLAMATION )
         ret = dlg.ShowModal()
         dlg.Destroy()
                
@@ -181,9 +175,6 @@ class ResultFrame(wx.Panel):
                 del self.lst_dest[i]
 
 
-
-
-
     def update_in_dest(self, script_res, name):
         for i,v in enumerate(self.lst_dest):
             if v[0] == name:
@@ -193,15 +184,11 @@ class ResultFrame(wx.Panel):
 
 
     def OnItemMenu(self, event):
-
-
         type = ["root", "script", "info"]
-
         item = event.GetItem()
         self.log_debug("OnItemMenu item=\"%s\"" % self.tree.GetItemText(item))
 
         self.sel_item = item
-
 
         node = self.tree.GetItemPyData(self.sel_item)
 
@@ -211,15 +198,10 @@ class ResultFrame(wx.Panel):
         if type.count(node["type"]) != 1:
             self.sel_item = None
 
-
-
-
         menu = wx.Menu()
         if      node["type"] == "root" :
-
             item1 = menu.Append(wx.ID_ANY, "Export csv ...")
             self.Bind(wx.EVT_MENU, self.on_export_csv,      item1)
-
 
             if len(self.lst_dest) > 0 :
                 sm = wx.Menu()
@@ -230,8 +212,6 @@ class ResultFrame(wx.Panel):
                 menu.AppendMenu(wx.ID_ANY, "Update all results ...", sm)
 
         elif    node["type"] == "script" :
-
-
             item1 = menu.Append(wx.ID_ANY, "Remove")
             self.Bind(wx.EVT_MENU, self.on_remove_result,      item1)
 
@@ -260,11 +240,9 @@ class ResultFrame(wx.Panel):
         assert node["type"] == "root"
         self.log_debug("on_update_all_result")
 
-
         for k,r in self.res.data.iteritems():
             self.update_in_dest(r, self.lst_dest[0][0])
-        
-        
+                
         for k in self.res.data.keys():
             self.remove_result(k)
         self.update()  
@@ -302,9 +280,7 @@ class ResultFrame(wx.Panel):
 
     def remove_result(self, key):
         del self.res.data[key]
-              
-
-
+            
 
 
     def load_and_update(self):
@@ -416,7 +392,7 @@ class ResultFrame(wx.Panel):
 
         for k,scr in self.res.data.iteritems():
 
-            item_script = self.tree.AppendItem(item_root, scr.script.str_relative())
+            item_script = self.tree.AppendItem(item_root, scr.script.get_name())
             self.tree.SetPyData(item_script, {"type":"script", "data":k})
 
             status, param = scr.get_status()
@@ -429,13 +405,23 @@ class ResultFrame(wx.Panel):
                     item_case = self.tree.AppendItem(item_script, "%s" % param)
                     self.tree.SetPyData(item_case, {"type":"info", "data":k})
             elif  status == dres.ST_EXEC_EXECUTED_NO_ERROR :
-                #item_script = self.tree.AppendItem(tree_result, scr.script.str_relative())
-                if scr.trace_info is None :
-                    item_case = self.tree.AppendItem(item_script, "No trace" )
-                    self.tree.SetPyData(item_case, {"type":"info", "data":k})
-                else:
-                    item_case = self.tree.AppendItem(item_script, "%s" % scr.trace_info )
-                    self.tree.SetPyData(item_case, {"type":"info", "data":k})
+                
+
+                item_file = self.tree.AppendItem(item_script, "file" )
+                self.tree.SetPyData(item_file, {"type":"info", "data":k})                  
+                
+                item_ = self.tree.AppendItem(item_file, "name     : \"%s.py\"" % scr.script.get_name())
+                item_ = self.tree.AppendItem(item_file, "relative : \"%s\"" % scr.script.str_relative())
+               
+                
+                item_trace = self.tree.AppendItem(item_script, "trace" )
+                self.tree.SetPyData(item_, {"type":"info", "data":k})  
+                
+                for item in scr.trace_info:
+                    item_ = self.tree.AppendItem(item_trace, "%s" % item )
+                    self.tree.SetPyData(item_, {"type":"info", "data":k})                    
+                
+
 
                 script_status = "ok"
                 for k,cas in scr.cases.iteritems():
@@ -473,7 +459,6 @@ class ResultFrame(wx.Panel):
                     self.tree.SetItemImage(item_script, self.im_script_ok, wx.TreeItemIcon_Normal)
                 elif script_status == "ko":
                     self.tree.SetItemImage(item_script, self.im_script_ko, wx.TreeItemIcon_Normal)
-
 
                 #self.tree.SetItemImage(item_case, self.im_script_ko, wx.TreeItemIcon_Normal)
         self.tree.Expand(item_root)

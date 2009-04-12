@@ -1,11 +1,17 @@
-'''
-Created on Mar 3, 2009
+# -*- coding: UTF-8 -*-
 
-@author: jmb
-'''
+"""
+PyTestEmb Project : -
+"""
 
-if __name__ == '__main__':
-    pass
+__author__      = "$Author: octopy $"
+__version__     = "$Revision: 1.4 $"
+__copyright__   = "Copyright 2009, The PyTestEmb Project"
+__license__     = "GPL"
+__email__       = "octopy@gmail.com"
+
+
+
 
 
 import time
