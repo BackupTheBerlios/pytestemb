@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.10 $"
+__version__     = "$Revision: 1.11 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -137,8 +137,6 @@ STYLE_AUTO_START_CLOSE  = 0
 STYLE_DEFAULT           = 1
 
 
-
-
 RET_CODE_OK         = 0
 RET_CODE_ERROR      = 1
 RET_CODE_USER_ABORT = 2
@@ -166,11 +164,9 @@ class DialogRunner(wx.Dialog):
 
         self.log        = None
         self.docs       = None
-        self.results    = None
-              
-        
-        self.start = None
-        self.stop = None
+        self.results    = None        
+        self.start      = None
+        self.stop       = None
         
 
         if   style == STYLE_DEFAULT:
@@ -192,8 +188,8 @@ class DialogRunner(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)        
         
         # timer for activity gauge
-        self.Bind(wx.EVT_TIMER, self.handler_timer)
-        self.timer = wx.Timer(self)
+#        self.Bind(wx.EVT_TIMER, self.handler_timer)
+#        self.timer = wx.Timer(self)
 
         
         # process management
@@ -220,8 +216,7 @@ class DialogRunner(wx.Dialog):
             self.docs = ddoc.Documentation()
         else :
             raise Exception("No type run define")        
-    
-    
+        
     
             # create control  
         self.lstboxScript = wx.ListBox(self, -1,  size=wx.Size(400,200))
@@ -266,13 +261,10 @@ class DialogRunner(wx.Dialog):
     def get_doc(self):
         return self.docs
         
-    
-    
     def set_log(self, log):
         self.log = log
         self.log_info("log enable")
         
-    
     def log_debug(self, data):
         if self.log is not None :
             self.log.log_debug(data)
@@ -294,27 +286,8 @@ class DialogRunner(wx.Dialog):
             scriptName.append(script.str_relative())
         self.lstboxScript.InsertItems(scriptName, 0)
         self.activity.SetRange(len(scriptName))
-                
-#    
-#        
-#    def clean(self):
-#        LOG.info("Start clean")
-#        self.timer.Stop()
-#        self.stop_thread_scripts_runner()
-#        if self.process is not None:
-#            self.process.Kill(self.process.GetPid())
-#            self.process.CloseOutput()
-#            self.process = None
-#        LOG.info("Stop clean")        
 
             
-
-    def handler_timer(self, event):
-        self.activity.Pulse()
-
-
-      
-      
       
     def run_process(self, pathfilename):
         """ run a process 
@@ -373,21 +346,10 @@ class DialogRunner(wx.Dialog):
         """ call back when event """
         self.pid = None
         
-        
         self.log_debug("Process Ended pid:%s,  exitCode: %s" % \
                               (evt.GetPid(), evt.GetExitCode()))
-        #time.sleep(0.1)         # let some times to reader to finish reading
-        
         self.exit_code = evt.GetExitCode()
-        
         self.evtReaderRun.set() # stop reader on process
-        
-        
-
-
-        
-
-        
         
         
         
@@ -423,11 +385,6 @@ class DialogRunner(wx.Dialog):
             self.docs.update(scriptdoc)
         else :
             raise Exception("No type run define")
-        
-        
-
-        
-
 
 
                 
@@ -438,16 +395,10 @@ class DialogRunner(wx.Dialog):
 
     def post_event_endscripts(self):
         evt = EventEndScript()
-        self.AddPendingEvent(evt)
-        
-                
-        
-        
-        
+        self.AddPendingEvent(evt)        
         
 
     def OnEndScripts(self, event):
-        self.stop_Gauge_Activity()
         
         self.log_info("end script running")   
         if   self.style == STYLE_DEFAULT:
@@ -460,7 +411,6 @@ class DialogRunner(wx.Dialog):
             
         
 
-
     def OnStartProcess(self, event):
         self.log_debug("OnStartProcess")   
         self.process = wx.Process(self)
@@ -468,20 +418,6 @@ class DialogRunner(wx.Dialog):
         self.run_process(event.pathfilename)
     
 
-    def start_Gauge_Activity(self):
-        """ start the gauge activity
-        Must be called by main thread """
-        assert not(self.timer.IsRunning())
-        self.timer.Start(100) 
-        
-        
-    def stop_Gauge_Activity(self):
-        """ stop the gauge activity (reset) """
-        if self.timer.IsRunning() :
-            self.timer.Stop()
-            self.activity.SetValue(0)
-                
-            
     def start_thread_scripts_runner(self):
         """ start_thread_scripts_runner """
         self.evtScriptRun.clear()
@@ -492,25 +428,16 @@ class DialogRunner(wx.Dialog):
     def stop_thread_scripts_runner(self):
         """ stop_thread_scripts_runner """
         if self.thdScriptRun.isAlive() :
-            
             self.log_debug("Thread is stopping ...")
-            
             self.evtReaderRun.set()
-            
-            self.evtScriptRun.set()
-           
-            
+            self.evtScriptRun.set() 
             self.thdScriptRun.join()
             self.log_debug("Thread is stopped")            
         else :
             self.log_debug("Thread is already stopped")
     
     
-    
 
-    
-    
-    
     def thread_scripts_runner(self):  
         """ thread that run a list of scripts """
         self.log_debug("Thread is running")
@@ -528,8 +455,7 @@ class DialogRunner(wx.Dialog):
                 return            
             
             self.process.Destroy()
-            self.process = None
-            
+            self.process = None            
 
             # update GUI and result
             self.AddPendingEvent(EventExecStatus.create_end_script(script.str_relative()))
@@ -570,8 +496,7 @@ class DialogRunner(wx.Dialog):
                             #LOG.info(text)
                             stdoutreader.add_line(text)
                         else:   
-                            time.sleep(waiting)
-                    
+                            time.sleep(waiting)                    
                 pass
         except Exception, ex:
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
@@ -586,13 +511,8 @@ class DialogRunner(wx.Dialog):
     def onStart(self, event):
         self.start_running_script()
         
-
-
-
-
       
     def onStop(self, event):
-        
         self.stop_script_running()
 
         if   self.style == STYLE_DEFAULT:
@@ -611,28 +531,19 @@ class DialogRunner(wx.Dialog):
         
         
     def stop_script_running(self):
-        """ Stop script exection """
-        
+        """ Stop script exection """    
         self.log_debug("stop script running")
-        
-
+    
         try:
             self.process.CloseOutput()
-            
             self.stop_thread_scripts_runner() 
-            
-            
             self.process.Detach()   
 #            self.process.Destroy()
             self.process = None                   
-            #
-            
-
            
         except Exception, ex :
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
          
-
         try :
             self.log_debug("Stop process ... by kill pid:%d" % self.pid)
             ret = wx.Process.Kill(self.pid, wx.SIGTERM)
@@ -687,14 +598,10 @@ if __name__ == "__main__":
         
             proj = dproj.load_xml(os.path.realpath("../../test/script/project_01.xml")) 
             #proj = dproj.load_xml(os.path.realpath("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml"))
-            
             #slist = proj.get_campaign_list_scripts("Campaign_Infinite_Loop")
             #slist = proj.get_campaign_list_scripts("Campaign_Infinite_Loop")
             slist = proj.get_pool_list_absolute()
-            
-
-
-            
+               
             data = {}
             
             data[BASE_PATH] = proj.get_base_path()
