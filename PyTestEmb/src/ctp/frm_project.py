@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.14 $"
+__version__     = "$Revision: 1.15 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -114,7 +114,7 @@ class ProjectFrame(wx.Panel):
 
     def new_project(self):
 
-        intruction = "Please enter the name of project :"
+        instruction = "Please enter the name of project :"
         dlg = wx.TextEntryDialog(self, instruction, "New project ...", "Python")
         dlg.SetValue("project_name")
 
@@ -149,19 +149,18 @@ class ProjectFrame(wx.Panel):
             style=wx.OPEN | wx.CHANGE_DIR
             )
 
-        if dlg.ShowModal() == wx.ID_OK:
-            self.path = dlg.GetPath()
-        else :
-            self.path = None
+
+        ret = dlg.ShowModal()
         dlg.Destroy()
-
-        self.log_debug("FileDialog = \"%s\"" % self.path)
-
-        if self.path is not None :
+        
+        if ret == wx.ID_OK:
+            self.log_debug("FileDialog = \"%s\"" % self.path)
+            self.path = dlg.GetPath()
             self.load_xml(self.path)
+        else :
+            self.log_debug("FileDialog Abort")
 
-
-
+        
 
     def save_file_xml(self, filename):
         self.log_info("Save project : \"%s\"" % filename)

@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.16 $"
+__version__     = "$Revision: 1.17 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -438,7 +438,10 @@ class PyAUIFrame(wx.Frame):
 
     def on_menu_project_new(self, event):
         self.log_debug("on_menu_project_new")
-        self.ctrl["project"].new_project()
+        dlg = wx.MessageDialog(self, "To do", 'To Do', wx.OK|wx.ICON_EXCLAMATION )
+        ret = dlg.ShowModal()
+        dlg.Destroy()
+        #self.ctrl["project"].new_project()
                 
     def on_menu_project_save(self, event):
         self.log_debug("on_menu_project_save")
