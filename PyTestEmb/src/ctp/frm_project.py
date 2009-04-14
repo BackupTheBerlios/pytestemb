@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.13 $"
+__version__     = "$Revision: 1.14 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -132,6 +132,8 @@ class ProjectFrame(wx.Panel):
     def save_xml(self):
         if self.path is not None:
             self.save_file_xml(self.path)
+        else :
+            self.log_debug("path is None")
 
 
     def open_and_load_xml(self):
@@ -725,7 +727,7 @@ class DialogConfiguration(wx.Dialog):
     def on_directory(self, event):
 
         _style = wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST
-        dlg = wx.DirDialog(self, "Choose a directory:", _style)
+        dlg = wx.DirDialog(self, "Choose a directory:", style=_style)
 
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()

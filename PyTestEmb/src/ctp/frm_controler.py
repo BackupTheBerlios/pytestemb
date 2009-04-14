@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.11 $"
+__version__     = "$Revision: 1.12 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -500,6 +500,7 @@ class DialogRunner(wx.Dialog):
                 pass
         except Exception, ex:
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
+            raise ex
         #self.process = None     
         self.log_debug("end stdoutreader")
         return stdoutreader   
@@ -556,7 +557,7 @@ class DialogRunner(wx.Dialog):
                   
         except Exception, ex:
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
-            
+            raise ex
 
     
     def close_dialog(self):
