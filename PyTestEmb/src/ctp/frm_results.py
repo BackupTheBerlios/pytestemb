@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.11 $"
+__version__     = "$Revision: 1.12 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -433,8 +433,10 @@ class ResultFrame(wx.Panel):
                         if res is not None:
                             item_res = self.tree.AppendItem(item_case, "%s" % k )
                             self.tree.SetPyData(item_case, {"type":"info", "data":k})
-                            if k == dres.RES_ASSERT_OK :
+                            if   k == dres.RES_ASSERT_OK :
                                 case_status = "ok"
+                            elif k == dres.RES_WARNING :
+                                pass
                             else:
                                 case_status = "ko"
                                 script_status = "ko"

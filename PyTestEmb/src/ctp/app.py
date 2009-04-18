@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.17 $"
+__version__     = "$Revision: 1.18 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -227,9 +227,8 @@ class PyAUIFrame(wx.Frame):
 
         self.Maximize()
 
+        self.startup_log()
         self.log_info("Application is ready")
-
-
 
 
 
@@ -245,6 +244,17 @@ class PyAUIFrame(wx.Frame):
     def log_error(self, data):
         evt = frm_logging.EventTrace.create_error(data)
         self.ctrl["log"].AddPendingEvent(evt)
+
+
+    def startup_log(self):
+        self.log_debug("Path application   : %s" % self.path["app_path"])
+        self.log_debug("File stack         : %s" % self.path["stack_file"])
+        self.log_debug("File global        : %s" % self.path["global_file"])
+        self.log_debug("Config python path : %s" % self.wxconf.Read("PYTHON_PATH", ""))
+        self.log_debug("Config trace       : %s" % self.wxconf.ReadInt("TRACE", -1))
+        self.log_info("Application is ready")
+        
+
 
 
     def on_run_script(self, event):

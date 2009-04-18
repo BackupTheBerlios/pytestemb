@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.15 $"
+__version__     = "$Revision: 1.16 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -110,6 +110,11 @@ class ProjectFrame(wx.Panel):
     def log_info(self, data):
         if self.log is not None :
             self.log.log_info(data)
+            
+    def log_error(self, data):
+        if self.log is not None :
+            self.log.log_error(data)
+            
 
 
     def new_project(self):
@@ -170,7 +175,27 @@ class ProjectFrame(wx.Panel):
 
     def load_xml(self, filename):
         self.log_info("Load project : \"%s\"" % filename)
-        self.project = dpro.load_xml(filename)
+        
+        try :
+            self.project = dpro.load_xml(filename)
+        except Exception, ex : 
+            
+            self.log_error("xml file problem : \"%s\"" % filename)
+            self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
+           
+           
+            info = "Error or Incorrect  in file :\n \"%s\"\n" % (filename)
+            info += "Exception                 :\n \"%s\"\n" % (ex.__str__())
+            
+            
+            dlg = wx.MessageDialog(self, info,
+                                   'Error XML project file',
+                                   wx.OK | wx.ICON_ERROR)
+            ret = dlg.ShowModal()
+            dlg.Destroy()
+            
+            return   
+        
         self.project.sort()
         self.update_tree()
 
