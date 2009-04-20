@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.18 $"
+__version__     = "$Revision: 1.19 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -77,9 +77,10 @@ class PyAUIFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
         self.path = dict()
-        self.path["app_path"] = get_app_path()
-        self.path["stack_file"] = os.path.join(self.path["app_path"], "stack.dbm")
+        self.path["app_path"]    = get_app_path()
+        self.path["stack_file"]  = os.path.join(self.path["app_path"], "stack.dbm")
         self.path["global_file"] = os.path.join(self.path["app_path"], "global.dbm")
+        self.path["doc_file"]    = os.path.join(self.path["app_path"], "doc.dbm")
 
 
         self.ctrl = { "log"     :     None,
@@ -289,6 +290,7 @@ class PyAUIFrame(wx.Frame):
             assert False
         
         res = dlg.get_result()
+        self.log_debug("Save stack_file : %s" % self.path["stack_file"] )
         res.save(self.path["stack_file"])
 
         dlg.Destroy()
@@ -304,7 +306,7 @@ class PyAUIFrame(wx.Frame):
         slist = event.slist
         config = event.config
 
-        self.log_info("Run %d script(s)" % len(slist))
+        self.log_info("Doc %d script(s)" % len(slist))
 
         self.log_debug("Base path : \"%s\"" % config[frm_controler.BASE_PATH])
         for s in slist:
@@ -329,7 +331,9 @@ class PyAUIFrame(wx.Frame):
         else :
             assert False
 
-        res = dlg.get_result()
+        res = dlg.get_doc()
+        self.log_debug("Save doc_file : %s" % self.path["doc_file"] )
+        res.save(self.path["doc_file"])
 
         dlg.Destroy()
 

@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.4 $"
+__version__     = "$Revision: 1.5 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -115,7 +115,7 @@ class LoggingFrame(wx.Panel):
         wx.Panel.__init__(self, *p, **pp)
         
         
-        self.txtdis = wx.TextCtrl(self, -1,  style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+        self.txtdis = wx.TextCtrl(self, -1,  style=wx.TE_MULTILINE|wx.TE_DONTWRAP)
         self.txtdis.SetFont(wx.Font(10, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         
         EVT_CUSTOM_TRACE(self, self.on_trace)

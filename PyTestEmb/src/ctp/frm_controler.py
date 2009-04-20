@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.12 $"
+__version__     = "$Revision: 1.13 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -107,10 +107,11 @@ class EventExecStatus(wx.PyEvent):
 
 
 
-
+# On linux
 PY_EXE_RET_CODE_OK              = 0
-PY_EXE_RET_CODE_ERROR_FILE      = 1
-PY_EXE_RET_CODE_ERROR_SYNTAX    = 2
+PY_EXE_RET_CODE_ERROR_SYNTAX    = 1
+PY_EXE_RET_CODE_ERROR_FILE      = 2
+
 
 
 # data dict
@@ -318,7 +319,8 @@ class DialogRunner(wx.Dialog):
         
         self.exit_code = None
         self.pid = wx.Execute(cmd, wx.EXEC_ASYNC, self.process)
-        self.log_debug("Start process : %s pid %s" % (cmd, self.pid))
+        self.log_debug("Process cmd : %s" % cmd)
+        self.log_debug("Process pid : %s" % self.pid)
         
 #        self.process.GetOutputStream().write("env : debug\n")
 #        self.process.GetOutputStream().write("serial : com1\n")
@@ -346,8 +348,9 @@ class DialogRunner(wx.Dialog):
         """ call back when event """
         self.pid = None
         
-        self.log_debug("Process Ended pid:%s,  exitCode: %s" % \
-                              (evt.GetPid(), evt.GetExitCode()))
+        self.log_debug("Process Ended")
+        self.log_debug("Process pid : %s" % evt.GetPid())
+        self.log_debug("Process exitcode : %s" % evt.GetExitCode())
         self.exit_code = evt.GetExitCode()
         self.evtReaderRun.set() # stop reader on process
         

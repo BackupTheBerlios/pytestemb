@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.2 $"
+__version__     = "$Revision: 1.3 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -26,10 +26,14 @@ class Documentation:
     def __init__(self, name=""):
         self.name = name
         self.data = dict()
-
-    def save(self):
-        s = shelve.open('doc.dbm', writeback=True)
+        
+    def save(self, filename):
+        s = shelve.open(filename, writeback=True)
         try:
+            # erase
+            for k,v in s.iteritems():
+                del s[k]                
+            # save
             for k,v in self.data.iteritems():
                 d = dict()
                 d["status"]  = (v.get_status()[0] == ST_PARSE_DOC_NO_ERROR, v.get_status()[1])
@@ -40,12 +44,11 @@ class Documentation:
         finally:
             s.close()
 
-    def load(self):
-        s = shelve.open('doc.dbm', writeback=False)
+
+    def load(self, filename):
+        s = shelve.open(filename, writeback=False)
         try:
-            print "load"
             for k,v in s.iteritems():
-                print k, v
                 self.data[k] = v
         finally:
             s.close()
@@ -62,10 +65,13 @@ class Documentation:
         return l
 
 
-    def __iter__(self):
-        l = self.data.values()
-        l.sort()
-        return l
+
+    def __str__(self):
+        dis = ""
+        for script in self.data.itervalues():
+            dis += "%s\n" % script
+        return dis
+
 
 
 
@@ -114,7 +120,16 @@ class ScriptDoc:
 
 
 
+if __name__ == "__main__":
+    
 
+    d = Documentation()
+    
+    d.load("doc.dbm")
+    
+    
+    print "%s" % d 
+    
 
 
 
