@@ -1,0 +1,23 @@
+PyTestEmb Release Note :
+
+
+Version 1.2.2
+
+Adding :
+- Check set_setup and set_cleanup are used only one time, to avoid user mistake
+- Check that user data provided in parameters(msg or log data) are string datas (avoid forced conversion)
+
+Issue fix : 
+- trace file are set in utf8
+
+
+
+Version 1.2.1
+
+Adding :
+- PytestembError Exception type
+
+Issue fix : 
+- parameter type "msg" of function assert_xxxx(value, msg) is not check
+- add a check : PytestembError is raised if type different of str
+

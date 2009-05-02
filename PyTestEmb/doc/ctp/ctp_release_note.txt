@@ -1,0 +1,15 @@
+PyTestEmb Release Note :
+
+
+Version 1.0.2
+
+Adding :
+- doc generation result in file
+- add more debug trace
+
+Issue fix : 
+- All errors (ASSERT, PY_EXCEPTION ...) generate test ko
+
+
+
+
