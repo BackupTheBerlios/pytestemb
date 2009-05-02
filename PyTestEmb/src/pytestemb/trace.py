@@ -5,7 +5,7 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.14 $"
+__version__     = "$Revision: 1.15 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -225,7 +225,7 @@ class TraceTxt(Trace):
     def format(self, gtime, scope, msg):
         gtime = gtime.ljust(16)
         scope = scope.ljust(24)
-        msg = msg.strip()       
+        msg = msg.strip()   
         return "%s%s%s\n"  % (gtime, scope, msg)      
             
     def add_header(self):        
@@ -234,7 +234,7 @@ class TraceTxt(Trace):
             dis += "Script file    : %s\n" % sys.argv[0] 
             dis += "Date           : %s\n" % time.strftime("%d/%m/%Y %H:%M:%S", self.gtime.start_date)
             dis += "\n%s\n" % self.format("Time(s)", "Scope", "Info")
-            self.file.write(dis)
+            self.file.write(dis.encode("utf-8"))
            
             
             
@@ -242,10 +242,10 @@ class TraceTxt(Trace):
         if self.file is not None :
             gtime = "%.6f" % self.gtime.get_time()
             dis = self.format(gtime, scope, msg)
-            self.file.write(dis)
+            self.file.write(dis.encode("utf-8"))
         
     def trace_script(self, msg):
-        self.add_line("Script", msg)
+        self.add_line("Script", msg.__str__())
 
     def trace_io(self, interface, data):
         self.add_line(interface, data.__str__())

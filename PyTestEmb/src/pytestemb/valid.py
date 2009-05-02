@@ -5,7 +5,7 @@ PyTestEmb Project : valid manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.10 $"
+__version__     = "$Revision: 1.11 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -19,9 +19,11 @@ import inspect
 
 
 
+
 import result
 import trace
 import utils
+import pexception
 
 
 # redirect sys.stderr => sys.stdout
@@ -45,10 +47,19 @@ class Valid:
         pass
 
     def set_setup(self, funcSetup):
-        self.setup = funcSetup
+        if self.setup == self._nothing_ :
+            self.setup = funcSetup
+        else:
+            # Avoid user mistake with two time function set
+            raise pexception.PytestembError("Setup function already set")
+        
 
     def set_cleanup(self, funcCleanup):
-        self.cleanup = funcCleanup
+        if self.cleanup == self._nothing_ :
+            self.cleanup = funcCleanup
+        else:
+            # Avoid user mistake with two time function set
+            raise pexception.PytestembError("CleanUp function already set")
 
     def add_test_case(self, funcCase):
         self.case.append(funcCase)

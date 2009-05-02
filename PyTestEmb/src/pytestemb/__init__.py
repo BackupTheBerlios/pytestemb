@@ -5,7 +5,7 @@ PyTestEmb Project : __init__ manages command line option and interface with othe
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.15 $"
+__version__     = "$Revision: 1.16 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -14,7 +14,7 @@ __email__       = "octopy@gmail.com"
 
 
 
-VERSION_STRING = "1.2.1"
+VERSION_STRING = "1.2.2"
 
 
 
@@ -28,7 +28,7 @@ import valid
 import result
 import config
 import pydoc
-
+import pexception
 
 
 
@@ -39,13 +39,6 @@ from optparse import OptionParser
 
 
 
-class PytestembError(Exception):
-    "Exception raised by Pytestemb"
-    def __init__(self, info):
-        Exception.__init__(self)
-        self.info = info
-    def __str__(self):
-        return self.info.__str__()  
 
 
 
@@ -201,7 +194,7 @@ def _create_des_(msg):
     if msg is None :
         return {}
     elif not(isinstance(msg, types.StringTypes)):
-        raise PytestembError("Msg must be a string")
+        raise pexception.PytestembError("Msg must be a string")
     else:
         return dict({"msg":"%s" % msg})
 

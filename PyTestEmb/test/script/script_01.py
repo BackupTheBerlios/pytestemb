@@ -48,6 +48,13 @@ def loop():
     for i in range(0,10):
         test.assert_true(1==1, "1==1")
         time.sleep(0.01)
+        
+        
+def start():
+    pass
+
+def stop():
+    pass
 
 
 
@@ -55,10 +62,12 @@ def loop():
 
 if __name__ == "__main__":
     
-    test.set_doc(__doc__)
+    
+    test.set_setup(start)
     test.add_test_case(defaultValue)
     test.add_test_case(boundValue)
     test.add_test_case(loop)
+    test.set_cleanup(stop)
     test.run_script()
 
     
