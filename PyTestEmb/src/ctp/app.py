@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.20 $"
+__version__     = "$Revision: 1.21 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -36,7 +36,7 @@ import frm_controler
 
 
 APP_NAME     = "Control Test"
-APP_VERSION  = "1.0.2"
+APP_VERSION  = "1.1.0"
 
 
 
@@ -47,7 +47,7 @@ TRACE_DEBUG     = True
 # EXCEPT_DEBUG :
 # True    = std.err for exception output
 # False   = GUI exception handler
-EXCEPT_DEBUG    = True
+EXCEPT_DEBUG    = False
 
 
 

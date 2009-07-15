@@ -5,16 +5,16 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.15 $"
+__version__     = "$Revision: 1.16 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
 
 
 import os
-import md5
 import sys
 import time
+import hashlib
 import platform
 
 import logging
@@ -139,7 +139,7 @@ class TraceOctopylog(Trace):
         self.trace_scope("io.%s" % interface, data)
     
     def trace_result(self, name, des):
-        self.trace_scope("result", "%s : %s" % (name, des.__str__()))
+        self.trace_scope("result", "%s : %s" % (name, des))
 
     def trace_config(self, msg):
         self.trace_scope("config", msg)
@@ -162,16 +162,16 @@ class TraceStdout(Trace):
         sys.stdout.write("Script::%s" % msg)
 
     def trace_io(self, interface, data):
-        sys.stdout.write("%s::%s" % (interface, data.__str__()))
+        sys.stdout.write("%s::%s" % (interface, data))
     
     def trace_result(self, name, des):
-        sys.stdout.write("%s::%s" % (name, des.__str__()))
+        sys.stdout.write("%s::%s" % (name, des))
 
     def trace_config(self, msg):
         sys.stdout.write("Config::%s" % msg)
 
     def trace_env(self, scope, data):
-        sys.stdout.write("%s::%s" % (scope, data.__str__()))
+        sys.stdout.write("%s::%s" % (scope, data))
 
 
 from config import ConfigError
@@ -213,12 +213,13 @@ class TraceTxt(Trace):
         
     def gen_file_name(self):
         """ """
-        m = md5.new()
+        m = hashlib.md5()
         m.update(sys.argv[0])
-        m.update(time.strftime("%d_%m_%Y_%H_%M_%S", self.gtime.start_date)) 
-        name = utils.get_script_name()   
-        name += "_%s.log" % (m.hexdigest()[0:16].upper())
-        return name
+        m.update(time.strftime("%d_%m_%Y_%H_%M_%S", self.gtime.start_date))        
+        name_script = utils.get_script_name()
+        name_hash = m.hexdigest()[0:16].upper()
+        return"%s_%s.log" % (name_script, name_hash)
+        
  
  
              
@@ -245,19 +246,19 @@ class TraceTxt(Trace):
             self.file.write(dis.encode("utf-8"))
         
     def trace_script(self, msg):
-        self.add_line("Script", msg.__str__())
+        self.add_line("Script", "%s" % msg)
 
     def trace_io(self, interface, data):
-        self.add_line(interface, data.__str__())
+        self.add_line(interface, "%s" % data)
     
     def trace_result(self, name, des):
-        self.add_line(name, des.__str__())
+        self.add_line(name, "%s" % des)
 
     def trace_config(self, msg):
-        self.add_line("Config", msg)
+        self.add_line("Config", "%s" % msg)
 
     def trace_env(self, scope, data):
-        self.add_line(scope, data.__str__())     
+        self.add_line(scope, "%s" % data)     
 
 
 

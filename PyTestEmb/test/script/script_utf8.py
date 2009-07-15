@@ -5,20 +5,34 @@
 
 import pytestemb as test
 
-
+vector = [  "предыстория",
+            "الإنكليزية",
+            u"предыстория",
+            u"الإنكليزية",
+            u"ascii",
+            "ascii",
+            u"\u0627\u0644\u0625\u0646\u0643\u0644\u064a\u0632\u064a\u0629"
+            "\u0627\u0644\u0625\u0646\u0643\u0644\u064a\u0632\u064a\u0629"
+            u"\xd8\xa7\xd9\x84\xd8\xa5\xd9\x86\xd9\x83\xd9\x84\xd9\x8a\xd8\xb2\xd9\x8a\xd8\xa9",
+            ""
+            ]
 
 
 
 def test_assert():
-    test.assert_true(1==1, "предыстория")
+    for itm in vector:
+        test.assert_true(True,  itm)
+        test.assert_true(False, itm)
+
+
 
 def test_trace():
-    test.trace_script("предыстория")
+    for itm in vector:
+        test.trace_script(      itm)
+        test.trace_env("env",   itm)
+        test.trace_io("io",     itm)
     
-
-
-
-
+    
 
 
 if __name__ == "__main__":

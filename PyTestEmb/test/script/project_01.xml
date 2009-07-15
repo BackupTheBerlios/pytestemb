@@ -94,6 +94,18 @@
             <Name>script_syntax</Name>
             <Path></Path>
         </Script>
+        <Script>
+            <Name>script_utf8</Name>
+            <Path></Path>
+        </Script>
+        <Script>
+            <Name>script_rules_01</Name>
+            <Path></Path>
+        </Script>
+        <Script>
+            <Name>script_rules_02</Name>
+            <Path></Path>
+        </Script>
     </Scripts>
     <Campaign>
         <Name>Campaign_01</Name>
@@ -139,6 +151,14 @@
         </Script>
         <Script>
             <Name>script_exception_02</Name>
+            <Path></Path>
+        </Script>
+        <Script>
+            <Name>script_rules_01</Name>
+            <Path></Path>
+        </Script>
+        <Script>
+            <Name>script_rules_02</Name>
             <Path></Path>
         </Script>
     </Campaign>

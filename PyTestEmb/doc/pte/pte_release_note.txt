@@ -1,6 +1,15 @@
 PyTestEmb Release Note :
 
 
+Version 1.2.3
+
+Adding :
+- use hashlib instead of md5 module (python 2.6)
+
+Issue fix : 
+
+
+
 Version 1.2.2
 
 Adding :

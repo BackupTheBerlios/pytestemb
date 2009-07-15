@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.13 $"
+__version__     = "$Revision: 1.14 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -136,6 +136,21 @@ class ResultFrame(wx.Panel):
 
     def on_tool_new(self, event):
         self.log_debug("on_tool_new")
+        
+        
+        msg = "Confirm New\nCurrent results will be erased"
+        dlg = wx.MessageDialog(self, msg, "Confirmation",
+                                   wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+
+        ret = dlg.ShowModal()
+        dlg.Destroy() 
+        
+        if ret in [wx.ID_NO, wx.ID_CANCEL]:
+            return
+        else:      
+            self.remove_results()
+            self.update()  
+        
 
 
     def on_tool_open(self, event):
@@ -272,11 +287,24 @@ class ResultFrame(wx.Panel):
         assert node["type"] == "script"
         self.log_debug("on_remove_campaign")
 
+        self.remove_results()
+        self.update()  
+        
+        
+    def on_remove_results(self):
+        node = self.tree.GetItemPyData(self.sel_item)
+        assert node["type"] == "root"
+        self.log_debug("on_remove_results")
+
         k = node["data"]
         self.remove_result(k)
-        self.update()  
-
-
+        self.update()          
+        
+        
+        
+    
+    def remove_results(self):
+        self.res.data = {}
 
     def remove_result(self, key):
         del self.res.data[key]
