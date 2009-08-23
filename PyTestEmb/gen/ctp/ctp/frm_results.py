@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.15 $"
+__version__     = "$Revision: 1.1 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -327,8 +327,7 @@ class ResultFrame(wx.Panel):
         if dlg.ShowModal() == wx.ID_OK:
             self.path = dlg.GetPath()
         else :
-            pass # keep the current path
-            #self.path = None
+            self.path = None
         dlg.Destroy()
 
         self.log_debug("FileDialog = \"%s\"" % self.path)

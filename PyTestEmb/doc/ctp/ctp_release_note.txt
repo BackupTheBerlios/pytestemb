@@ -1,6 +1,36 @@
 PyTestEmb Release Note :
 
 
+Version 1.1.3
+
+Adding :
+- None
+
+Issue fix : 
+- cancel on result open, clear current path
+
+
+
+Version 1.1.2
+
+Adding :
+- None
+
+Issue fix : 
+- remove script
+
+
+
+Version 1.1.1
+
+Adding :
+- None
+
+Issue fix : 
+- application base path on windows
+- save stack_result exception
+
+
 
 Version 1.1.0
 
@@ -9,7 +39,7 @@ Adding :
 
 
 Issue fix : 
-
+- None
 
 
 
