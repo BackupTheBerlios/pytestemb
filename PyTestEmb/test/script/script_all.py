@@ -13,7 +13,6 @@
 import pytestemb as test
 
 
-import time
 
 
 def case_assert_true():

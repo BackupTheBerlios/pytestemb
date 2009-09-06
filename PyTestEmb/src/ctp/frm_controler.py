@@ -5,7 +5,7 @@ PyTestEmb Project : pannelRunner manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.13 $"
+__version__     = "$Revision: 1.14 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -13,11 +13,11 @@ __email__       = "octopy@gmail.com"
 
 
 
-import os
+#import os
 import time
 import threading
 
-import logging
+#import logging
 import logging.handlers
 
 
@@ -121,6 +121,7 @@ CONFIG          = 2
 TRACE           = 3
 PYPATH          = 4
 RUN_TYPE        = 5
+PYINTER         = 6
 
 # trace config
 TRACE_NONE          = 0
@@ -314,7 +315,8 @@ class DialogRunner(wx.Dialog):
             scriptArgument += " --doc" 
 
 
-        interpretor = "python -u"
+        interpretor = self.data[PYINTER] + " -u"
+        
         cmd = interpretor + " " + pathfilename + scriptArgument
         
         self.exit_code = None
@@ -384,7 +386,7 @@ class DialogRunner(wx.Dialog):
                 param = "SyntaxError: invalid syntax"
                 scriptdoc.set_status(ddoc.ST_PARSE_PY_ERROR, param)        
             else :
-                 scriptdoc.set_status(ddoc.ST_PARSE_FILE_ERROR) 
+                scriptdoc.set_status(ddoc.ST_PARSE_FILE_ERROR) 
             self.docs.update(scriptdoc)
         else :
             raise Exception("No type run define")
@@ -500,7 +502,7 @@ class DialogRunner(wx.Dialog):
                             stdoutreader.add_line(text)
                         else:   
                             time.sleep(waiting)                    
-                pass
+
         except Exception, ex:
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
             raise ex
@@ -548,19 +550,23 @@ class DialogRunner(wx.Dialog):
         except Exception, ex :
             self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
          
-        try :
-            self.log_debug("Stop process ... by kill pid:%d" % self.pid)
-            ret = wx.Process.Kill(self.pid, wx.SIGTERM)
-            if    ret == wx.KILL_OK :
-                self.log_debug("Process kill success")
-            elif  ret == wx.KILL_NO_PROCESS :
-                self.log_debug("No process existing")
-            else :
-                self.log_error("Error killing process, try manually : name=\"python\", pid=%d " % self.pid)
-                  
-        except Exception, ex:
-            self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
-            raise ex
+         
+        if self.pid is not None:
+            try :
+                self.log_debug("Stop process ... by kill pid:%d" % self.pid)
+                
+                ret = wx.Process.Kill(self.pid, wx.SIGKILL)
+                if    ret == wx.KILL_OK :
+                    self.log_debug("Process kill success")
+                elif  ret == wx.KILL_NO_PROCESS :
+                    self.log_debug("No process existing")
+                else :
+                    self.log_error("Error killing process, try manually : name=\"python\", pid=%d " % self.pid)    
+            except Exception, ex:
+                self.log_debug("%s : %s" % (ex.__class__.__name__, ex.__str__()))
+                self.log_error("Error during process killing")    
+        else:
+            self.log_debug("Process seems ended")
 
     
     def close_dialog(self):
@@ -598,7 +604,7 @@ if __name__ == "__main__":
         def OnInit(self):
    
    
-            import os.path
+            #import os.path
         
             proj = dproj.load_xml(os.path.realpath("../../test/script/project_01.xml")) 
             #proj = dproj.load_xml(os.path.realpath("C:\\CVS_LOCAL_ECLIPSE\\scripts\\project\\champ2\\champ2.xml"))

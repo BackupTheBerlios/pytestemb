@@ -5,7 +5,7 @@ PyTestEmb Project : result manages result of script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.18 $"
+__version__     = "$Revision: 1.19 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -49,15 +49,15 @@ class Result:
     def get_assert_caller(self):
         CALL_DEPTH = 4
         lst = inspect.stack()
-        dict = {}
+        dic = {}
         try :
-            dict["file"] = copy.copy(lst[CALL_DEPTH][1])
-            dict["line"] = copy.copy(lst[CALL_DEPTH][2])
-            dict["function"] = copy.copy(lst[CALL_DEPTH][3])
-            dict["expression"] = copy.copy(lst[CALL_DEPTH][4][0].strip(" \t\n"))           
+            dic["file"]         = copy.copy(lst[CALL_DEPTH][1])
+            dic["line"]         = copy.copy(lst[CALL_DEPTH][2])
+            dic["function"]     = copy.copy(lst[CALL_DEPTH][3])
+            dic["expression"]   = copy.copy(lst[CALL_DEPTH][4][0].strip(" \t\n"))           
         finally:
             del lst
-            return dict
+            return dic
  
     def _assert_(self, exp, fatal, des, values=""):
         if exp :
@@ -176,7 +176,7 @@ def trace(func):
         # arg[1] = string or dict or no
         try:
             trace_func(func.func_name, args[1])
-        except :
+        except Exception, ex :
             pass
         result = func(*args, **kwargs)
         return result
@@ -190,7 +190,7 @@ def stamp(func):
         stamp = args[0].get_time()
         try:
             args[1]["time"] = stamp
-        except :
+        except Exception, ex:
             pass
         result = func(*args, **kwargs)
         return result
@@ -349,10 +349,10 @@ class ResultCounter:
         return self.counter
 
     def __str__(self):
-        str = "%s\n" % self.name
+        sstr = "%s\n" % self.name
         for k, v in self.counter.iteritems():
-            str += "%s:%s\n" % (k, v)
-        return str       
+            sstr += "%s:%s\n" % (k, v)
+        return sstr       
 
 
 
@@ -363,15 +363,14 @@ class ResultScript:
         self.trace = []
     
     def __str__(self):
-        str = "%s\n" % self.name
+        sstr = "%s\n" % self.name
         for cas in self.case:
-            str += "%s\n" % cas.__str__()
-        
+            sstr += "%s\n" % cas.__str__()
         
         for item in self.trace:
-            str += "TRACE:%s" % item
+            sstr += "TRACE:%s" % item
         
-        return str
+        return sstr
 
 
 
@@ -457,7 +456,7 @@ class ResultStandalone(Result):
     @stamp
     @trace 
     def error_config(self, des):
-        self.result[-1]["error_config"]
+        self.result[-1]["error_config"] += 1
 
     @stamp
     @trace    
@@ -505,7 +504,7 @@ class ResultStandalone(Result):
         
         try :
             self.result[-1]["assert_ko"] += 1
-        except :
+        except Exception, ex:
             pass
  
     @trace           
@@ -523,14 +522,14 @@ class ResultStandalone(Result):
 #        sys.stdout.write("Trace info : %s\n" % des.__str__())
         
 
-def create(interface, trace):
+def create(interface, mtrace):
     
     if   interface == "none" :
-        return Result(trace)
+        return Result(mtrace)
     elif interface == "stdout" :
-        return ResultStdout(trace)
+        return ResultStdout(mtrace)
     elif interface == "standalone" :
-        return ResultStandalone(trace)
+        return ResultStandalone(mtrace)
     else:
         assert False
 

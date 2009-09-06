@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.5 $"
+__version__     = "$Revision: 1.6 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -136,7 +136,10 @@ class LoggingFrame(wx.Panel):
         self.level[NOTSET]    = ("NOTSET",   wx.TextAttr(cdb.Find("BLACK")))
 
         self.file = None
-        self.file = open("ctp.log", "w")
+        
+    
+    def active_log_file(self, filename):
+        self.file = open(filename, "w")
         
     
     def __del__(self):
@@ -145,17 +148,17 @@ class LoggingFrame(wx.Panel):
         
     def on_trace(self, event):
         
-        
-        
         tstamp = time.strftime("%H:%M:%S", event.tstamp)
         
         txt, style = self.level[event.level]
-        
         self.txtdis.SetDefaultStyle(style)
         self.txtdis.AppendText("%s ::%s:: %s\n" % (tstamp.ljust(8) ,txt.ljust(8), event.data))
+        
+        if self.file is not None:
+            self.file.write("%s ::%s:: %s\n" % (tstamp.ljust(8) ,txt.ljust(8), event.data))
+            self.file.flush()
 
-        self.file.write("%s ::%s:: %s\n" % (tstamp.ljust(8) ,txt.ljust(8), event.data))
-        self.file.flush()
+
 
 
 class TestFrame(wx.Frame):

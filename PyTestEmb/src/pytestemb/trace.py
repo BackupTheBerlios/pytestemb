@@ -5,7 +5,7 @@ PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.16 $"
+__version__     = "$Revision: 1.17 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -81,15 +81,15 @@ class TraceManager(Trace):
             tra.set_config(config)       
         
     def start(self):    
-         for tra in self.dictra.itervalues() :
+        for tra in self.dictra.itervalues() :
             tra.start()              
     
     def trace_script(self, msg):
-         for tra in self.dictra.itervalues() :
+        for tra in self.dictra.itervalues() :
             tra.trace_script(msg)              
     
     def trace_io(self, interface, data):
-         for tra in self.dictra.itervalues() :
+        for tra in self.dictra.itervalues() :
             tra.trace_io(interface, data)              
     
     def trace_result(self, name, des):
@@ -128,7 +128,7 @@ class TraceOctopylog(Trace):
     def trace_scope(self, scope, msg):
         try:
             self.scope[scope].info("%s" % msg)
-        except:
+        except Exception, ex:
             self.scope[scope] = logging.getLogger("pytestemb.%s" % scope)        
             self.scope[scope].info("%s" % msg)
 
@@ -187,6 +187,7 @@ class TraceTxt(Trace):
         raise Exception("Platform not supported")
     
     def __init__(self):
+        self.file = None
         Trace.__init__(self)
         
     def start(self):
@@ -223,11 +224,11 @@ class TraceTxt(Trace):
  
  
              
-    def format(self, gtime, scope, msg):
-        gtime = gtime.ljust(16)
+    def format(self, mtime, scope, msg):
+        mtime = mtime.ljust(16)
         scope = scope.ljust(24)
         msg = msg.strip()   
-        return "%s%s%s\n"  % (gtime, scope, msg)      
+        return "%s%s%s\n"  % (mtime, scope, msg)      
             
     def add_header(self):        
         if self.file is not None :
@@ -241,8 +242,8 @@ class TraceTxt(Trace):
             
     def add_line(self, scope, msg):
         if self.file is not None :
-            gtime = "%.6f" % self.gtime.get_time()
-            dis = self.format(gtime, scope, msg)
+            mtime = "%.6f" % self.gtime.get_time()
+            dis = self.format(mtime, scope, msg)
             self.file.write(dis.encode("utf-8"))
         
     def trace_script(self, msg):

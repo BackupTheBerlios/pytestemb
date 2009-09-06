@@ -18,14 +18,14 @@ def boundValue():
     test.assert_true(1==1, "1==1")
     test.assert_true(1==1, "1==1")
     test.trace_script("Easy trace")
-    pass
+
 
 
 
 def loop():
     
     for i in range(0,10):
-        test.assert_true(1==1, "1==1")
+        test.assert_true(1==1, "1==1 loop:%d" % i)
         time.sleep(0.01)
 
 

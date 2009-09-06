@@ -1,6 +1,15 @@
 PyTestEmb Release Note :
 
 
+
+Version 1.2.4 (working)
+
+Adding :
+
+Issue fix : 
+- pylint problem correction
+
+
 Version 1.2.3
 
 Adding :

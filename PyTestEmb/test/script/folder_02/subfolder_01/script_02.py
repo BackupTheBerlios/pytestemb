@@ -19,7 +19,6 @@ def boundValue():
     test.assert_true(1==2, "1==2")
     test.assert_true(1==1, "1==1")
     test.trace_script("Easy trace")
-    pass
 
 
 

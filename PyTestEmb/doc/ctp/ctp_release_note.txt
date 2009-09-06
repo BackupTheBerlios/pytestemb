@@ -1,13 +1,16 @@
 PyTestEmb Release Note :
 
 
-Version 1.1.3
+Version 1.2.0 (working)
 
 Adding :
-- None
+- management of python interpretor
 
 Issue fix : 
+- log file write in directory application
 - cancel on result open, clear current path
+- exception when stopping script execution
+- pylint problem correction
 
 
 

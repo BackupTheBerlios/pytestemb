@@ -5,7 +5,7 @@ PyTestEmb Project : valid manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.11 $"
+__version__     = "$Revision: 1.12 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -21,7 +21,7 @@ import inspect
 
 
 import result
-import trace
+#import trace
 import utils
 import pexception
 
@@ -64,8 +64,8 @@ class Valid:
     def add_test_case(self, funcCase):
         self.case.append(funcCase)
     
-    def script_need_run(self, name):
-        return True
+#    def script_need_run(self, name):
+#        return True
     
     
     def run_script(self):
@@ -79,10 +79,7 @@ class Valid:
             for acase in self.case :
                 name = acase.func_name
                 self.result.case_start({"name":name})
-                if self.script_need_run(name):
-                    self.run_case(acase)
-                else :
-                    pass
+                self.run_case(acase)
                 self.result.case_stop({"name":name})
             # Cleanup
             self.result.cleanup_start()
@@ -126,7 +123,7 @@ class Valid:
                 stack[-1]["line"]      = copy.copy(traceback[index][2])
                 stack[-1]["function"]  = copy.copy(traceback[index][3])
                 stack[-1]["code"]      = copy.copy(traceback[index][4][0].strip("\n"))    
-        except :
+        except Exception, ex:
             pass
         finally:
             del traceback

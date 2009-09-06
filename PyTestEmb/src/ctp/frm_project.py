@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.16 $"
+__version__     = "$Revision: 1.17 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -47,14 +47,14 @@ class ProjectFrame(wx.Panel):
         self.tree.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.Bind(wx.EVT_TREE_ITEM_MENU, self.OnItemMenu, self.tree)
 
-        self.configuration = {"trace"   :frm_controler.TRACE_OCTOPYLOG_TXT,
-                              "path"    :""}
 
         # Configuration
         self.config = config
-        self.configuration["path"] = self.config.Read("PYTHON_PATH", "")
-        self.configuration["trace"] = self.config.ReadInt("TRACE", frm_controler.TRACE_OCTOPYLOG_TXT)
-
+        self.configuration = {}
+        self.configuration["inter"]     = self.config.Read("PYTHON_INTERPRETOR", "python")
+        self.configuration["path"]      = self.config.Read("PYTHON_PATH", "")
+        self.configuration["trace"]     = self.config.ReadInt("TRACE", frm_controler.TRACE_OCTOPYLOG_TXT)
+        
 
         self.project    = None
         self.log        = None
@@ -89,12 +89,14 @@ class ProjectFrame(wx.Panel):
 
     def finish(self):
         self.log_debug("Save configuration")
-        self.log_debug("PYTHON_PATH   :: %s" % self.configuration["path"])
-        self.log_debug("TRACE         :: %d" % self.configuration["trace"])
+        self.log_debug("PYTHON INTERPRETOR :: %s" % self.configuration["inter"])
+        self.log_debug("PYTHON_PATH        :: %s" % self.configuration["path"])
+        self.log_debug("TRACE              :: %d" % self.configuration["trace"])
+        self.config.Write("PYTHON_INTERPRETOR", self.configuration["inter"])
         self.config.Write("PYTHON_PATH", self.configuration["path"])
         self.config.WriteInt("TRACE", self.configuration["trace"])
-
-
+        
+        
 
     def post_event(self, evt):
         self.GetParent().AddPendingEvent(evt)
@@ -455,6 +457,7 @@ class ProjectFrame(wx.Panel):
             slist.append(script)
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        config[frm_controler.PYINTER]   = self.configuration["inter"]
         config[frm_controler.PYPATH]    = self.configuration["path"]
         config[frm_controler.TRACE]     = frm_controler.TRACE_NONE
         evt = evt_doc.EventDoc(slist, config)
@@ -470,6 +473,7 @@ class ProjectFrame(wx.Panel):
         slist.append(node["data"])
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        config[frm_controler.PYINTER]   = self.configuration["inter"]
         config[frm_controler.PYPATH]    = self.configuration["path"]
         config[frm_controler.TRACE]     = frm_controler.TRACE_NONE
         evt = evt_doc.EventDoc(slist, config)
@@ -489,6 +493,7 @@ class ProjectFrame(wx.Panel):
             slist.append(script)
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        config[frm_controler.PYINTER]   = self.configuration["inter"]
         config[frm_controler.PYPATH]    = self.configuration["path"]
         config[frm_controler.TRACE]     = self.configuration["trace"]
         evt = evt_run.EventRunScript(slist, config)
@@ -505,6 +510,7 @@ class ProjectFrame(wx.Panel):
         slist.append(node["data"])
         config = dict()
         config[frm_controler.BASE_PATH] = self.project.get_base_path()
+        config[frm_controler.PYINTER]   = self.configuration["inter"]
         config[frm_controler.PYPATH]    = self.configuration["path"]
         config[frm_controler.TRACE]     = self.configuration["trace"]
 
@@ -606,7 +612,16 @@ class ProjectFrame(wx.Panel):
         self.tree.SetItemImage(item_config_path, self.im_folder_wrench, wx.TreeItemIcon_Normal)
 
         path = self.configuration["path"]
-        item_ = self.tree.AppendItem(item_config_path, path)
+        item_ = self.tree.AppendItem(item_config_path,  "\"%s\"" % path)
+        self.tree.SetPyData(item_, {"type":"configuration", "data":None})
+        self.tree.SetItemImage(item_, self.im_folder_link, wx.TreeItemIcon_Normal)
+
+        item_config_path = self.tree.AppendItem(item_config, "Python Interpretor")
+        self.tree.SetPyData(item_config_path, {"type":"configuration", "data":None})
+        self.tree.SetItemImage(item_config_path, self.im_folder_wrench, wx.TreeItemIcon_Normal)
+
+        inter = self.configuration["inter"]
+        item_ = self.tree.AppendItem(item_config_path, "\"%s\"" % inter)
         self.tree.SetPyData(item_, {"type":"configuration", "data":None})
         self.tree.SetItemImage(item_, self.im_folder_link, wx.TreeItemIcon_Normal)
 
@@ -675,57 +690,67 @@ class DialogConfiguration(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
 
         self.SetTitle("Configuration")
-
-        self.save = wx.Button(self, -1,"Save")
-        self.cancel = wx.Button(self, -1, "Cancel")
-
-        self.directory = wx.Button(self, -1, "Directory")
-
-        self.Bind(wx.EVT_BUTTON, self.on_save, self.save)
-        self.Bind(wx.EVT_BUTTON, self.on_cancel, self.cancel)
-        self.Bind(wx.EVT_BUTTON, self.on_directory, self.directory)
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
+  
 
-
+        # Trace
         self.txt_trace = wx.StaticText(self, -1, "Trace(s) :", (20, 10))
-        self.txt_directory = wx.StaticText(self, -1, "Python Directory :", (20, 10))
-        self.txt_path = wx.TextCtrl(self, -1, "",size=(300,20))
-        self.txt_path.SetEditable(False)
-
-
-        # create control
         self.lstbox = wx.CheckListBox(self, -1, (80, 50), wx.DefaultSize, DialogConfiguration.LOG_CONFIG_TXT)
+        
+        self.sizer_trace = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer_trace.Add(self.txt_trace, 1, wx.EXPAND, 5)
+        self.sizer_trace.Add(self.lstbox, 1, wx.EXPAND, 5)
+        
+        
+        # python path
 
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
+        self.bt_directory_path  = wx.Button(self, -1, "Browse Python Path")
+        self.txt_directory_path = wx.TextCtrl(self, -1, "",size=(300,20))
+        self.Bind(wx.EVT_BUTTON, self.on_directory_path, self.bt_directory_path)
+
+        self.sizer_path = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer_path.Add(self.bt_directory_path,   1, wx.EXPAND, 5)
+        self.sizer_path.Add(self.txt_directory_path,  1, wx.EXPAND, 5)
+        
+
+        # python interpretor
+        self.bt_directory_interpretor  = wx.Button(self, -1, "Browse Python Interpretor")
+        self.txt_directory_interpretor = wx.TextCtrl(self, -1, "",size=(300,20))
+        self.Bind(wx.EVT_BUTTON, self.on_directory_interpretor, self.bt_directory_interpretor)
+
+        self.sizer_interpretor = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer_interpretor.Add(self.bt_directory_interpretor,  1, wx.EXPAND, 5)
+        self.sizer_interpretor.Add(self.txt_directory_interpretor, 1, wx.EXPAND, 5)      
+        
+
+        # Save/Cancel
+        self.save = wx.Button(self, -1,"Save")
+        self.cancel = wx.Button(self, -1, "Cancel")
+        self.Bind(wx.EVT_BUTTON, self.on_save, self.save)
+        self.Bind(wx.EVT_BUTTON, self.on_cancel, self.cancel)
+                
+        self.sizer_save_cancel = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer_save_cancel.Add(self.save,  0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
+        self.sizer_save_cancel.Add(self.cancel,  0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
 
 
-        sizer_1.Add((400, 1), 0, 0, 0)
-        sizer_1.Add(self.txt_trace, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(self.lstbox, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
+        # Sizer
+        self.sizer_dialog = wx.BoxSizer(wx.VERTICAL)
+        self.sizer_dialog.Add(self.sizer_trace, 0, wx.ALL, 5)
+        self.sizer_dialog.Add(self.sizer_path, 0, wx.ALL, 5)
+        self.sizer_dialog.Add(self.sizer_interpretor, 0, wx.ALL, 5)
+        self.sizer_dialog.Add(self.sizer_save_cancel, 0, wx.ALL, 5)
 
-        #sizer_1.Add((400, 20), 0, 0, 0)
-
-        sizer_1.Add(self.txt_directory, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.directory, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.txt_path, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(sizer_2, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        #sizer_1.Add((400, 20), 0, 0, 0)
-
-
-        sizer_3.Add(self.save, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_3.Add(self.cancel, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(sizer_3, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5)
-
-        self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
+        self.SetSizer(self.sizer_dialog)
+        self.sizer_dialog.Fit(self)
         self.Layout()
 
 
-        self.txt_path.SetValue(self.configuration["path"])
-
+        # Load value
+        self.txt_directory_path.SetValue(self.configuration["path"])
+        self.txt_directory_interpretor.SetValue(self.configuration["inter"])
+        
         if self.configuration["trace"] == frm_controler.TRACE_OCTOPYLOG_TXT :
             self.lstbox.Check(0, True)
             self.lstbox.Check(1, True)
@@ -748,23 +773,31 @@ class DialogConfiguration(wx.Dialog):
             self.log.log_info(data)
 
 
-    def on_directory(self, event):
-
+    def on_directory_interpretor(self, event):
         _style = wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST
         dlg = wx.DirDialog(self, "Choose a directory:", style=_style)
-
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            self.log_info("Path selected : %s"  % path)
-            self.txt_path.SetValue(path)
-            
+            self.log_info("Path selected, python interpretor : %s"  % path)
+            self.txt_directory_interpretor.SetValue(path)
+        dlg.Destroy()
+        
+        
+    def on_directory_path(self, event):
+        _style = wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST
+        dlg = wx.DirDialog(self, "Choose a directory:", style=_style)
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            self.log_info("Path selected, python directory : %s"  % path)
+            self.txt_directory_path.SetValue(path)
         dlg.Destroy()
 
 
     def on_save(self, event):
         self.log_debug("on_save")
-
-        self.configuration["path"] =  self.txt_path.GetValue()
+        
+        self.configuration["inter"] = self.txt_directory_interpretor.GetValue()
+        self.configuration["path"] =  self.txt_directory_path.GetValue()
 
         if      self.lstbox.IsChecked(0)\
             and self.lstbox.IsChecked(1):

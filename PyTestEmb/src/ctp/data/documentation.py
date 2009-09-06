@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.3 $"
+__version__     = "$Revision: 1.4 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -16,7 +16,7 @@ import copy
 import shelve
 
 
-import project
+#import project
 import utils
 
 
@@ -97,9 +97,11 @@ SCRIPT_STATUS = {   ST_PARSE_NOT_YET_PARSE   : "Script has not been parse",\
 class ScriptDoc:
     def __init__(self, script):
         self.script = script
-
-        self.set_status(ST_PARSE_NOT_YET_PARSE)
+        self.status = None
         self.data = list()
+        
+        self.set_status(ST_PARSE_NOT_YET_PARSE)
+        
 
 
     def get_status(self):

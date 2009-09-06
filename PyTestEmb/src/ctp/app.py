@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.22 $"
+__version__     = "$Revision: 1.23 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -18,7 +18,7 @@ import wx.aui
 import wx.lib.flatnotebook as fnb
 
 
-import sys
+#import sys
 import os.path
 import platform
 
@@ -37,7 +37,7 @@ import frm_controler
 
 
 APP_NAME     = "Control Test"
-APP_VERSION  = "1.1.3 RC"
+APP_VERSION  = "1.2.0 RC"
 
 
 
@@ -86,10 +86,11 @@ class PyAUIFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
         self.path = dict()
-        self.path["app_path"]    = get_app_path()
-        self.path["stack_file"]  = os.path.join(self.path["app_path"], "stack.dbm")
-        self.path["global_file"] = os.path.join(self.path["app_path"], "global.dbm")
-        self.path["doc_file"]    = os.path.join(self.path["app_path"], "doc.dbm")
+        self.path["app_path"]       = get_app_path()
+        self.path["log_file"]       = os.path.join(self.path["app_path"], "ctp.log")
+        self.path["stack_file"]     = os.path.join(self.path["app_path"], "stack.dbm")
+        self.path["global_file"]    = os.path.join(self.path["app_path"], "global.dbm")
+        self.path["doc_file"]       = os.path.join(self.path["app_path"], "doc.dbm")
 
 
         self.ctrl = { "log"     :     None,
@@ -257,11 +258,15 @@ class PyAUIFrame(wx.Frame):
 
 
     def startup_log(self):
-        self.log_debug("Path application   : %s" % self.path["app_path"])
-        self.log_debug("File stack         : %s" % self.path["stack_file"])
-        self.log_debug("File global        : %s" % self.path["global_file"])
-        self.log_debug("Config python path : %s" % self.wxconf.Read("PYTHON_PATH", ""))
-        self.log_debug("Config trace       : %s" % self.wxconf.ReadInt("TRACE", -1))
+        
+        self.ctrl["log"].active_log_file(self.path["log_file"])
+        
+        self.log_debug("Path application    : %s" % self.path["app_path"])
+        self.log_debug("File stack          : %s" % self.path["stack_file"])
+        self.log_debug("File global         : %s" % self.path["global_file"])
+        self.log_debug("Config python path  : %s" % self.wxconf.Read("PYTHON_PATH",         "no value"))
+        self.log_debug("Config python inter : %s" % self.wxconf.Read("PYTHON_INTERPRETOR",  "no value"))
+        self.log_debug("Config trace        : %s" % self.wxconf.ReadInt("TRACE", -1))
         self.log_info("Application is ready")
         
 
@@ -427,7 +432,6 @@ class PyAUIFrame(wx.Frame):
         self.log_debug("OnAbout")
         
         from wx.lib.wordwrap import wordwrap
-        import platform
         import pytestemb
 
         description = "Control Test is a script manager\n"

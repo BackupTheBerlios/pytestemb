@@ -5,7 +5,7 @@ PyTestEmb Project : unit test for result utils
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.3 $"
+__version__     = "$Revision: 1.4 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -22,7 +22,7 @@ import ctp.data.utils as utils
 
 if sys.platform == "win":
         
-    class Test_split_fullpath(unittest.TestCase):
+    class Test_split_fullpath_win(unittest.TestCase):
         def setUp(self):
             pass
         
@@ -53,7 +53,7 @@ if sys.platform == "win":
             
             
             
-    class Test_extract_sub(unittest.TestCase):
+    class Test_extract_sub_win(unittest.TestCase):
         def setUp(self):
             pass
         
@@ -75,7 +75,7 @@ if sys.platform == "win":
 
 if sys.platform == "linux2":
         
-    class Test_split_fullpath(unittest.TestCase):
+    class Test_split_fullpath_linux(unittest.TestCase):
         def setUp(self):
             pass
         
@@ -94,8 +94,8 @@ if sys.platform == "linux2":
         def test_case_nofile(self):
             path, file, ext = utils.split_fullpath("/home/.xml")             
             self.assertEqual(path,"/home")
-            self.assertEqual(file,"")
-            self.assertEqual(ext,"xml")
+            self.assertEqual(file,".xml")
+            self.assertEqual(ext,"")
                     
         def test_case_nopath(self):
             path, file, ext = utils.split_fullpath("file.xml")    
@@ -106,7 +106,7 @@ if sys.platform == "linux2":
             
             
             
-    class Test_extract_sub(unittest.TestCase):
+    class Test_extract_sub_linux(unittest.TestCase):
         def setUp(self):
             pass
         
