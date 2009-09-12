@@ -5,7 +5,7 @@ PyTestEmb Project : -
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.23 $"
+__version__     = "$Revision: 1.24 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -37,7 +37,7 @@ import frm_controler
 
 
 APP_NAME     = "Control Test"
-APP_VERSION  = "1.2.0 RC"
+APP_VERSION  = "1.2.0"
 
 
 

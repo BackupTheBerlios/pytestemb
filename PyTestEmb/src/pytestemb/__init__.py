@@ -5,7 +5,7 @@ PyTestEmb Project : __init__ manages command line option and interface with othe
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.18 $"
+__version__     = "$Revision: 1.19 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -14,7 +14,7 @@ __email__       = "octopy@gmail.com"
 
 
 
-VERSION_STRING = "1.2.4 RC"
+VERSION_STRING = "1.2.4"
 
 
 
