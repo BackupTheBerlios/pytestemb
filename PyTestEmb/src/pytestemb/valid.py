@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-""" 
+"""
 PyTestEmb Project : valid manages script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.12 $"
+__version__     = "$Revision: 1.13 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -42,7 +42,7 @@ class Valid:
         self.cleanup = self._nothing_
         self.case = []
         self.name = utils.get_script_name()
-    
+
     def _nothing_(self):
         pass
 
@@ -52,7 +52,7 @@ class Valid:
         else:
             # Avoid user mistake with two time function set
             raise pexception.PytestembError("Setup function already set")
-        
+
 
     def set_cleanup(self, funcCleanup):
         if self.cleanup == self._nothing_ :
@@ -63,12 +63,13 @@ class Valid:
 
     def add_test_case(self, funcCase):
         self.case.append(funcCase)
-    
+
 #    def script_need_run(self, name):
 #        return True
-    
-    
+
+
     def run_script(self):
+
         self.result.script_start({"name":self.name})
         try:
             # Setup
@@ -88,15 +89,15 @@ class Valid:
         except:
             raise
         self.result.script_stop({"name":self.name})
-        
-    
-    def run_try(self, func):  
+
+
+    def run_try(self, func):
         try:
             func()
         except result.TestErrorFatal:
-            pass  
+            pass
         except (Exception), (error):
-            self.inspect_traceback(error)            
+            self.inspect_traceback(error)
 
     def run_case(self, case):
         try:
@@ -107,10 +108,10 @@ class Valid:
         except (Exception), (error):
             self.inspect_traceback(error)
             return False
-            
-        
-        
-        
+
+
+
+
     def inspect_traceback(self, exception):
         CALL_DEPTH = 1
         traceback = inspect.trace()
@@ -122,18 +123,18 @@ class Valid:
                 stack[-1]["path"]      = copy.copy(traceback[index][1])
                 stack[-1]["line"]      = copy.copy(traceback[index][2])
                 stack[-1]["function"]  = copy.copy(traceback[index][3])
-                stack[-1]["code"]      = copy.copy(traceback[index][4][0].strip("\n"))    
+                stack[-1]["code"]      = copy.copy(traceback[index][4][0].strip("\n"))
         except Exception, ex:
             pass
         finally:
             del traceback
         des = {}
         des["stack"] = stack
-        des["exception_info"] = exception.__str__()    
-        des["exception_class"] = exception.__class__.__name__    
-        
+        des["exception_info"] = exception.__str__()
+        des["exception_class"] = exception.__class__.__name__
+
         self.result.py_exception(des)
-            
+
 
 
 

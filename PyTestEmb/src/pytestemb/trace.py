@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-""" 
+"""
 PyTestEmb Project : trace manages trace coming from module and script execution
 """
 
 __author__      = "$Author: octopy $"
-__version__     = "$Revision: 1.17 $"
+__version__     = "$Revision: 1.18 $"
 __copyright__   = "Copyright 2009, The PyTestEmb Project"
 __license__     = "GPL"
 __email__       = "octopy@gmail.com"
@@ -14,16 +14,17 @@ __email__       = "octopy@gmail.com"
 import os
 import sys
 import time
+import codecs
 import hashlib
 import platform
 
 import logging
 import logging.handlers
 
-        
 
-import utils        
-import gtime        
+
+import utils
+import gtime
 
 
 
@@ -34,28 +35,28 @@ class Trace:
         self.gtime = gtime.Gtime.create()
         self.result = None
         self.config = None
-        
+
     def set_result(self, result):
         self.result = result
-    
-    def set_config(self, config):    
+
+    def set_config(self, config):
         self.config = config
-        
-    def start(self):    
+
+    def start(self):
         pass
-    
+
     def trace_script(self, msg):
         pass
-    
+
     def trace_io(self, interface, data):
         pass
-    
+
     def trace_result(self, name, des):
         pass
 
     def trace_config(self, msg):
         pass
-    
+
     def trace_env(self, scope, data):
         pass
 
@@ -65,63 +66,63 @@ class Trace:
 class TraceManager(Trace):
     def __init__(self):
         Trace.__init__(self)
-        
+
         self.dictra = dict()
 
     def add_trace(self, name, tra):
         self.dictra[name] = tra
-         
-        
+
+
     def set_result(self, result):
         for tra in self.dictra.itervalues() :
             tra.set_result(result)
-    
-    def set_config(self, config):    
+
+    def set_config(self, config):
         for tra in self.dictra.itervalues() :
-            tra.set_config(config)       
-        
-    def start(self):    
+            tra.set_config(config)
+
+    def start(self):
         for tra in self.dictra.itervalues() :
-            tra.start()              
-    
+            tra.start()
+
     def trace_script(self, msg):
         for tra in self.dictra.itervalues() :
-            tra.trace_script(msg)              
-    
+            tra.trace_script(msg)
+
     def trace_io(self, interface, data):
         for tra in self.dictra.itervalues() :
-            tra.trace_io(interface, data)              
-    
+            tra.trace_io(interface, data)
+
     def trace_result(self, name, des):
         for tra in self.dictra.itervalues() :
-            tra.trace_result( name, des)               
+            tra.trace_result( name, des)
 
     def trace_config(self, msg):
         for tra in self.dictra.itervalues() :
-            tra.trace_config(msg)               
-    
+            tra.trace_config(msg)
+
     def trace_env(self, scope, data):
         for tra in self.dictra.itervalues() :
-            tra.trace_env(scope, data)               
+            tra.trace_env(scope, data)
 
 
 
 
-    
+
 
 
 class TraceOctopylog(Trace):
-    
+
     def __init__(self):
         Trace.__init__(self)
-        self.scope = {}   
-           
-    def start(self):    
+        self.scope = {}
+
+    def start(self):
         socketHandler = logging.handlers.SocketHandler("localhost", logging.handlers.DEFAULT_TCP_LOGGING_PORT)
         rootLogger = logging.getLogger("pytestemb")
         rootLogger.setLevel(logging.DEBUG)
         rootLogger.addHandler(socketHandler)
-        
+
         des = dict({"type":"octopylog"})
         self.result.trace_ctrl(des)
 
@@ -129,7 +130,7 @@ class TraceOctopylog(Trace):
         try:
             self.scope[scope].info("%s" % msg)
         except Exception, ex:
-            self.scope[scope] = logging.getLogger("pytestemb.%s" % scope)        
+            self.scope[scope] = logging.getLogger("pytestemb.%s" % scope)
             self.scope[scope].info("%s" % msg)
 
     def trace_script(self, msg):
@@ -137,59 +138,69 @@ class TraceOctopylog(Trace):
 
     def trace_io(self, interface, data):
         self.trace_scope("io.%s" % interface, data)
-    
+
     def trace_result(self, name, des):
-        self.trace_scope("result", "%s : %s" % (name, des))
+
+        #self.trace_scope("result", "%s : %s" % (name, des))
+        self.trace_scope("result", "%s : %s" % (name, utils.str_dict(des)))
 
     def trace_config(self, msg):
         self.trace_scope("config", msg)
-        
+
     def trace_env(self, scope, data):
         self.trace_scope("env.%s" % scope, data)
-     
+
 
 
 class TraceStdout(Trace):
-    
+
     def __init__(self):
         Trace.__init__(self)
 
-    def start(self):    
+    def start(self):
         des = dict({"type":"stdout"})
-        self.result.trace_ctrl(des)        
-        
+        self.result.trace_ctrl(des)
+
+    def _write(self, msg):
+        sys.stdout.write(codecs.encode(utils.to_unicode(msg), "utf-8"))
+
     def trace_script(self, msg):
-        sys.stdout.write("Script::%s" % msg)
+        self._write(msg)
+        #sys.stdout.write("Script::%s" % msg)
 
     def trace_io(self, interface, data):
-        sys.stdout.write("%s::%s" % (interface, data))
-    
+        self._write(data)
+        #sys.stdout.write("%s::%s" % (interface, data))
+
     def trace_result(self, name, des):
-        sys.stdout.write("%s::%s" % (name, des))
+        self._write(des)
+        #sys.stdout.write("%s::%s" % (name, des))
 
     def trace_config(self, msg):
-        sys.stdout.write("Config::%s" % msg)
+        self._write(msg)
+        #sys.stdout.write("Config::%s" % msg)
 
     def trace_env(self, scope, data):
-        sys.stdout.write("%s::%s" % (scope, data))
+        self._write(data)
+        #sys.stdout.write("%s::%s" % (scope, data))
 
 
 from config import ConfigError
 
 
 class TraceTxt(Trace):
-     
+
     if      platform.system() == "Linux":
         DEFAULT_DIR = "/tmp/pytestemb"
     elif    platform.system() == "Windows":
         DEFAULT_DIR = "c:\\temp\\pytestemb"
     else:
         raise Exception("Platform not supported")
-    
+
     def __init__(self):
         self.file = None
         Trace.__init__(self)
-        
+
     def start(self):
         # output path and filename for trace file
         try:
@@ -198,68 +209,69 @@ class TraceTxt(Trace):
             if not(os.path.lexists(TraceTxt.DEFAULT_DIR)):
                 os.mkdir(TraceTxt.DEFAULT_DIR)
             #pathfile = "%s\\" % TraceTxt.DEFAULT_DIR
-        pathfile =  os.path.join(TraceTxt.DEFAULT_DIR, self.gen_file_name() ) 
+        pathfile =  os.path.join(TraceTxt.DEFAULT_DIR, self.gen_file_name() )
         # create file
-        
+
         des = dict({"type":"txt","file":pathfile})
         try :
-            self.file = open(pathfile, 'w')          
+            self.file = codecs.open(pathfile, encoding="utf-8", mode="w")
         except (IOError) , (error):
             self.file = None
             des["error"] = error.__str__()
         self.result.trace_ctrl(des)
         # write header
-        self.add_header()         
-        
-        
+        self.add_header()
+
+
     def gen_file_name(self):
         """ """
         m = hashlib.md5()
         m.update(sys.argv[0])
-        m.update(time.strftime("%d_%m_%Y_%H_%M_%S", self.gtime.start_date))        
+        m.update(time.strftime("%d_%m_%Y_%H_%M_%S", self.gtime.start_date))
         name_script = utils.get_script_name()
         name_hash = m.hexdigest()[0:16].upper()
         return"%s_%s.log" % (name_script, name_hash)
-        
- 
- 
-             
+
+
+
+
     def format(self, mtime, scope, msg):
         mtime = mtime.ljust(16)
         scope = scope.ljust(24)
-        msg = msg.strip()   
-        return "%s%s%s\n"  % (mtime, scope, msg)      
-            
-    def add_header(self):        
+        msg = msg.strip()
+        return "%s%s%s\n"  % (mtime, scope, msg)
+
+    def add_header(self):
         if self.file is not None :
             dis = ""
-            dis += "Script file    : %s\n" % sys.argv[0] 
+            dis += "Script file    : %s\n" % sys.argv[0]
             dis += "Date           : %s\n" % time.strftime("%d/%m/%Y %H:%M:%S", self.gtime.start_date)
             dis += "\n%s\n" % self.format("Time(s)", "Scope", "Info")
-            self.file.write(dis.encode("utf-8"))
-           
-            
-            
+            self.file.write(utils.to_unicode(dis))
+
+
+
     def add_line(self, scope, msg):
         if self.file is not None :
             mtime = "%.6f" % self.gtime.get_time()
             dis = self.format(mtime, scope, msg)
-            self.file.write(dis.encode("utf-8"))
-        
+            self.file.write(utils.to_unicode(dis))
+
     def trace_script(self, msg):
         self.add_line("Script", "%s" % msg)
 
     def trace_io(self, interface, data):
         self.add_line(interface, "%s" % data)
-    
+
     def trace_result(self, name, des):
-        self.add_line(name, "%s" % des)
+
+        self.add_line(name, "%s" % utils.str_dict(des))
 
     def trace_config(self, msg):
         self.add_line("Config", "%s" % msg)
 
     def trace_env(self, scope, data):
-        self.add_line(scope, "%s" % data)     
+        self.add_line(scope, "%s" % data)
 
 
 
@@ -277,8 +289,9 @@ def create(interface):
         else:
             assert False
     return tracemanager
-    
-    
-    
-    
-    
+
+
+
+
+
+
